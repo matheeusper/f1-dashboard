@@ -1,0 +1,36 @@
+# Gera o PainelF1.exe (Windows) e anexa o PainelF1-windows.zip em cada release publicada.
+# Tambem pode ser rodado na mao em Actions > "Executavel Windows" > Run workflow
+# (nesse caso o zip fica disponivel como artefato da execucao).
+name: Executavel Windows
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Compilar o executavel
+        shell: pwsh
+        run: ./build.ps1
+
+      - name: Anexar o zip na release
+        if: github.event_name == 'release'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/PainelF1-windows.zip --clobber
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PainelF1-windows
+          path: dist/PainelF1-windows.zip

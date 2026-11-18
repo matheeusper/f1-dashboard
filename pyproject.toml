@@ -1,6 +1,6 @@
 [project]
 name = "painel-f1-25"
-version = "1.0.0"
+version = "1.1.0"
 description = "Painel de telemetria e engenheiro de corrida com voz para o F1 25 (telemetria UDP)."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -10,6 +10,10 @@ dependencies = [
     # vozes neurais da Microsoft para o engenheiro (sem ela, o painel usa a voz do Windows)
     "edge-tts>=7.0",
 ]
+
+[dependency-groups]
+# para gerar o PainelF1.exe (build.ps1)
+build = ["pyinstaller>=6.10"]
 
 [tool.uv]
 # conjunto de scripts (server.py e modulos ao lado), nao um pacote instalavel

@@ -3,6 +3,11 @@
 __pycache__/
 *.pyc
 
+# saida do build do executavel (build.ps1)
+build/
+dist/
+*.spec
+
 # dados pessoais de cada piloto: historico de voltas, recordes, conquistas e ajustes (nome, voz)
 dados/
 

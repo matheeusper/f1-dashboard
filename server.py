@@ -21,9 +21,10 @@ from urllib.parse import parse_qs
 
 import historico
 import voz as vozmod
+from caminhos import CONGELADO, RECURSOS
 from f1_packets import Decoder
 
-WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
+WEB_DIR = os.path.join(RECURSOS, "web")
 STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/index.html": ("index.html", "text/html; charset=utf-8"),
@@ -243,6 +244,8 @@ def main():
     ap.add_argument("--abrir", action="store_true", help="abre o painel no navegador")
     ap.add_argument("--historico", help="arquivo do historico (padrao: dados/historico.sqlite3; "
                                         "o modo demo usa dados/demo.sqlite3)")
+    if CONGELADO and len(sys.argv) == 1:
+        sys.argv.append("--abrir")   # dois cliques no PainelF1.exe: ja abre o painel
     args = ap.parse_args()
     if args.historico or args.demo:
         # o demo grava num historico separado para nao misturar com as suas voltas reais

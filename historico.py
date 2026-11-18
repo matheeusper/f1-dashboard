@@ -13,8 +13,9 @@ from array import array
 from collections import Counter, defaultdict
 
 from analise import Trace
+from caminhos import DADOS
 
-PASTA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dados")
+PASTA = DADOS
 ARQUIVO = os.path.join(PASTA, "historico.sqlite3")
 
 ESQUEMA = """

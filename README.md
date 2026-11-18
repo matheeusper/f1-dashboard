@@ -37,6 +37,20 @@ Painel em estilo cluster de carro para o **F1 25**, feito para um segundo monito
 
 ## Instalação (Windows)
 
+### Jeito mais fácil: baixar o executável
+
+Não precisa instalar nada.
+
+1. Na página de **[Releases](https://github.com/matheeusper/f1-dashboard/releases/latest)**, baixe o **`PainelF1-windows.zip`** e extraia onde quiser.
+2. **Configure o jogo** (uma vez só): veja a tabela no passo 3 logo abaixo.
+3. Dê dois cliques em **`PainelF1.exe`**. O painel abre sozinho.
+
+Na primeira vez, o Windows pode mostrar *"O Windows protegeu o computador"*, porque o programa não é assinado digitalmente. Clique em **Mais informações → Executar assim mesmo**.
+
+Na mesma pasta há atalhos para o **demo** e para o **celular**. Seus dados ficam na pasta `dados`, ao lado do `.exe`. Para atualizar, extraia a versão nova por cima e mantenha essa pasta.
+
+### Rodando pelo código (com uv)
+
 1. **Instale o [uv](https://docs.astral.sh/uv/)**: cole no PowerShell e feche a janela no fim.
    ```powershell
    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
@@ -248,12 +262,15 @@ Só biblioteca padrão do Python, mais o [`edge-tts`](https://pypi.org/project/e
 | `historico.py` | Histórico em SQLite e dados da página Evolução |
 | `voz.py` | Voz neural (edge-tts) e ajustes |
 | `simulador.py` | Gera telemetria falsa no formato do jogo, para testes |
+| `caminhos.py` | Onde ficam os arquivos, rodando pelo código ou como executável |
 | `web/` | Painel e página Evolução |
 
 ```bash
 uv run server.py --demo --abrir           # painel com corrida simulada
 uv run simulador.py --porta 20777         # só o simulador, enviando para um servidor já aberto
 ```
+
+**Executável:** o `build.ps1` gera o `dist\PainelF1-windows.zip` com o PyInstaller (`powershell -ExecutionPolicy Bypass -File build.ps1`). O mesmo build roda sozinho no GitHub Actions (`.github/workflows/executavel.yml`): a cada release publicada, o zip é compilado num Windows e anexado à release. Os atalhos e o LEIA-ME que vão no zip estão em `pacote/`, e os caminhos de arquivos do executável ficam em `caminhos.py`.
 
 A especificação UDP do F1 25 está nos fóruns oficiais da EA (*Data Output from F1 25*).
 

@@ -20,7 +20,9 @@ try:
 except ImportError:  # pacote nao instalado: o painel usa a voz do Windows
     edge_tts = None
 
-PASTA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dados")
+from caminhos import DADOS
+
+PASTA = DADOS
 ARQUIVO = os.path.join(PASTA, "config.json")
 
 VOZES = [
