@@ -688,6 +688,8 @@ b { font-weight: 600; }
 .cfg-btns ol { margin: 10px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; font-size: 19px; }
 .cfg-btns li b { display: inline-block; min-width: 92px; color: var(--cyan); font-weight: 600; }
 .radio.quiet .r-dot { background: var(--yellow); }
+.cfg-hint { margin-top: -8px; font-size: 17px; color: var(--dim); line-height: 1.35; }
+.cfg-hint b { color: var(--cyan); }
 .cfg-status { font-size: 19px; color: var(--dim); }
 .cfg-status.ok { color: var(--green); }
 .cfg-status.off { color: var(--yellow); }

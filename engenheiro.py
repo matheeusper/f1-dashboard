@@ -14,7 +14,7 @@ from analise import (DICA, HABITO, Trace, deltas, detectar_curvas, diagnostico, 
                      fala_volta, frenagem, metricas, ponto_entrada, texto_meu, texto_outro)
 from analise import num as numero
 from acerto import AcertoMixin
-from corrida import CorridaMixin
+from corrida import CorridaMixin, primeiro_nome
 from estrategia import EstrategiaMixin
 from treino import TreinoMixin
 
@@ -117,9 +117,22 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             return None
 
     # ================================================================ mensagens
+    def nome_do_jogo(self):
+        """Nome do piloto que o jogador usa no jogo (inclusive personalizado), ou None.
+        Online o jogo manda o gamertag (ou 'Player'), entao ai vale o nome digitado."""
+        s, nomes, p = self.d.session, self.d.names, self.d.player
+        if (s and s.get("online")) or not nomes or not 0 <= p < len(nomes):
+            return None
+        return primeiro_nome(nomes[p])
+
     def nome(self):
-        """Primeiro nome do piloto (ex.: 'Max'), ou vazio."""
-        n = self.ajustes.get()["nome"] if self.ajustes else ""
+        """Como chamar o piloto no radio (ex.: 'Max'), ou vazio."""
+        a = self.ajustes.get() if self.ajustes else {}
+        if a.get("nome_jogo", True):
+            n = self.nome_do_jogo()
+            if n:
+                return n
+        n = a.get("nome", "")
         return n.split()[0] if n.split() else ""
 
     def vn(self):

@@ -8,6 +8,7 @@ eliminacao, trafego e volta de saida/entrada. Usa os nomes dos pilotos.
 """
 import struct
 import time
+import unicodedata
 
 from analise import fala_dif, fala_gap, fala_volta
 from analise import num as numero
@@ -34,6 +35,34 @@ def nome_curto(bruto):
         return None
     w = n.split()[-1]
     return w.capitalize() if (w.isupper() or w.islower()) else w
+
+
+# Sobrenome -> como o engenheiro chama no radio (o jogo costuma mandar so o sobrenome dos pilotos reais)
+PRIMEIROS = {
+    "verstappen": "Max", "tsunoda": "Yuki", "hamilton": "Lewis", "leclerc": "Charles", "norris": "Lando",
+    "piastri": "Oscar", "russell": "George", "antonelli": "Kimi", "alonso": "Fernando", "stroll": "Lance",
+    "gasly": "Pierre", "doohan": "Jack", "colapinto": "Franco", "ocon": "Esteban", "bearman": "Ollie",
+    "albon": "Alex", "sainz": "Carlos", "hulkenberg": "Nico", "bortoleto": "Gabriel", "lawson": "Liam",
+    "hadjar": "Isack", "lindblad": "Arvid", "ricciardo": "Daniel", "perez": "Checo", "bottas": "Valtteri",
+    "zhou": "Zhou", "magnussen": "Kevin", "sargeant": "Logan", "schumacher": "Mick", "drugovich": "Felipe",
+}
+
+
+def _sem_acento(s):
+    return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
+
+
+def primeiro_nome(bruto):
+    """Como chamar o piloto no radio, pelo nome que o jogo manda.
+    'Matheus SILVA' -> 'Matheus'; 'VERSTAPPEN' -> 'Max'; 'SILVA' -> 'Silva'; 'Player' -> None."""
+    sobrenome = nome_curto(bruto)
+    if not sobrenome:
+        return None
+    ws = bruto.rstrip("…").split()
+    if len(ws) >= 2 and len(ws[0]) > 1 and not ws[0].endswith("."):   # veio o primeiro nome junto
+        p = ws[0]
+        return p.capitalize() if (p.isupper() or p.islower()) else p
+    return PRIMEIROS.get(_sem_acento(sobrenome).lower(), sobrenome)
 
 
 def cap(s):

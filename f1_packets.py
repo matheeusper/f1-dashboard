@@ -291,6 +291,7 @@ class Decoder:
             "trackId": v[6], "formula": v[7], "typeId": stype,
             "pitIdeal": data[OFF_PIT_WINDOW], "pitLatest": data[OFF_PIT_WINDOW + 1],
             "pitRejoin": data[OFF_PIT_WINDOW + 2],
+            "online": data[OFF_SAFETY_CAR + 1] == 1,   # m_networkGame vem logo depois do safety car
         }
 
     def _lap(self, data, lay, p):

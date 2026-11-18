@@ -960,13 +960,20 @@
     if (open && coach) renderAnalysis(coach);
   }
   // ---- ajustes do radio (nome, voz, velocidade, volume)
-  const C = { box: $('cfg'), nome: $('cfgNome'), voz: $('cfgVoz'), vel: $('cfgVel'), velTxt: $('cfgVelTxt'),
+  const C = { box: $('cfg'), nome: $('cfgNome'), nomeJogo: $('cfgNomeJogo'), nomeInfo: $('cfgNomeInfo'), voz: $('cfgVoz'), vel: $('cfgVel'), velTxt: $('cfgVelTxt'),
     vol: $('cfgVol'), volTxt: $('cfgVolTxt'), status: $('cfgStatus'), radio: $('cfgRadio'),
     chiado: $('cfgChiado'), chiadoTxt: $('cfgChiadoTxt'), chiadoRow: $('cfgChiadoRow'), botoes: $('cfgBotoes') };
   let cfgTimer = null;
+  let nomeRadio = '';   // como o engenheiro chama o piloto agora (do jogo ou digitado)
   function cfgMostra(r) {
     const a = r.ajustes;
     if (document.activeElement !== C.nome) C.nome.value = a.nome;
+    C.nomeJogo.checked = a.nome_jogo;
+    nomeRadio = r.nomeAtual || '';
+    C.nomeInfo.innerHTML = !a.nome_jogo ? 'O engenheiro usa o nome digitado acima.'
+      : r.nomeJogo ? 'No jogo você está como <b>' + esc(r.nomeJogo) + '</b>: é assim que o engenheiro vai te chamar.'
+      : (r.online ? 'Online o jogo manda o seu gamertag, então vale o nome digitado acima.'
+        : 'Assim que o jogo mandar os pilotos, o engenheiro usa o seu. Até lá, vale o nome digitado acima.');
     if (!C.voz.options.length) {
       C.voz.innerHTML = r.vozes.map((v) => '<option value="' + v.id + '">' + v.nome + ' (' + v.tipo + ')</option>').join('');
     }
@@ -999,7 +1006,7 @@
     txt(C.chiadoTxt, C.chiado.value + '%');
     return fetch('/api/config', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome: C.nome.value, voz: C.voz.value, velocidade: +C.vel.value, volume: +C.vol.value,
+      body: JSON.stringify({ nome: C.nome.value, nome_jogo: C.nomeJogo.checked, voz: C.voz.value, velocidade: +C.vel.value, volume: +C.vol.value,
         radio: C.radio.checked, chiado: +C.chiado.value }),
     }).then((x) => x.json()).then(cfgMostra).catch(() => txt(C.status, 'Não consegui salvar.'));
   }
@@ -1007,10 +1014,11 @@
   for (const el of [C.nome, C.vel, C.vol, C.chiado]) el.addEventListener('input', cfgAgenda);
   C.voz.addEventListener('change', cfgSalva);
   C.radio.addEventListener('change', cfgSalva);
+  C.nomeJogo.addEventListener('change', cfgSalva);
   $('cfgTest').addEventListener('click', () => {
     clearTimeout(cfgTimer);
     cfgSalva().then(() => {
-      const n = (C.nome.value.trim().split(/\s+/)[0] || '');
+      const n = nomeRadio;
       speak('Rádio check' + (n ? ', ' + n : '') + '. Tô contigo, vamos buscar esse recorde hoje.', 'normal');
     });
   });

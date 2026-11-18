@@ -35,7 +35,7 @@ IDS = {v["id"] for v in VOZES}
 # tom da mensagem -> (ajuste de velocidade em %, ajuste de tom em Hz)
 TONS = {"normal": (0, 0), "calmo": (-5, -2), "animado": (8, 4), "urgente": (14, 1)}
 
-PADRAO = {"nome": "", "voz": "pt-BR-AntonioNeural", "velocidade": 6, "volume": 100,
+PADRAO = {"nome": "", "nome_jogo": True, "voz": "pt-BR-AntonioNeural", "velocidade": 6, "volume": 100,
           "radio": True, "chiado": 35}
 
 
@@ -57,8 +57,9 @@ class Ajustes:
             out["nome"] = d["nome"].strip()[:24]
         if d.get("voz") in IDS:
             out["voz"] = d["voz"]
-        if isinstance(d.get("radio"), bool):
-            out["radio"] = d["radio"]
+        for k in ("radio", "nome_jogo"):
+            if isinstance(d.get(k), bool):
+                out[k] = d[k]
         for k, lo, hi in (("velocidade", -20, 30), ("volume", 0, 100), ("chiado", 0, 100)):
             try:
                 out[k] = max(lo, min(hi, int(d[k])))

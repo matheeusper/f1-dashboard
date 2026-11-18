@@ -45,8 +45,10 @@ decoder.eng.ajustes = ajustes
 
 def config_view():
     from engenheiro import BOTOES
+    eng = decoder.eng
     return {"ajustes": ajustes.get(), "vozes": vozmod.VOZES, "status": voz.status(), "neural": voz.neural(),
-            "botoes": BOTOES}
+            "botoes": BOTOES, "nomeJogo": eng._seguro(eng.nome_do_jogo), "nomeAtual": eng._seguro(eng.nome) or "",
+            "online": bool((decoder.session or {}).get("online"))}
 
 
 def udp_loop(sock):

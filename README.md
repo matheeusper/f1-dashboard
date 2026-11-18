@@ -91,7 +91,7 @@ No menu, escolha **Demo: corrida simulada** (rivais, pit stops, safety car e err
 O engenheiro fala com você e mostra as mensagens na faixa **RÁDIO DO ENGENHEIRO**. Ele só fala nas retas, nunca na frenagem ou no meio da curva. Avisos urgentes, como dano, punição ou safety car, esperam no máximo 2 segundos.
 
 **Voz e personalidade:** aperte **C**, ou clique em **⚙ AJUSTES** no rádio, para escolher:
-- **Seu nome no rádio:** ele chama você pelo primeiro nome (*"Isso, Max! Recorde pessoal!"*).
+- **Seu nome no rádio:** ele chama você pelo primeiro nome (*"Isso, Max! Recorde pessoal!"*). Por padrão, usa o nome do piloto que você escolheu no jogo, inclusive um piloto personalizado do Modo Carreira ou do My Team. Online, ou com a opção desligada nos Ajustes, vale o nome que você digitou.
 - **A voz:** Antonio, Francisca ou Thalita, que são vozes neurais da Microsoft e soam humanas. Ou a voz do Windows, que funciona sem internet.
 - **Velocidade e volume.** O botão **▶ TESTAR VOZ** faz um rádio check.
 - **Som de rádio de equipe:** bipes ao abrir e fechar a transmissão, voz filtrada e chiado regulável.
