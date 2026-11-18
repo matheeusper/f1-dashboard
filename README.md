@@ -39,15 +39,20 @@ Painel em estilo cluster de carro para o **F1 25**, feito para um segundo monito
 
 ### Jeito mais fácil: baixar o executável
 
-Não precisa instalar nada.
+Não precisa instalar nada: é um arquivo só.
 
-1. Na página de **[Releases](https://github.com/matheeusper/f1-dashboard/releases/latest)**, baixe o **`PainelF1-windows.zip`** e extraia onde quiser.
+1. Na página de **[Releases](https://github.com/matheeusper/f1-dashboard/releases/latest)**, baixe o **`PainelF1.exe`** e coloque numa pasta sua, por exemplo `Documentos\PainelF1`.
 2. **Configure o jogo** (uma vez só): veja a tabela no passo 3 logo abaixo.
-3. Dê dois cliques em **`PainelF1.exe`**. O painel abre sozinho.
+3. Dê dois cliques em **`PainelF1.exe`** e escolha no menu:
+   - **Iniciar painel**: recebe a telemetria do jogo e abre o painel;
+   - **Demo: corrida simulada** e **Demo: Time Trial**: para ver tudo funcionando sem o jogo;
+   - **Painel no celular ou tablet**: libera o painel na rede local e mostra o endereço para digitar no aparelho.
+
+Depois de escolher, a janela mostra o status e tem botões para reabrir o painel, abrir a página Evolução ou trocar de modo. **Fechar essa janela desliga o painel.**
 
 Na primeira vez, o Windows pode mostrar *"O Windows protegeu o computador"*, porque o programa não é assinado digitalmente. Clique em **Mais informações → Executar assim mesmo**.
 
-Na mesma pasta há atalhos para o **demo** e para o **celular**. Seus dados ficam na pasta `dados`, ao lado do `.exe`. Para atualizar, extraia a versão nova por cima e mantenha essa pasta.
+Seus dados ficam na pasta `dados`, criada ao lado do `.exe`. Para atualizar, troque só o `PainelF1.exe` e mantenha essa pasta.
 
 ### Rodando pelo código (com uv)
 
@@ -71,19 +76,15 @@ Na mesma pasta há atalhos para o **demo** e para o **celular**. Seus dados fica
    | Taxa de envio | 60 Hz |
    | Formato UDP | 2025 ou 2026 (os dois funcionam) |
 
-4. **Dê dois cliques em `Iniciar Painel.bat`.** Na primeira vez, o uv prepara o ambiente, o que leva cerca de 1 minuto. O painel abre sozinho em tela cheia no monitor vertical. Se não abrir no monitor certo, arraste a janela para ele e aperte **F11**.
-5. Abra o jogo e entre na pista: o painel acende sozinho.
+4. **Dê dois cliques em `Painel F1 25.bat`.** Ele abre o mesmo menu do executável. Na primeira vez, o uv prepara o ambiente, o que leva cerca de 1 minuto.
+5. Escolha **Iniciar painel**: o painel abre sozinho, em tela cheia no monitor vertical. Se não abrir no monitor certo, arraste a janela para ele e aperte **F11**.
+6. Abra o jogo e entre na pista: o painel acende sozinho.
 
-Deixe a janela preta aberta enquanto joga. Fechar essa janela desliga o painel.
-
-**Linux ou macOS:** rode `uv run server.py --abrir` na pasta do projeto.
+**Linux ou macOS:** rode `uv run server.py --menu` (ou `uv run server.py --abrir`) na pasta do projeto.
 
 ### Testar sem o jogo
 
-- **`Demo.bat`**: uma corrida simulada, com rivais, pit stops, safety car e erros de pilotagem.
-- **`Demo Time Trial.bat`**: um Time Trial simulado, para testar o modo treino e as metas.
-
-O demo grava num histórico separado, sem misturar com as suas voltas.
+No menu, escolha **Demo: corrida simulada** (rivais, pit stops, safety car e erros de pilotagem) ou **Demo: Time Trial** (modo treino e metas). O demo grava num histórico separado, sem misturar com as suas voltas.
 
 ## Engenheiro de corrida
 
@@ -209,9 +210,9 @@ O engenheiro mede o equilíbrio do carro na entrada, no meio e na saída de cada
 
 ## Celular e tablet
 
-1. Abra o **`Iniciar Painel (celular).bat`**. A janela preta mostra o endereço para o celular, por exemplo `http://192.168.0.10:8025`.
+1. No menu, escolha **Painel no celular ou tablet**. A janela mostra o endereço para digitar no aparelho, por exemplo `http://192.168.0.10:8025`.
 2. O celular precisa estar na mesma rede do PC.
-3. Na primeira vez, libere o Python no firewall do Windows: marque também **Redes públicas** se a sua rede estiver como pública.
+3. Na primeira vez, libere o Painel F1 25 no firewall do Windows: marque também **Redes públicas** se a sua rede estiver como pública.
 
 - **Layouts:** o painel escolhe o layout pela tela. No celular ele fica compacto, com tudo grande, deitado ou em pé.
 - **Tela cheia:** toque na barra de cima.
@@ -224,6 +225,7 @@ O engenheiro mede o equilíbrio do carro na entrada, no meio e na saída de cada
 
 | Opção | O que faz |
 |---|---|
+| `--menu` | Abre a janela de menu (é o que o `PainelF1.exe` faz sem opções) |
 | `--abrir` | Abre o painel no Chrome ou Edge, em tela cheia no monitor vertical, se houver |
 | `--demo` | Telemetria simulada, sem o jogo |
 | `--time-trial` | Com `--demo`: simula um Time Trial |
@@ -262,6 +264,7 @@ Só biblioteca padrão do Python, mais o [`edge-tts`](https://pypi.org/project/e
 | `historico.py` | Histórico em SQLite e dados da página Evolução |
 | `voz.py` | Voz neural (edge-tts) e ajustes |
 | `simulador.py` | Gera telemetria falsa no formato do jogo, para testes |
+| `menu.py` | Janela de menu: iniciar painel, demo, Time Trial, celular |
 | `caminhos.py` | Onde ficam os arquivos, rodando pelo código ou como executável |
 | `web/` | Painel e página Evolução |
 
@@ -270,7 +273,7 @@ uv run server.py --demo --abrir           # painel com corrida simulada
 uv run simulador.py --porta 20777         # só o simulador, enviando para um servidor já aberto
 ```
 
-**Executável:** o `build.ps1` gera o `dist\PainelF1-windows.zip` com o PyInstaller (`powershell -ExecutionPolicy Bypass -File build.ps1`). O mesmo build roda sozinho no GitHub Actions (`.github/workflows/executavel.yml`): a cada release publicada, o zip é compilado num Windows e anexado à release. Os atalhos e o LEIA-ME que vão no zip estão em `pacote/`, e os caminhos de arquivos do executável ficam em `caminhos.py`.
+**Executável:** o `build.ps1` gera o `dist\PainelF1.exe`, um arquivo só, sem console e com ícone, usando o PyInstaller (`powershell -ExecutionPolicy Bypass -File build.ps1`). O mesmo build roda sozinho no GitHub Actions (`.github/workflows/executavel.yml`): a cada release publicada, o `.exe` é compilado num Windows e anexado à release. O ícone é gerado por `tools/gerar_icone.py` (`icone.ico` e `web/icone.png`).
 
 A especificação UDP do F1 25 está nos fóruns oficiais da EA (*Data Output from F1 25*).
 

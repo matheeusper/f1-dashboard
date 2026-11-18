@@ -32,6 +32,8 @@ STATIC = {
     "/app.js": ("app.js", "application/javascript; charset=utf-8"),
     "/evolucao": ("evolucao.html", "text/html; charset=utf-8"),
     "/evolucao.js": ("evolucao.js", "application/javascript; charset=utf-8"),
+    "/icone.png": ("icone.png", "image/png"),
+    "/favicon.ico": ("icone.png", "image/png"),
 }
 
 decoder = Decoder()
@@ -223,15 +225,15 @@ def abrir_painel(url):
     else:
         cmd += ["--window-size=540,960"]
         print("Nenhum monitor vertical detectado: arraste a janela para ele e aperte F11.")
-    subprocess.Popen(cmd)
+    subprocess.Popen(cmd, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
 
 
-# ---------------------------------------------------------------------- main
-def main():
-    try:
-        sys.stdout.reconfigure(errors="replace")
-    except Exception:
-        pass
+# ---------------------------------------------------------------------- inicio
+class ErroInicio(Exception):
+    """Nao deu para subir o painel (porta ocupada etc.). A mensagem vai para o usuario."""
+
+
+def criar_parser():
     ap = argparse.ArgumentParser(description="Painel de telemetria do F1 25")
     ap.add_argument("--porta-udp", type=int, default=20777, help="porta UDP do jogo (padrao 20777)")
     ap.add_argument("--porta-web", type=int, default=8025, help="porta da pagina (padrao 8025)")
@@ -244,9 +246,13 @@ def main():
     ap.add_argument("--abrir", action="store_true", help="abre o painel no navegador")
     ap.add_argument("--historico", help="arquivo do historico (padrao: dados/historico.sqlite3; "
                                         "o modo demo usa dados/demo.sqlite3)")
-    if CONGELADO and len(sys.argv) == 1:
-        sys.argv.append("--abrir")   # dois cliques no PainelF1.exe: ja abre o painel
-    args = ap.parse_args()
+    ap.add_argument("--menu", action="store_true",
+                    help="abre a janela de menu (iniciar, demo, celular); e o padrao do executavel")
+    return ap
+
+
+def iniciar(args):
+    """Sobe o painel (telemetria UDP + pagina) em segundo plano e devolve o endereco."""
     if args.historico or args.demo:
         # o demo grava num historico separado para nao misturar com as suas voltas reais
         historico.ARQUIVO = os.path.abspath(args.historico or os.path.join(historico.PASTA, "demo.sqlite3"))
@@ -258,32 +264,55 @@ def main():
     try:
         udp.bind((host, args.porta_udp))
     except OSError:
-        print("ERRO: a porta UDP %d ja esta em uso (outro app de telemetria aberto?)." % args.porta_udp)
-        print("Feche o outro app, ou use --porta-udp N e coloque a mesma porta no jogo.")
-        return 1
+        udp.close()
+        raise ErroInicio("A porta UDP %d já está em uso: outro app de telemetria (SimHub, Crew Chief...) "
+                         "ou o próprio painel já está aberto." % args.porta_udp)
     try:
         ThreadingHTTPServer.daemon_threads = True
         httpd = ThreadingHTTPServer((host, args.porta_web), Handler)
     except OSError:
-        print("ERRO: a porta %d ja esta em uso (o painel ja esta aberto?)." % args.porta_web)
-        return 1
+        udp.close()
+        raise ErroInicio("A porta %d já está em uso: o painel já está aberto?" % args.porta_web)
 
     threading.Thread(target=udp_loop, args=(udp,), daemon=True).start()
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
     if args.demo:
         from simulador import simular
         decoder.demo = True
         threading.Thread(target=simular, kwargs={"port": args.porta_udp, "fmt": args.formato,
                                                  "tipo": 18 if args.time_trial else 15},
                          daemon=True).start()
-
     url = "http://127.0.0.1:%d" % args.porta_web
+    if args.abrir:
+        abrir_painel(url)
+    return url
+
+
+# ---------------------------------------------------------------------- main
+def main():
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except Exception:
+        pass
+    ap = criar_parser()
+    if CONGELADO and len(sys.argv) == 1:
+        sys.argv.append("--menu")   # dois cliques no PainelF1.exe: abre o menu
+    args = ap.parse_args()
+    if args.menu:
+        from menu import abrir_menu
+        abrir_menu(args)
+        return 0
+    try:
+        url = iniciar(args)
+    except ErroInicio as exc:
+        print("ERRO:", exc)
+        return 1
     print("Painel F1 25 no ar: " + url)
     print("Esperando telemetria UDP na porta %d%s." % (args.porta_udp, " (modo demo)" if args.demo else ""))
     print("Feche esta janela para desligar.")
-    if args.abrir:
-        abrir_painel(url)
     try:
-        httpd.serve_forever()
+        while True:
+            time.sleep(3600)
     except KeyboardInterrupt:
         pass
     return 0

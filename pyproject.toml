@@ -1,6 +1,6 @@
 [project]
 name = "painel-f1-25"
-version = "1.1.0"
+version = "1.2.0"
 description = "Painel de telemetria e engenheiro de corrida com voz para o F1 25 (telemetria UDP)."
 readme = "README.md"
 requires-python = ">=3.10"
