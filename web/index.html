@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel F1 25</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+
+  <!-- 1. Barra de status -->
+  <header class="top panel" id="top">
+    <div class="top-left">
+      <div id="track" class="track">—</div>
+      <div class="sub"><span id="sessionType">Sem sessão</span><span id="flag" class="pill"></span></div>
+    </div>
+    <div class="top-mid">
+      <div class="kv"><span class="lbl">POS</span><span class="kv-v"><small>P</small><b id="pos">–</b></span></div>
+      <div class="kv"><span class="lbl" id="lapLbl">VOLTA</span><span class="kv-v"><b id="lapNum">–</b><small id="lapTotal"></small></span></div>
+    </div>
+    <div class="top-right">
+      <div class="line"><span id="weather">—</span><span id="rain" class="dim"></span></div>
+      <div class="line"><span class="dim">PISTA</span> <b id="trackTemp">–</b>° <span class="dim sp">AR</span> <b id="airTemp">–</b>°</div>
+      <div class="line"><span id="conn" class="conn">SEM SINAL</span></div>
+    </div>
+  </header>
+
+  <!-- 2. LEDs de giro -->
+  <div class="leds" id="leds"></div>
+
+  <!-- 3. Cluster principal -->
+  <section class="cluster" id="cluster">
+    <div class="pedal brake">
+      <span class="lbl">FREIO</span>
+      <div class="ptrack"><i id="brakeBar"></i></div>
+      <span class="pval" id="brakeVal">0</span>
+    </div>
+
+    <div class="gauge-wrap">
+      <svg id="gauge" viewBox="0 0 700 500" aria-hidden="true">
+        <defs>
+          <linearGradient id="gArc" gradientUnits="userSpaceOnUse" x1="120" y1="0" x2="580" y2="0">
+            <stop offset="0" stop-color="#2de2e6"/>
+            <stop offset=".62" stop-color="#7d8bff"/>
+            <stop offset="1" stop-color="#ff3d9a"/>
+          </linearGradient>
+        </defs>
+        <path class="arc-track" d="M190.9 444.1 A225 225 0 1 1 509.1 444.1" pathLength="1000"/>
+        <path class="arc-red" id="arcRed" d="M190.9 444.1 A225 225 0 1 1 509.1 444.1" pathLength="1000"/>
+        <path class="arc-glow" id="arcGlow" d="M190.9 444.1 A225 225 0 1 1 509.1 444.1" pathLength="1000"/>
+        <path class="arc-val" id="arcVal" d="M190.9 444.1 A225 225 0 1 1 509.1 444.1" pathLength="1000"/>
+        <g id="ticks"></g>
+        <text id="rpmTxt" x="350" y="166" class="g-rpm">0</text>
+        <text x="350" y="188" class="g-unit">RPM</text>
+        <text id="gear" x="350" y="358" class="g-gear">N</text>
+        <text id="suggested" x="492" y="300" class="g-sug"></text>
+        <text id="speed" x="350" y="440" class="g-speed">0</text>
+        <text x="350" y="470" class="g-unit">km/h</text>
+      </svg>
+      <div id="lights" class="lights"><i></i><i></i><i></i><i></i><i></i></div>
+      <div id="toast" class="toast"></div>
+      <div id="msFlash" class="ms-flash"></div>
+    </div>
+
+    <div class="pedal throttle">
+      <span class="lbl">ACEL.</span>
+      <div class="ptrack"><i id="throttleBar"></i></div>
+      <span class="pval" id="throttleVal">0</span>
+    </div>
+  </section>
+
+  <!-- 4. Volante, forca G e indicadores -->
+  <section class="inputs">
+    <div class="panel gbox">
+      <div class="gcircle"><i id="gDot"></i></div>
+      <div class="gtxt">
+        <div><span class="lbl">G LAT</span><b id="gLat">0.0</b></div>
+        <div><span class="lbl">G LONG</span><b id="gLong">0.0</b></div>
+      </div>
+    </div>
+    <div class="panel steerbox">
+      <div class="srow"><span class="lbl">VOLANTE</span><div class="strack"><i id="steerDot"></i></div></div>
+      <div class="srow"><span class="lbl">EMBREAGEM</span><div class="bar"><i id="clutchBar"></i></div></div>
+    </div>
+    <div class="badge" id="drsBadge"><b id="drsTxt">DRS</b><small id="drsSub"></small></div>
+    <div class="badge" id="otBadge"><b>OVERTAKE</b><small id="otSub"></small></div>
+    <div class="badge" id="pitBadge"><b>PIT</b><small id="pitSub">LIMITADOR</small></div>
+  </section>
+
+  <!-- 5. Tempos -->
+  <section class="panel timing">
+    <div class="t-main">
+      <div class="t-cur">
+        <span class="lbl">VOLTA ATUAL <em id="invalid" class="tag bad">INVÁLIDA</em><em id="pitInfo" class="tag"></em></span>
+        <span id="curLap" class="t-big">–:––.–––</span>
+      </div>
+      <div class="t-delta">
+        <span class="lbl">DELTA P/ MELHOR</span>
+        <span id="delta" class="delta">—</span>
+      </div>
+    </div>
+    <div class="sectors" id="sectors"></div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <!-- 6. ERS e combustivel -->
+  <section class="energy">
+    <div class="panel">
+      <div class="ph"><span class="lbl">ERS</span><span id="ersMode" class="tag">—</span></div>
+      <div class="erow">
+        <span class="num" id="ersPct">0<small>%</small></span>
+        <div class="battery"><i id="ersBar"></i></div>
+      </div>
+      <div class="mini"><span class="lbl">COLHIDO</span><div class="bar"><i id="ersHarvBar" class="c-green"></i></div><span id="ersHarv" class="mv">0.00 MJ</span></div>
+      <div class="mini"><span class="lbl">USADO</span><div class="bar"><i id="ersDepBar" class="c-mag"></i></div><span id="ersDep" class="mv">0.00 MJ</span></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="lbl">COMBUSTÍVEL</span><span id="fuelMix" class="tag">—</span></div>
+      <div class="erow">
+        <span class="num" id="fuelLaps">0.00</span>
+        <span class="unit">voltas<br>de sobra</span>
+        <span class="num2" id="fuelKg">0.0<small> kg</small></span>
+      </div>
+      <div class="mini"><span class="lbl">TANQUE</span><div class="bar"><i id="fuelBar" class="c-cyan"></i></div><span id="fuelPct" class="mv">0%</span></div>
+      <div class="mini"><span class="lbl">POTÊNCIA</span><div class="bar"><i id="powerBar" class="c-mag"></i></div><span id="power" class="mv">0 kW</span></div>
+    </div>
+  </section>
+
+  <!-- Radio do engenheiro -->
+  <section class="panel radio" id="radio">
+    <div class="r-head">
+      <span class="r-dot"></span><span class="lbl">RÁDIO DO ENGENHEIRO</span>
+      <span id="pitPrev" class="r-pit" title="Onde você volta se parar agora"></span>
+      <span id="treinoChip" class="r-treino"></span>
+      <span id="radioAge" class="r-age"></span>
+      <button id="cfgBtn" class="tag r-mode" type="button" title="Ajustes do rádio (tecla C)">⚙ AJUSTES</button>
+      <button id="voiceMode" class="tag r-mode" type="button">VOZ: TUDO</button>
+    </div>
+    <div class="r-msg" id="radioMsg">Faça uma volta limpa: o engenheiro monta sua referência e começa a analisar cada curva.</div>
+    <div class="r-corners" id="rCorners" title="Toque para abrir a análise (tecla A)"></div>
+  </section>
+
+  <!-- 7 e 8. Pneus, danos e carro -->
+  <section class="bottom">
+    <div class="panel tyres">
+      <div class="ph">
+        <span class="lbl">PNEUS E FREIOS</span>
+        <span class="compound"><i id="compound">–</i><span id="compoundTxt">—</span></span>
+      </div>
+      <div class="tgrid">
+        <div class="tyre" id="t_fl"></div>
+        <svg class="car" id="car" viewBox="0 0 160 460" aria-hidden="true">
+          <line class="susp" x1="34" y1="100" x2="70" y2="112"/><line class="susp" x1="126" y1="100" x2="90" y2="112"/>
+          <line class="susp" x1="32" y1="362" x2="64" y2="352"/><line class="susp" x1="128" y1="362" x2="96" y2="352"/>
+          <polygon class="part" id="d_floor" points="46,172 114,172 124,338 110,392 50,392 36,338"/>
+          <rect class="part" id="d_fwL" x="12" y="26" width="64" height="24" rx="5"/>
+          <rect class="part" id="d_fwR" x="84" y="26" width="64" height="24" rx="5"/>
+          <polygon class="body" points="72,22 88,22 93,122 100,204 104,330 96,398 64,398 56,330 60,204 67,122"/>
+          <polygon class="part" id="d_spL" points="36,206 58,198 56,300 40,312 32,262"/>
+          <polygon class="part" id="d_spR" points="124,206 102,198 104,300 120,312 128,262"/>
+          <ellipse class="cockpit" cx="80" cy="208" rx="9" ry="19"/>
+          <rect class="part" id="d_engine" x="70" y="246" width="20" height="74" rx="6"/>
+          <rect class="part" id="d_gearbox" x="72" y="328" width="16" height="48" rx="4"/>
+          <polygon class="part" id="d_diffuser" points="52,398 108,398 114,416 46,416"/>
+          <rect class="part" id="d_rw" x="24" y="424" width="112" height="24" rx="5"/>
+          <rect class="wheel" id="w_fl" x="8" y="70" width="26" height="60" rx="8"/>
+          <rect class="wheel" id="w_fr" x="126" y="70" width="26" height="60" rx="8"/>
+          <rect class="wheel" id="w_rl" x="2" y="330" width="30" height="66" rx="9"/>
+          <rect class="wheel" id="w_rr" x="128" y="330" width="30" height="66" rx="9"/>
+        </svg>
+        <div class="tyre" id="t_fr"></div>
+        <div class="tyre" id="t_rl"></div>
+        <div class="tyre" id="t_rr"></div>
+      </div>
+    </div>
+
+    <div class="panel carinfo">
+      <div class="ph"><span class="lbl">DANOS</span></div>
+      <div class="dgrid" id="dgrid"></div>
+      <div class="ph"><span class="lbl">DESGASTE DA UNIDADE DE POTÊNCIA</span></div>
+      <div class="pu" id="pu"></div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </section>
+
+  <!-- Analise por curva (tecla A) -->
+  <div id="analysis" class="analysis">
+    <div class="a-head">
+      <div>
+        <div class="a-title">ANÁLISE POR CURVA</div>
+        <div class="a-sub" id="aSub">Sem voltas analisadas ainda.</div>
+      </div>
+      <div class="a-actions">
+        <a class="a-btn" href="/evolucao">EVOLUÇÃO →</a>
+        <button class="a-btn" id="aClose" type="button">FECHAR ✕</button>
+      </div>
+    </div>
+    <svg id="aMap" class="a-map" viewBox="0 0 1000 470" aria-label="Mapa da pista"></svg>
+    <div class="a-legend"><i class="lg-good"></i>ganhou <i class="lg-ok"></i>igual <i class="lg-warn"></i>perdeu &gt;0,06 s <i class="lg-bad"></i>perdeu &gt;0,15 s</div>
+    <div class="a-chart-head">
+      <span class="lbl" id="tcTitulo">TELEMETRIA COMPARADA</span>
+      <span class="a-chart-leg"><i class="lg-eu"></i>sua volta <i class="lg-ref"></i>referência <span class="dim">· toque numa curva ou use ← →</span></span>
+    </div>
+    <svg id="tcGraf" class="a-chart" viewBox="0 0 1000 400" aria-label="Telemetria comparada da curva"></svg>
+    <div class="a-extra">
+      <div class="a-box"><div class="lbl">METAS · TIME TRIAL</div><div id="aMetas"></div></div>
+      <div class="a-box"><div class="lbl">ACERTO DO CARRO</div><div id="aAcerto"></div></div>
+    </div>
+    <table class="a-table">
+      <thead><tr><th>CURVA</th><th>PERDA</th><th>FRENAGEM</th><th>VEL. MÍN.</th><th>ACELERADOR</th><th>OBSERVAÇÃO</th></tr></thead>
+      <tbody id="aRows"></tbody>
+    </table>
+    <div class="a-log-title lbl">ÚLTIMAS MENSAGENS</div>
+    <ol class="a-log" id="aLog"></ol>
+  </div>
+
+  <!-- Ajustes do radio (tecla C) -->
+  <div id="cfg" class="cfg">
+    <div class="cfg-card">
+      <div class="a-title">RÁDIO E VOZ</div>
+      <label class="cfg-row"><span class="lbl">SEU NOME NO RÁDIO</span>
+        <input id="cfgNome" maxlength="24" placeholder="Ex.: Max" autocomplete="off"></label>
+      <label class="cfg-row"><span class="lbl">VOZ DO ENGENHEIRO</span>
+        <select id="cfgVoz"></select></label>
+      <label class="cfg-row"><span class="lbl">VELOCIDADE DA FALA <b id="cfgVelTxt"></b></span>
+        <input id="cfgVel" type="range" min="-20" max="30" step="1"></label>
+      <label class="cfg-row"><span class="lbl">VOLUME <b id="cfgVolTxt"></b></span>
+        <input id="cfgVol" type="range" min="0" max="100" step="5"></label>
+      <label class="cfg-check"><input id="cfgRadio" type="checkbox"> Som de rádio de equipe (bipes, voz filtrada e chiado)</label>
+      <label class="cfg-row" id="cfgChiadoRow"><span class="lbl">CHIADO <b id="cfgChiadoTxt"></b></span>
+        <input id="cfgChiado" type="range" min="0" max="100" step="5"></label>
+      <div class="cfg-status" id="cfgStatus">Carregando…</div>
+      <div class="cfg-btns">
+        <div class="lbl">BOTÕES DO VOLANTE (UDP ACTION) · OU TECLAS 1–9 E 0 (=10) NO PAINEL</div>
+        <ol id="cfgBotoes"></ol>
+      </div>
+      <div class="cfg-actions">
+        <button id="cfgTest" class="a-btn" type="button">▶ TESTAR VOZ</button>
+        <button id="cfgClose" class="a-btn" type="button">FECHAR ✕</button>
+      </div>
+      <p class="cfg-note">As vozes naturais usam a internet (serviço de voz da Microsoft). Sem conexão, o engenheiro fala com a voz do Windows.</p>
+    </div>
+  </div>
+
+  <!-- Aviso e tela de espera -->
+  <div id="warn" class="warn"></div>
+  <div id="wait" class="wait show">
+    <div class="wait-card">
+      <div class="wait-title">Aguardando o F1 25<span class="dots"></span></div>
+      <p id="waitMsg">Nenhuma telemetria chegando. No jogo, abra:</p>
+      <ol>
+        <li>Configurações → <b>Telemetria</b></li>
+        <li>Telemetria UDP: <b>Ligado</b></li>
+        <li>Endereço IP: <b>127.0.0.1</b> · Porta: <b>20777</b></li>
+        <li>Taxa de envio: <b>60 Hz</b></li>
+        <li>Formato UDP: <b>2025</b> ou <b>2026</b></li>
+      </ol>
+      <p class="dim">O painel acende sozinho quando você entrar na pista. Para testar sem o jogo, use o Demo.bat.</p>
+      <div class="wait-actions">
+        <button id="wCfg" class="a-btn" type="button">⚙ AJUSTES DO RÁDIO</button>
+        <a class="a-btn" href="/evolucao">📈 EVOLUÇÃO</a>
+        <button id="wHide" class="a-btn" type="button">VER O PAINEL ✕</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

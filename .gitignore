@@ -1,0 +1,14 @@
+# ambiente do uv / Python
+.venv/
+__pycache__/
+*.pyc
+
+# dados pessoais de cada piloto: historico de voltas, recordes, conquistas e ajustes (nome, voz)
+dados/
+
+# editores e sistema
+.vscode/
+.idea/
+.claude/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,5 @@
+* text=auto
+# atalhos do Windows precisam de fim de linha CRLF para funcionar
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.jpg binary

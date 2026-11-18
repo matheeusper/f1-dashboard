@@ -1,0 +1,134 @@
+// Pagina Evolucao: historico de voltas por pista (dados de /api/pistas e /api/evolucao).
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const sel = $('pista'), box = $('conteudo');
+  const HABITO = {
+    trava: 'travar as rodas', cedo: 'frear cedo demais', tarde: 'frear tarde e passar do ponto',
+    lento: 'contornar devagar demais', acel: 'acelerar tarde na saída', patinou: 'patinar na saída',
+    rapido: 'entrar rápido demais',
+  };
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+  function fmtLap(ms) {
+    if (!ms || ms <= 0) return '—';
+    const m = Math.floor(ms / 60000), s = (ms % 60000) / 1000;
+    return m + ':' + (s < 10 ? '0' : '') + s.toFixed(3);
+  }
+  const fmtSeg = (ms) => (ms / 1000).toFixed(3).replace('.', ',');
+  const fmtDia = (t) => {
+    const d = new Date(t * 1000);
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' +
+      d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  function grafico(sessoes) {
+    const pts = sessoes.filter((s) => s.melhor > 0);
+    if (pts.length < 2) {
+      return '<div class="empty" style="padding:30px">O gráfico aparece a partir da segunda sessão nesta pista.</div>';
+    }
+    const W = 1000, H = 360, L = 86, Rm = 20, T = 20, B = 46;
+    const vals = pts.flatMap((s) => [s.melhor, s.media]).filter((v) => v > 0);
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    const pad = Math.max(200, (hi - lo) * 0.15);
+    lo -= pad; hi += pad;
+    const x = (i) => L + (W - L - Rm) * (pts.length === 1 ? 0.5 : i / (pts.length - 1));
+    const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+    let g = '';
+    for (let k = 0; k <= 4; k++) {
+      const v = lo + (hi - lo) * k / 4;
+      g += '<line class="axis" x1="' + L + '" x2="' + (W - Rm) + '" y1="' + y(v) + '" y2="' + y(v) + '"/>' +
+        '<text class="axis-t" x="' + (L - 10) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + fmtLap(Math.round(v)) + '</text>';
+    }
+    const passo = Math.max(1, Math.ceil(pts.length / 7));
+    const dias = new Set(pts.map((s) => fmtDia(s.inicio).split(' ')[0]));
+    pts.forEach((s, i) => {
+      if (i % passo === 0 || i === pts.length - 1) {
+        const [dia, hora] = fmtDia(s.inicio).split(' ');
+        const rot = dias.size < pts.length ? dia + ' ' + hora : dia;   // varias sessoes no mesmo dia: mostra a hora
+        const anc = i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle';
+        g += '<text class="axis-t" x="' + x(i) + '" y="' + (H - 16) + '" text-anchor="' + anc + '">' + rot + '</text>';
+      }
+    });
+    const linha = (k) => pts.map((s, i) => x(i).toFixed(1) + ',' + y(s[k]).toFixed(1)).join(' ');
+    g += '<polyline class="l-avg" points="' + linha('media') + '"/>';
+    g += '<polyline class="l-best" points="' + linha('melhor') + '"/>';
+    pts.forEach((s, i) => {
+      g += '<circle class="d-avg" cx="' + x(i) + '" cy="' + y(s.media) + '" r="4"><title>Média ' + fmtLap(s.media) + '</title></circle>';
+      g += '<circle class="d-best" cx="' + x(i) + '" cy="' + y(s.melhor) + '" r="6"><title>Melhor ' + fmtLap(s.melhor) + ' · ' + fmtDia(s.inicio) + '</title></circle>';
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Melhor volta e média por sessão">' + g + '</svg>' +
+      '<div class="legend"><span><i style="background:var(--purple)"></i>Melhor volta da sessão</span>' +
+      '<span><i style="background:var(--cyan)"></i>Média das voltas limpas</span></div>';
+  }
+
+  function render(d) {
+    if (!d.sessoes.length) {
+      box.innerHTML = '<div class="panel empty">Nenhuma volta registrada nesta pista ainda.</div>';
+      return;
+    }
+    const ult = d.sessoes[d.sessoes.length - 1];
+    const potencial = d.recorde && d.ideal ? d.recorde - d.ideal : 0;
+    let h = '<div class="cards">' +
+      '<div class="panel card"><span class="lbl">Recorde pessoal</span><b class="p">' + fmtLap(d.recorde) + '</b><small>sua melhor volta aqui</small></div>' +
+      '<div class="panel card"><span class="lbl">Volta ideal</span><b class="c">' + fmtLap(d.ideal) + '</b><small>' +
+      (potencial > 0 ? 'seus melhores trechos somados: ' + fmtSeg(potencial) + ' s para buscar' : 'soma dos seus melhores trechos') + '</small></div>' +
+      '<div class="panel card"><span class="lbl">Última sessão</span><b>' + fmtLap(ult.melhor) + '</b><small>média ' + fmtLap(ult.media) +
+      ' · ±' + fmtSeg(ult.desvio) + ' s</small></div>' +
+      '<div class="panel card"><span class="lbl">Voltas registradas</span><b>' + d.voltas + '</b><small>em ' + d.sessoes.length + ' sessões</small></div>' +
+      '</div>';
+    h += '<div class="panel"><h2>EVOLUÇÃO POR SESSÃO</h2>' + grafico(d.sessoes) + '</div>';
+    if (d.conquistas && d.conquistas.length) {
+      h += '<div class="panel"><h2>CONQUISTAS DO MODO TREINO (' + d.conquistas.length + ')</h2><ul class="conq">' +
+        d.conquistas.map((c) => '<li><span>🏆 ' + esc(c.texto) + '</span><span class="quando">' + fmtDia(c.quando) +
+          '</span></li>').join('') + '</ul></div>';
+    }
+
+    if (d.curvas.length) {
+      const maxG = Math.max(...d.curvas.map((c) => c.ganho), 1);
+      const piores = d.curvas.slice().sort((a, b) => b.ganho - a.ganho).slice(0, 3).map((c) => c.n);
+      h += '<div class="panel"><h2>CURVA A CURVA</h2><div class="scroll"><table><thead><tr>' +
+        '<th>CURVA</th><th>MELHOR TRECHO</th><th>MÉDIA RECENTE</th><th>TEMPO PARA BUSCAR</th><th>TENDÊNCIA</th><th>VÍCIO</th>' +
+        '</tr></thead><tbody>' + d.curvas.map((c) => {
+          const t = c.tendencia == null ? '—' : Math.abs(c.tendencia) < 15 ? 'estável'
+            : c.tendencia < 0 ? '<span class="down">▼ ' + fmtSeg(-c.tendencia) + ' s melhor</span>'
+              : '<span class="up">▲ ' + fmtSeg(c.tendencia) + ' s pior</span>';
+          const hab = c.habito ? '<span class="habit">' + esc(HABITO[c.habito] || c.habito) + ' (' + Math.round(c.habito_pct * 100) + '% das voltas)</span>' : '—';
+          return '<tr><td><b>' + c.n + '</b>' + (piores.includes(c.n) && c.ganho > 40 ? ' <span class="up">●</span>' : '') +
+            '</td><td>' + fmtSeg(c.melhor) + ' s</td><td>' + fmtSeg(c.media) + ' s</td><td><span class="bar"><i style="transform:scaleX(' +
+            (c.ganho / maxG).toFixed(3) + ')"></i></span>' + fmtSeg(c.ganho) + ' s</td><td>' + t + '</td><td class="wrap">' + hab + '</td></tr>';
+        }).join('') + '</tbody></table></div>' +
+        '<div class="legend">Tendência compara suas 10 últimas voltas limpas com as 10 anteriores. ● = onde você mais tem tempo para ganhar.</div></div>';
+    }
+
+    h += '<div class="panel"><h2>SESSÕES</h2><div class="scroll"><table><thead><tr>' +
+      '<th>DATA</th><th>TIPO</th><th>VOLTAS</th><th>MELHOR</th><th>MÉDIA</th><th>CONSISTÊNCIA</th></tr></thead><tbody>' +
+      d.sessoes.slice().reverse().map((s) => '<tr><td>' + fmtDia(s.inicio) + '</td><td>' + esc(s.tipo || '—') + '</td><td>' +
+        s.validas + ' / ' + s.voltas + '</td><td>' + (s.melhor === d.recorde ? '<b style="color:var(--purple)">' + fmtLap(s.melhor) + '</b>' : fmtLap(s.melhor)) +
+        '</td><td>' + fmtLap(s.media) + '</td><td>±' + fmtSeg(s.desvio) + ' s</td></tr>').join('') +
+      '</tbody></table></div></div>';
+    box.innerHTML = h;
+  }
+
+  function carregar(chave) {
+    try { localStorage.setItem('painel.pista', chave); } catch (e) { /* sem storage */ }
+    fetch('/api/evolucao?pista=' + encodeURIComponent(chave)).then((r) => r.json()).then(render)
+      .catch(() => { box.innerHTML = '<div class="panel empty">Não consegui ler o histórico. O servidor do painel está aberto?</div>'; });
+  }
+
+  fetch('/api/pistas').then((r) => r.json()).then((pistas) => {
+    if (!pistas.length) {
+      sel.style.display = 'none';
+      box.innerHTML = '<div class="panel empty">Nenhuma volta registrada ainda.<br>Corra no F1 25 com o painel aberto: cada volta limpa entra aqui automaticamente.</div>';
+      return;
+    }
+    let salvo = null;
+    try { salvo = localStorage.getItem('painel.pista'); } catch (e) { /* sem storage */ }
+    sel.innerHTML = pistas.map((p) => '<option value="' + esc(p.key) + '">' + esc(p.pista) + ' · ' + p.voltas + ' voltas</option>').join('');
+    if (salvo && pistas.some((p) => p.key === salvo)) sel.value = salvo;
+    sel.addEventListener('change', () => carregar(sel.value));
+    carregar(sel.value);
+  }).catch(() => { box.innerHTML = '<div class="panel empty">Não consegui ler o histórico. O servidor do painel está aberto?</div>'; });
+
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' || e.key.toLowerCase() === 'p') location.href = '/'; });
+})();

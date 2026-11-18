@@ -1,0 +1,16 @@
+[project]
+name = "painel-f1-25"
+version = "1.0.0"
+description = "Painel de telemetria e engenheiro de corrida com voz para o F1 25 (telemetria UDP)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+urls = { Repository = "https://github.com/matheeusper/f1-dashboard" }
+dependencies = [
+    # vozes neurais da Microsoft para o engenheiro (sem ela, o painel usa a voz do Windows)
+    "edge-tts>=7.0",
+]
+
+[tool.uv]
+# conjunto de scripts (server.py e modulos ao lado), nao um pacote instalavel
+package = false

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evolução F1 25</title>
+<style>
+  :root {
+    --bg: #05070b; --panel: #0c1118; --panel-2: #111823; --line: #1c2533; --text: #eaf0f8;
+    --dim: #7b879a; --cyan: #2de2e6; --mag: #ff3d9a; --green: #3ddc84; --red: #ff4d5a;
+    --yellow: #ffd23f; --purple: #b973ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Bahnschrift", "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; display: flex; flex-direction: column; gap: 22px; }
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 38px; letter-spacing: 1px; flex: 1; }
+  a.back, select {
+    font-family: inherit; font-size: 17px; color: var(--text); text-decoration: none;
+    padding: 10px 16px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line);
+  }
+  select { min-width: 240px; }
+  .panel { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; }
+  .lbl { font-size: 13px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; }
+  h2 { margin: 0 0 14px; font-size: 15px; letter-spacing: 2.2px; color: var(--dim); font-weight: 500; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .card { display: flex; flex-direction: column; gap: 6px; }
+  .card b { font-size: 36px; font-weight: 700; }
+  .card small { font-size: 15px; color: var(--dim); }
+  .card b.p { color: var(--purple); } .card b.c { color: var(--cyan); } .card b.g { color: var(--green); }
+  svg { width: 100%; display: block; }
+  .axis { stroke: #1c2533; }
+  .axis-t { fill: var(--dim); font-size: 13px; }
+  .l-best { fill: none; stroke: var(--purple); stroke-width: 3; }
+  .l-avg { fill: none; stroke: var(--cyan); stroke-width: 2.5; stroke-dasharray: 7 6; }
+  .d-best { fill: var(--purple); } .d-avg { fill: var(--cyan); }
+  .legend { display: flex; gap: 22px; font-size: 15px; color: var(--dim); margin-top: 8px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 22px; height: 3px; vertical-align: middle; margin-right: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 17px; }
+  th { text-align: left; font-size: 12px; letter-spacing: 1.8px; color: var(--dim); font-weight: 500; padding: 0 8px 10px; border-bottom: 1px solid var(--line); }
+  td { padding: 9px 8px; border-bottom: 1px solid #141b26; white-space: nowrap; }
+  td.wrap { white-space: normal; color: var(--dim); }
+  .bar { position: relative; width: 140px; height: 9px; border-radius: 999px; background: #080b10; border: 1px solid var(--line); overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 10px; }
+  .bar i { position: absolute; inset: 0; transform-origin: left; background: var(--yellow); }
+  .up { color: var(--red); } .down { color: var(--green); } .habit { color: var(--mag); }
+  .conq { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .conq li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 14px; border-radius: 12px;
+             background: #080b10; border: 1px solid var(--line); font-size: 18px; }
+  .conq .quando { color: var(--dim); font-size: 15px; white-space: nowrap; }
+  .empty { text-align: center; color: var(--dim); font-size: 20px; padding: 60px 20px; line-height: 1.5; }
+  .scroll { overflow-x: auto; }
+  @media (max-width: 640px) { h1 { font-size: 28px; } .card b { font-size: 28px; } td, th { padding: 7px 5px; } .bar { width: 70px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a class="back" href="/">← Painel</a>
+    <h1>Evolução</h1>
+    <select id="pista" aria-label="Pista"></select>
+  </header>
+  <div id="conteudo"><div class="panel empty">Carregando…</div></div>
+</main>
+<script src="evolucao.js"></script>
+</body>
+</html>
