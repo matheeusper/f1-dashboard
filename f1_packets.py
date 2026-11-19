@@ -268,7 +268,11 @@ class Decoder:
 
     def _setups(self, data, lay, p):
         v = SETUP_CAR.unpack_from(data, HEADER_SIZE + p * SETUP_CAR.size)
-        self.setup = {"frontWing": v[0], "rearWing": v[1], "diffOn": v[2], "diffOff": v[3]}
+        # "chave": so o que se muda na garagem (asas, diferencial sem acelerador, geometria, suspensao,
+        # alturas, pressao de freio, pneus, lastro). Fica de fora o que muda pelo MFD andando:
+        # diferencial no acelerador (v[2]), balanco de freio (v[15]), freio-motor (v[16]), e o combustivel.
+        chave = (v[0], v[1], v[3]) + tuple(round(x, 2) for x in v[4:8]) + tuple(v[8:15]) +             tuple(round(x, 1) for x in v[17:21]) + (v[21],)
+        self.setup = {"frontWing": v[0], "rearWing": v[1], "diffOn": v[2], "diffOff": v[3], "chave": chave}
 
     def _telemetry2(self, data, lay, p):
         v = TELEMETRY2_CAR.unpack_from(data, HEADER_SIZE + p * TELEMETRY2_CAR.size)

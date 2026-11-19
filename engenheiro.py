@@ -787,6 +787,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             return
         self._seguro(self._cr_tick)
         self._seguro(self._es_tick)
+        self._seguro(self._ac_setup_check)
         estado = {"warn": v[20], "pen": v[19], "dt": v[22], "sg": v[23],
                   "dmg": {k: dmg[k] for k in PECAS} if dmg else None,
                   "sc": s["safetyCar"] if s else 0, "flag": st["flag"] if st else 0}
@@ -1126,7 +1127,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             "voice": self._voz_view(),
             "ptt": self.ptt, "silencio": self.silencio,
             "pit": self._seguro(self.es_view), "live": self.ms_view(),
-            "treino": self.tr_view(), "acerto": self.ac_cache,
+            "treino": self.tr_view(), "acerto": self.ac_cache, "torre": self._seguro(self.torre_view),
             "talk": self.talk, "report": self.report, "mapVer": self.map_ver,
             "nCorners": len(self.corners), "ref": ref_ms, "refKind": tipo,
             "record": self.recorde_ms, "ideal": r.get("ideal", 0),

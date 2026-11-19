@@ -32,9 +32,10 @@ Painel em estilo cluster de carro para o **F1 25**, feito para um segundo monito
 - **Memória:** recorde e volta ideal por pista, vícios que se repetem, resumo de cada sessão e a página **Evolução** com gráficos.
 - **Corrida:** substitui o engenheiro do jogo. Usa os nomes dos pilotos e avisa de box box, limitador, pit dos rivais, undercut e overcut, safety car, punições, clima e zona de eliminação na classificação.
 - **Estrategista de pit:** aprende quanto custa um pit em cada pista e prevê onde você volta à pista.
+- **Torre de tempos (tecla P):** o grid inteiro com gaps, intervalo, composto e idade dos pneus, paradas, última e melhor volta.
 - **Botões do volante:** pergunte sobre pneus, gaps, combustível, estratégia e acerto sem tirar as mãos do volante.
 - **Time Trial:** modo treino de uma curva, metas do dia e conquistas.
-- **Acerto:** detecta subesterço e sobresterço e sugere ajustes.
+- **Acerto:** detecta subesterço e sobresterço e sugere ajustes. Quando você muda o acerto na garagem, a análise recomeça sozinha.
 - **Layouts:** monitor em pé, monitor ou tablet deitado, e celular (compacto, letras grandes).
 - **Dois idiomas:** português e inglês, no menu, no painel e na voz do engenheiro.
 
@@ -200,13 +201,14 @@ O engenheiro mede o equilíbrio do carro na entrada, no meio e na saída de cada
 | Problemas na saída | Diferencial no acelerador mais aberto, acelerador mais progressivo |
 | Um eixo bem mais quente | Pressão um pouco menor naquele eixo |
 
-É um ponto de partida: mude uma coisa por vez.
+É um ponto de partida: mude uma coisa por vez. Quando você muda o acerto na garagem (asas, suspensão, pressões…), o engenheiro percebe, descarta as voltas do acerto antigo e recomeça a contagem de 3 voltas. Mudanças pelo MFD com o carro andando, como balanço de freio e diferencial, não recomeçam a análise.
 
 ## Atalhos
 
 | Tecla | O que faz |
 |---|---|
 | **A** | Análise da última volta: mapa, telemetria comparada, metas e acerto. Use **← →** ou clique para trocar de curva. |
+| **P** | Torre de tempos: o grid inteiro (ou toque no P da posição) |
 | **E** | Página Evolução |
 | **C** | Ajustes do rádio: idioma, nome, voz, velocidade, volume e som de rádio |
 | **V** | Voz: tudo → só importante → desligada |

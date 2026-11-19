@@ -458,7 +458,10 @@
     setMode(MODES[(i + 1) % MODES.length][0]);
   }
 
-  let voice = null, blocked = false, speaking = false, speakStart = 0, talkOk = true;
+  let voice = null, blocked = false, speaking = false, talkOk = true;
+  // ate quando a fala atual deve durar (ms do performance.now) e o numero da fala atual:
+  // uma fala nova sempre corta a anterior, e uma resposta atrasada do servidor e descartada
+  let falaAte = 0, falaId = 0;
   function pickVoice() {
     const vs = synth ? synth.getVoices() : [];
     voice = LANG_EN
@@ -468,10 +471,10 @@
   }
   if (synth) { pickVoice(); synth.onvoiceschanged = pickVoice; synth.cancel(); }
 
-  let neural = false, volume = 1, radioFx = true, chiado = 0.35, audio = null, fimFala = null;
-  function falando(on) {
+  let neural = false, volume = 1, radioFx = true, chiado = 0.35, audio = null, fimFala = null, chiadoSrc = null;
+  function falando(on, duracaoMs) {
     speaking = on;
-    if (on) speakStart = performance.now();
+    if (on) falaAte = performance.now() + (duracaoMs || 15000);
     cls(R.box, 'talking', on);
   }
   function bloqueado() {
@@ -553,15 +556,18 @@
   function fechaRadio(c, out, t) { bip(c, out, t, 1150, 0.05, 0.18); bip(c, out, t + 0.07, 860, 0.08, 0.18); }
 
   function pararFala() {
+    falaId++;
     if (synth) synth.cancel();
     if (audio) { try { audio.stop(); } catch (e) { /* ja parou */ } audio = null; }
+    if (chiadoSrc) { try { chiadoSrc.stop(); } catch (e) { /* ja parou */ } chiadoSrc = null; }
     clearTimeout(fimFala);
     falando(false);
   }
 
   // voz do Windows (sem internet ou se a natural falhar): bipes de radio, sem filtro
-  function speakWindows(text) {
+  function speakWindows(text, id) {
     if (!synth) return;
+    if (id === undefined) { pararFala(); id = falaId; }
     const c = radioFx ? audioCtx() : null;
     const ok = c && c.state === 'running';
     const u = new SpeechSynthesisUtterance(text);
@@ -569,31 +575,36 @@
     u.lang = LOCALE;
     u.rate = 1.12;
     u.volume = volume;
-    falando(true);
+    falando(true, 2500 + text.length * 95);   // a voz do Windows nao diz a duracao: estimativa pelo tamanho
     if (ok) { const { out } = cadeia(c, false); abreRadio(c, out, c.currentTime + 0.01); }
     u.onend = () => {
+      if (id !== falaId) return;
       if (ok) { const { out } = cadeia(c, false); fechaRadio(c, out, c.currentTime + 0.02); }
       falando(false);
     };
-    u.onerror = (e) => { falando(false); if (e.error === 'not-allowed') bloqueado(); };
-    setTimeout(() => synth.speak(u), ok ? 140 : 0);
+    u.onerror = (e) => { if (id !== falaId) return; falando(false); if (e.error === 'not-allowed') bloqueado(); };
+    setTimeout(() => { if (id === falaId) synth.speak(u); }, ok ? 140 : 0);
   }
 
   // voz natural: o servidor ja deixou o audio pronto quando a mensagem foi criada
   async function speak(text, tom) {
-    if (!neural) return speakWindows(text);
+    pararFala();                 // nunca duas vozes: a fala nova corta a que estiver tocando
+    const id = falaId;
+    if (!neural) return speakWindows(text, id);
     const c = audioCtx();
-    if (!c) return speakWindows(text);
-    falando(true);
+    if (!c) return speakWindows(text, id);
+    falando(true, 12000);        // o servidor pode levar alguns segundos para gerar o audio
     let buf;
     try {
       const r = await fetch('/tts?tom=' + encodeURIComponent(tom || 'normal') + '&t=' + encodeURIComponent(text));
       if (!r.ok) throw new Error('sem voz natural');
       buf = await c.decodeAudioData(await r.arrayBuffer());
     } catch (e) {
+      if (id !== falaId) return;
       falando(false);
-      return speakWindows(text);
+      return speakWindows(text, id);
     }
+    if (id !== falaId) return;   // outra fala comecou enquanto este audio chegava
     if (c.state !== 'running') { falando(false); bloqueado(); return; }
     const { entrada, out } = cadeia(c, radioFx);
     const t0 = c.currentTime + 0.03;
@@ -601,7 +612,7 @@
     const fim = inicio + buf.duration;
     if (radioFx) {
       abreRadio(c, out, t0);
-      estatica(c, out, t0 + 0.06, fim + 0.08, chiado);
+      chiadoSrc = estatica(c, out, t0 + 0.06, fim + 0.08, chiado);
       fechaRadio(c, out, fim + 0.06);
     }
     const src = c.createBufferSource();
@@ -609,8 +620,10 @@
     src.connect(entrada);
     src.start(inicio);
     audio = src;
+    const dur = (fim - c.currentTime + (radioFx ? 0.3 : 0.05)) * 1000;
+    falaAte = performance.now() + dur;   // agora a duracao e conhecida: a fila espera o audio inteiro
     clearTimeout(fimFala);
-    fimFala = setTimeout(() => { audio = null; falando(false); }, (fim - c.currentTime + (radioFx ? 0.3 : 0.05)) * 1000);
+    fimFala = setTimeout(() => { if (id !== falaId) return; audio = null; falando(false); }, dur);
   }
   addEventListener('pointerdown', () => {
     if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
@@ -637,6 +650,7 @@
     if (!c) return;
     coach = c;
     const now = performance.now();
+    if (TW.box.classList.contains('show') && now - twUltimo > 250) { twUltimo = now; renderTower(c.torre); }
     talkOk = c.talk;
     if (c.voice) {
       neural = c.voice.neural;
@@ -678,7 +692,7 @@
     const key = (c.report ? c.report.lap + ':' + c.report.ms : '') + '|' + Object.keys(c.habits || {}).join(',') +
       '|' + (c.live ? c.live.lap + ':' + c.live.corners.length : '') + '|' + c.nCorners + '|' +
       (tr.curva || '') + (tr.metas || []).map((m) => m.prog + (m.feito ? '!' : '')).join(',') + '|' +
-      (c.acerto ? c.acerto.voltas + ':' + c.acerto.achados.length : '');
+      (c.acerto ? c.acerto.voltas + ':' + c.acerto.achados.length + ':' + !!c.acerto.novo : '');
     if (key !== reportKey) {
       reportKey = key;
       renderCorners(c);
@@ -690,7 +704,8 @@
   function pump() {
     const now = performance.now();
     if (shown) txt(R.age, T('há %d s').replace('%d', Math.max(0, Math.round((now - shown.rx) / 1000))));
-    if (speaking && now - speakStart > 25000) speaking = false;   // protecao se o navegador travar a fala
+    // protecao se o navegador travar a fala: passou bem da duracao esperada, corta (em vez de falar por cima)
+    if (speaking && now > falaAte + 3000) pararFala();
     for (let i = queue.length - 1; i >= 0; i--) {
       if (now - queue[i].rx > queue[i].ttl * 1000) queue.splice(i, 1);
     }
@@ -763,8 +778,9 @@
     }
     html($('aMetas'), mt);
     let at;
-    if (!ac.voltas) at = '<p class="dim">' + T('A análise aparece depois de 3 voltas lançadas.') + '</p>';
-    else if (!ac.ok) at = '<p class="dim">' + T('Analisando: %d de 3 voltas.').replace('%d', ac.voltas) + '</p>';
+    if (!ac.voltas) at = '<p class="dim">' + (ac.novo ? T('Acerto novo: a análise recomeça e aparece depois de 3 voltas lançadas.')
+      : T('A análise aparece depois de 3 voltas lançadas.')) + '</p>';
+    else if (!ac.ok) at = '<p class="dim">' + (ac.novo ? T('Acerto novo: ') : '') + T('Analisando: %d de 3 voltas.').replace('%d', ac.voltas) + '</p>';
     else if (!ac.achados.length) at = '<p>' + T('Carro equilibrado: nada de subesterço ou sobresterço que se repita.') + '</p>';
     else {
       at = '<ul>' + ac.achados.map((a) => '<li>' + esc(a) + '</li>').join('') + '</ul>';
@@ -955,9 +971,54 @@
     if (el) selecionaCurva(+el.dataset.n);
   });
 
+  // ---- torre de tempos (tecla P ou toque na posicao)
+  const TW = { box: $('tower'), sub: $('twSub'), head: $('twHead'), rows: $('twRows') };
+  let twUltimo = 0;
+  const seg = (ms) => DEC((ms / 1000).toFixed(3));
+  function renderTower(t) {
+    if (!t || !t.carros.length) {
+      txt(TW.sub, T('Sem dados dos outros carros ainda.'));
+      html(TW.head, ''); html(TW.rows, '');
+      return;
+    }
+    txt(TW.sub, t.corrida ? (t.volta ? T('Volta ') + t.volta + (t.total ? '/' + t.total : '') : '')
+      : T('Classificação pelo melhor tempo'));
+    const cols = t.corrida
+      ? ['P', T('PILOTO'), T('GAP'), T('INT.'), T('PNEU'), T('PARADAS'), T('ÚLTIMA'), T('MELHOR')]
+      : ['P', T('PILOTO'), T('MELHOR'), T('DIF.'), T('PNEU'), T('ÚLTIMA')];
+    html(TW.head, cols.map((c) => '<th>' + c + '</th>').join(''));
+    html(TW.rows, t.carros.map((k) => {
+      const vis = VISUAL[k.comp];
+      const pneu = vis ? '<span class="tw-comp" style="border-color:' + vis[1] + '">' + vis[0] + '</span>' +
+        (k.idade != null ? k.idade : '') : '—';
+      let nome = esc(k.eu ? T('VOCÊ') : k.nome);
+      if (k.noPit) nome += ' <em class="tag tw-tag">' + T('NO PIT') + '</em>';
+      else if (k.parou) nome += ' <em class="tag tw-tag ok">' + T('◀ parou') + '</em>';
+      if (k.pen) nome += ' <em class="tag tw-tag bad">+' + k.pen + 's</em>';
+      if (k.fora) nome += ' <em class="tag tw-tag">' + T('FORA') + '</em>';
+      const melhor = '<span class="' + (k.roxo ? 'tw-roxo' : '') + '">' + fmtLap(k.melhor) + '</span>';
+      let cel;
+      if (t.corrida) {
+        const gap = k.pos === 1 ? T('LÍDER') : k.voltasAtras ? T('+%d V').replace('%d', k.voltasAtras) : '+' + seg(k.gap);
+        const intv = k.pos === 1 ? '—' : k.voltasAtras ? '' : '+' + seg(k.int);
+        cel = [k.pos, nome, gap, intv, pneu, k.pits, fmtLap(k.ultima), melhor];
+      } else {
+        cel = [k.pos, nome, melhor, k.difPole ? '+' + seg(k.difPole) : k.melhor ? '—' : '', pneu, fmtLap(k.ultima)];
+      }
+      return '<tr class="' + (k.eu ? 'eu' : '') + (k.fora ? ' fora' : '') + '">' +
+        cel.map((v, j) => '<td' + (j === 0 ? ' class="n"' : '') + '>' + v + '</td>').join('') + '</tr>';
+    }).join(''));
+  }
+  function toggleTower(force) {
+    const open = force === undefined ? !TW.box.classList.contains('show') : force;
+    TW.box.classList.toggle('show', open);
+    if (open) { toggleAnalysis(false); renderTower(coach && coach.torre); }
+  }
+
   function toggleAnalysis(force) {
     const open = force === undefined ? !R.an.classList.contains('show') : force;
     R.an.classList.toggle('show', open);
+    if (open) TW.box.classList.remove('show');
     if (open && coach && coach.mapVer !== mapVer) loadMap(coach.mapVer);
     if (open && coach) renderAnalysis(coach);
   }
@@ -1046,9 +1107,11 @@
   R.mode.addEventListener('click', (e) => { e.stopPropagation(); cycleMode(); });
   R.corners.addEventListener('click', () => toggleAnalysis(true));
   $('aClose').addEventListener('click', () => toggleAnalysis(false));
+  $('twClose').addEventListener('click', () => toggleTower(false));
+  E.pos.closest('.kv').addEventListener('click', (e) => { e.stopPropagation(); toggleTower(true); });
   addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
-    if (k === 'escape') { toggleAnalysis(false); toggleCfg(false); return; }
+    if (k === 'escape') { toggleAnalysis(false); toggleTower(false); toggleCfg(false); return; }
     if (e.target.closest && e.target.closest('input, select, textarea')) return;   // digitando o nome
     if ((k === 'arrowleft' || k === 'arrowright') && R.an.classList.contains('show') && coach && coach.nCorners) {
       const n = coach.nCorners, atual = tcSel || 1;
@@ -1063,6 +1126,7 @@
       fetch('/api/treino', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ curva }) }).catch(() => {});
     } else if (k === 'a') toggleAnalysis();
+    else if (k === 'p') toggleTower();
     else if (k === 'v') cycleMode();
     else if (k === 'c') toggleCfg();
     else if (k === 'e') location.href = '/evolucao';

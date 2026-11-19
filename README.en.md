@@ -32,9 +32,10 @@ A car-cluster style dashboard for **F1 25**, built for a vertical second monitor
 - **Memory:** record and ideal lap per track, habits that keep repeating, a summary of each session and the **Progress** page with charts.
 - **Race:** replaces the in-game engineer. Uses the drivers' names and calls box box, the pit limiter, rival stops, undercut and overcut, safety car, penalties, weather and the drop zone in qualifying.
 - **Pit strategist:** learns what a stop costs at each track and predicts where you'll rejoin.
+- **Timing tower (key P):** the whole grid with gaps, intervals, tyre compound and age, stops, last and best lap.
 - **Steering wheel buttons:** ask about tyres, gaps, fuel, strategy and setup without taking your hands off the wheel.
 - **Time Trial:** single-corner practice mode, daily goals and achievements.
-- **Setup:** detects understeer and oversteer and suggests changes.
+- **Setup:** detects understeer and oversteer and suggests changes. When you change the setup in the garage, the analysis restarts by itself.
 - **Layouts:** portrait monitor, landscape monitor or tablet, and phone (compact, large text).
 - **Two languages:** English and Portuguese, for the menu, the dashboard and the engineer's voice.
 
@@ -200,13 +201,14 @@ The engineer measures the car's balance on entry, mid-corner and exit of every c
 | Problems on exit | On-throttle diff more open, smoother on the throttle |
 | One axle much hotter | Slightly lower pressure on that axle |
 
-It's a starting point: change one thing at a time.
+It's a starting point: change one thing at a time. When you change the setup in the garage (wings, suspension, pressures…), the engineer notices, drops the laps from the old setup and restarts the 3-lap count. Changes made on the MFD while driving, like brake bias and differential, don't restart the analysis.
 
 ## Shortcuts
 
 | Key | What it does |
 |---|---|
 | **A** | Last lap analysis: map, telemetry comparison, goals and setup. Use **← →** or click to change corner. |
+| **P** | Timing tower: the whole grid (or tap the position) |
 | **E** | Progress page |
 | **C** | Radio settings: language, name, voice, speed, volume and radio sound |
 | **V** | Voice: all → important only → off |

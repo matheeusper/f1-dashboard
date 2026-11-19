@@ -87,6 +87,8 @@ class CorridaMixin:
         self.cr_formacao = False
         self.cr_driver_status = None
         self.cr_corte = None
+        self.cr_torre_pits = {}   # carro -> (paradas, volta em que parou por ultimo)
+        self.cr_torre_melhor = {}  # carro -> melhor volta vista (quando o jogo nao manda o historico)
 
     # ================================================================ nomes
     def piloto(self, i):
@@ -123,6 +125,55 @@ class CorridaMixin:
             if lv[13] == pos and lv[26] in (2, 3):
                 return i
         return None
+
+    # ================================================================ torre de tempos (tecla P)
+    def torre_view(self):
+        """O grid inteiro para a torre: gaps, pneus, paradas e voltas de cada carro."""
+        d = self.d
+        al, s = d.all_lap, d.session
+        if not al or s is None:
+            return None
+        corrida = bool(s["isRace"])
+        sts, hist = d.all_status or [], d.hist or {}
+        carros = [i for i, lv in enumerate(al) if lv[26] >= 2 and lv[13] >= 1]
+        if not carros:
+            return None
+        for i in carros:
+            ult = al[i][0]
+            if ult > 0 and ult < self.cr_torre_melhor.get(i, 1e12):
+                self.cr_torre_melhor[i] = ult
+        melhores = {i: hist[i][0] if i in hist and hist[i][0] > 0 else self.cr_torre_melhor.get(i, 0)
+                    for i in carros}
+        melhores = {i: m for i, m in melhores.items() if m > 0}
+        pole = min(melhores.values()) if melhores else 0
+        lider = next((i for i in carros if al[i][13] == 1), None)
+        comp = s["trackLength"] or 0
+        linhas = []
+        for i in carros:
+            lv = al[i]
+            pits, volta = lv[16], lv[14]
+            ant = self.cr_torre_pits.get(i)
+            if ant is None or pits < ant[0]:
+                self.cr_torre_pits[i] = (pits, -99)
+            elif pits > ant[0]:
+                self.cr_torre_pits[i] = (pits, volta)
+            parou_em = self.cr_torre_pits[i][1]
+            st = sts[i] if i < len(sts) else None
+            atras = 0
+            if corrida and lider is not None and comp > 0 and i != lider:
+                atras = max(0, int((al[lider][11] - lv[11]) // comp))
+            melhor = melhores.get(i, 0)
+            linhas.append({
+                "pos": lv[13], "nome": self.piloto(i) or "P%d" % lv[13], "eu": i == d.player,
+                "gap": lv[9] * 60000 + lv[8], "int": lv[7] * 60000 + lv[6], "voltasAtras": atras,
+                "comp": st[0] if st else 0, "idade": st[1] if st else None,
+                "pits": pits, "noPit": lv[15] in (1, 2), "parou": 0 <= volta - parou_em <= 2,
+                "ultima": lv[0], "melhor": melhor, "difPole": melhor - pole if melhor and pole else None,
+                "roxo": bool(melhor and melhor == pole), "pen": lv[19], "fora": lv[26] >= 4,
+            })
+        linhas.sort(key=lambda x: (x["fora"], x["pos"]))
+        return {"corrida": corrida, "volta": al[lider][14] if lider is not None else None,
+                "total": s["totalLaps"] if corrida else None, "carros": linhas}
 
     # ================================================================ 2x por segundo
     def _cr_tick(self):

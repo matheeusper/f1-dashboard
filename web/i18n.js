@@ -125,7 +125,14 @@
     "Ajustes do rádio (tecla C)": "Radio settings (key C)",
     "Toque para abrir a análise (tecla A)": "Tap to open the analysis (key A)",
     "Mapa da pista": "Track map", "Telemetria comparada da curva": "Corner telemetry comparison",
-    "Ex.: Max": "e.g. Max", "IDIOMA · LANGUAGE": "LANGUAGE · IDIOMA"
+    "Ex.: Max": "e.g. Max", "IDIOMA · LANGUAGE": "LANGUAGE · IDIOMA",
+    "TORRE DE TEMPOS": "TIMING TOWER", "Tecla P ou toque na posição para abrir · Esc fecha": "Press P or tap the position to open · Esc closes",
+    "Sem dados dos outros carros ainda.": "No data from the other cars yet.",
+    "Classificação pelo melhor tempo": "Order by best lap time", "PILOTO": "DRIVER", "GAP": "GAP", "INT.": "INT.",
+    "PNEU": "TYRE", "PARADAS": "STOPS", "VOCÊ": "YOU", "NO PIT": "IN PIT", "◀ parou": "◀ pitted", "FORA": "OUT",
+    "+%d V": "+%d L",
+    "Acerto novo: ": "New setup: ",
+    "Acerto novo: a análise recomeça e aparece depois de 3 voltas lançadas.": "New setup: the analysis restarts and shows up after 3 flying laps."
   }/*FIM*/;
 
   const en = document.documentElement.lang === 'en';

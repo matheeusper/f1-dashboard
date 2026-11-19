@@ -9,6 +9,7 @@ pelo menos 3 voltas. As sugestoes usam os valores atuais do seu acerto.
 """
 import bisect
 import statistics
+import time
 from collections import deque
 
 from analise import ponto_entrada
@@ -29,6 +30,36 @@ def _lista(ns):
 
 
 class AcertoMixin:
+    ac_chave = None          # acerto (so o que muda na garagem) das voltas analisadas: sobrevive a troca de sessao
+    ac_chave_nova = None     # (chave, desde) enquanto o acerto lido for diferente
+    ac_novo = False          # a analise recomecou por causa de um acerto novo
+
+    def _ac_setup_check(self):
+        """Mudou o acerto na garagem? Recomeca a analise (as voltas antigas eram de outro carro)."""
+        su = self.d.setup
+        chave = su.get("chave") if su else None
+        if chave is None:
+            return
+        if self.ac_chave is None:
+            self.ac_chave = chave
+            return
+        if chave == self.ac_chave:
+            self.ac_chave_nova = None
+            return
+        agora = time.monotonic()
+        if self.ac_chave_nova is None or self.ac_chave_nova[0] != chave:
+            self.ac_chave_nova = (chave, agora)   # espera parar de mexer nos valores
+            return
+        if agora - self.ac_chave_nova[1] < 3:
+            return
+        self.ac_chave, self.ac_chave_nova = chave, None
+        if self.ac_voltas or self.ac_hist or self.ac_temp:
+            self._ac_reset()
+            self.ac_novo = True
+            self.ac_cache = self.ac_view()
+            self.say(tx("Acerto novo. Recomeço a análise do equilíbrio: preciso de 3 voltas lançadas."),
+                     pri=3, ttl=30, tom="calmo", chave="acerto_novo", cool=20)
+
     def _ac_reset(self):
         self.ac_hist = {}                 # curva -> fase -> ultimas medias
         self.ac_temp = deque(maxlen=6)    # (dianteiros - traseiros) por volta
@@ -36,6 +67,7 @@ class AcertoMixin:
         self.ac_voltas = 0
         self.ac_falado = None
         self.ac_ultima_fala = 0
+        self.ac_novo = False
 
     # ---------------------------------------------------------------- coleta
     def _ac_amostra(self, tel):
@@ -73,6 +105,8 @@ class AcertoMixin:
             if len(sp) >= 5:
                 h["spin"].append(sum(sp) / len(sp))
         self.ac_voltas += 1
+        if self.ac_voltas >= 3:
+            self.ac_novo = False
         self._ac_fala_periodica(num)
 
     # ---------------------------------------------------------------- conclusoes
@@ -168,8 +202,10 @@ class AcertoMixin:
     def _r_acerto(self):
         texto, _ = self.ac_texto()
         if texto is None:
-            self.responde(tx("Ainda preciso de %d voltas lançadas para analisar o equilíbrio do carro.")
-                          % max(1, 3 - self.ac_voltas))
+            falta = max(1, 3 - self.ac_voltas)
+            self.responde(tx("Acerto novo: ainda preciso de %d voltas lançadas para analisar o equilíbrio.") % falta
+                          if self.ac_novo else
+                          tx("Ainda preciso de %d voltas lançadas para analisar o equilíbrio do carro.") % falta)
         else:
             self.responde(texto)
 
@@ -184,4 +220,4 @@ class AcertoMixin:
             else:
                 itens.append("%s %s %s" % (tx("Subesterço") if tipo == "sub" else tx("Sobresterço"), tx(FASES[fase]), _lista(ns)))
         return {"voltas": self.ac_voltas, "achados": itens, "sugestoes": self.ac_sugestoes(achados) if achados else [],
-                "ok": texto is not None}
+                "ok": texto is not None, "novo": self.ac_novo}

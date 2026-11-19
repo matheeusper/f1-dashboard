@@ -351,6 +351,30 @@ def simular(host="127.0.0.1", port=20777, fmt=2025, hz=60, stop=None, seed=None,
             meus_pits = 1 if eu.lap > 8 or (eu.lap == 8 and not no_pit) else 0
             rival_pit = rival.lap == 5 and rival.lap_ms < 12000
             pits_rival = 1 if rival.lap > 5 or (rival.lap == 5 and not rival_pit) else 0
+            # o resto do grid (so para a torre de tempos ter os 20+ carros): ritmo fixo, metade para na volta 5-8
+            resto = [i for i in range(cars) if i not in (PLAYER, RIVAL, ATRAS, ABANDONA)] if corrida else []
+            grid_lap, grid_st = {}, {}
+            acum, base = 0, gap_l + gap_atras
+            for k, (i, pos_g) in enumerate(zip(resto, [1, 2] + list(range(6, cars + 1)))):
+                if pos_g == 1:
+                    lider_gap, intv = 0, 0
+                elif pos_g == 2:
+                    lider_gap, intv = 3500, 3500
+                else:
+                    intv = 1100 + (k * 577) % 1300
+                    acum += intv
+                    lider_gap = base + acum
+                d_g = eu.total() + (gap_l - lider_gap) / 1000 * max(eu.v, 10)
+                volta_g = max(1, int(d_g // LAP_LEN) + 1)
+                parada = 5 + pos_g % 4 if pos_g % 2 else 99
+                pits_g = 1 if volta_g > parada else 0
+                no_pit_g = 1 if volta_g == parada + 1 and d_g % LAP_LEN < 400 else 0
+                gl, gi = split_ms(lider_gap), split_ms(intv)
+                grid_lap[i] = (89800 + (pos_g * 137) % 1500 if volta_g > 1 else 0, 30000, 0, 0, 0, 0, gi[0], gi[1],
+                               gl[0], gl[1], d_g % LAP_LEN, d_g, 0.0, pos_g, volta_g, no_pit_g, pits_g, 0, 0, 0, 0, 0,
+                               0, 0, pos_g, 4, 2, no_pit_g, 0, 0, 0, 300.0, 1)
+                visual = 18 if pits_g else (16 if pos_g % 3 == 0 else 17)
+                grid_st[i] = (visual, volta_g - parada if pits_g else volta_g + 2)
             send(per_car(LAP_DATA, LAP, lap_vals(eu, minha_pos, gap_f, gap_l, warnings, invalida,
                                                  pit=1 if no_pit else 0, pits=meus_pits,
                                                  lane=int(eu.lap_ms) if no_pit else 0,
@@ -358,7 +382,7 @@ def simular(host="127.0.0.1", port=20777, fmt=2025, hz=60, stop=None, seed=None,
                          struct.pack("<BB", 255, 255),
                          extra={RIVAL: lap_vals(rival, 3, 1500, 5000, pit=1 if rival_pit else 0, pits=pits_rival,
                                                 extra_ms=21000 if rival.lap == 6 else 0),   # volta do pit: +21 s
-                                ATRAS: atras, ABANDONA: atras[:13] + (0,) + atras[14:]}))
+                                ATRAS: atras, ABANDONA: atras[:13] + (0,) + atras[14:], **grid_lap}))
             if frame % 300 == 0:
                 participantes()
 
@@ -374,7 +398,12 @@ def simular(host="127.0.0.1", port=20777, fmt=2025, hz=60, stop=None, seed=None,
                 h_rival = list(head)
                 h_rival[4], h_rival[13], h_rival[14], h_rival[15] = 0, 19 if pits_rival else 18, \
                     18 if pits_rival else 17, rival.lap - 5 if pits_rival else rival.lap + 2
-                send(per_car(STATUS, lay["status"], head + tail, extra={RIVAL: h_rival + tail}))
+                extra_st = {RIVAL: h_rival + tail}
+                for i, (visual, idade_g) in grid_st.items():
+                    h_g = list(head)
+                    h_g[4], h_g[13], h_g[14], h_g[15] = 0, visual + 1, visual, idade_g
+                    extra_st[i] = h_g + tail
+                send(per_car(STATUS, lay["status"], head + tail, extra=extra_st))
                 fw = 14 if eu.lap >= 2 else 0
                 furo = 65 if eu.lap >= 10 else 0     # furo no dianteiro esquerdo na volta 10
                 dmg = (wear[0], wear[1], wear[2], wear[3], 0, 0, furo, 0, 0, 0, 0, 0, 0, 0, 0, 0,

@@ -26,6 +26,10 @@ EN = {
     "diferencial no acelerador mais aberto": "on-throttle diff more open",
     " Sugestão: ": " Suggestion: ",
     "Acerto: ": "Setup: ",
+    "Acerto novo. Recomeço a análise do equilíbrio: preciso de 3 voltas lançadas.":
+        "New setup. Restarting the balance analysis: I need 3 flying laps.",
+    "Acerto novo: ainda preciso de %d voltas lançadas para analisar o equilíbrio.":
+        "New setup: I still need %d flying laps to read the balance.",
     "Ainda preciso de %d voltas lançadas para analisar o equilíbrio do carro.":
         "I still need %d flying laps to read the car balance.",
     "Pneus dianteiros mais quentes": "Front tyres running hotter",
