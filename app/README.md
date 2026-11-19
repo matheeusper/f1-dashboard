@@ -46,11 +46,13 @@ Os dados ficam na pasta `dados` ao lado do `.exe`: histórico, ajustes, `app.jso
 
 O botão segurado junto (View/Back) existe para não disparar nada sem querer enquanto você pilota. Para trocar um botão: ☰ → Controles e teclas → gravar, e aperte o botão novo no controle.
 
+**Falar com o engenheiro:** o próprio app grava o microfone e entende a pergunta com o **Whisper**, rodando no seu PC (offline, sem conta). Na primeira vez ele baixa o modelo de voz (~150 MB) para `dados\modelos`; o rádio mostra o progresso. Depois disso não precisa de internet para ouvir. A gravação para sozinha cerca de 1 s depois que você termina de falar.
+
 **Overlay:** funciona com o F1 25 em **tela cheia sem bordas** (borderless). Em tela cheia exclusiva o Windows não deixa nenhuma janela ficar por cima, e contornar isso exigiria mexer no jogo, o que o anti-cheat pune.
 
 ## Compilar
 
-Precisa do [Rust](https://rustup.rs) e do Visual Studio Build Tools com C++.
+Precisa do [Rust](https://rustup.rs), do Visual Studio Build Tools com C++ (inclui o CMake) e do [LLVM](https://github.com/llvm/llvm-project/releases) (o `libclang`, para compilar o Whisper). O `app\.cargo\config.toml` aponta o `LIBCLANG_PATH` para `C:\Program Files\LLVM\bin`; o CMake precisa estar no PATH (o `build-app.ps1` já coloca).
 
 ```powershell
 # desenvolvimento: roda o núcleo pelo código, com o uv (dados em app\target\debug\dados)
@@ -64,5 +66,5 @@ powershell -ExecutionPolicy Bypass -File build-app.ps1   # -> app\target\release
 ## Próximas etapas
 
 1. Portar o núcleo de Python para Rust, módulo por módulo: pacotes UDP, estado, engenheiro, análise, estratégia, histórico. No fim fica sem Python e com um `.exe` menor.
-2. Voz nativa: microfone com Whisper (offline) e as vozes neurais chamadas direto do Rust.
+2. Voz nativa: as vozes neurais do engenheiro chamadas direto do Rust (o ouvido com Whisper já é nativo).
 3. Atualização pelo próprio app (baixa a release nova e se substitui) e assinatura digital.

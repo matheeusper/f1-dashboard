@@ -153,7 +153,7 @@ fn restaurar_controles(app: AppHandle) {
     entrada::restaurar(&app);
 }
 
-/// Ouve uma pergunta no microfone (reconhecimento de fala do Windows) e devolve o texto.
+/// Ouve uma pergunta no microfone e transcreve com o Whisper (offline). Devolve o texto.
 #[tauri::command(async)]
 fn ouvir() -> Result<String, String> {
     ouvido::ouvir(&config::idioma())
@@ -164,9 +164,10 @@ fn parar_ouvir() {
     ouvido::parar();
 }
 
+/// Fase do ouvido (baixando o modelo, ouvindo, entendendo) para a pagina mostrar.
 #[tauri::command]
-fn abrir_privacidade_fala() {
-    ouvido::abrir_privacidade();
+fn estado_ouvido() -> ouvido::EstadoOuvido {
+    ouvido::estado()
 }
 
 #[tauri::command]
@@ -198,7 +199,7 @@ fn main() {
             restaurar_controles,
             ouvir,
             parar_ouvir,
-            abrir_privacidade_fala,
+            estado_ouvido,
             sair
         ])
         .setup(|app| {

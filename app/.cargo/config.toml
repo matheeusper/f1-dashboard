@@ -1,0 +1,3 @@
+# Whisper (whisper-rs) gera as bindings com o libclang do LLVM (instalado em C:\Program Files\LLVM).
+[env]
+LIBCLANG_PATH = "C:\\Program Files\\LLVM\\bin"

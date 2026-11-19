@@ -649,16 +649,14 @@
     const c = actx;
     if (c && c.state === 'running') { const { out } = cadeia(c, false); fechaRadio(c, out, c.currentTime + 0.01); }
   }
-  // no app nativo: o reconhecimento de fala do Windows (o WebView2 nao tem o do Chrome)
+  // no app nativo: o app grava o microfone e transcreve com o Whisper, offline (o WebView2 nao tem o
+  // reconhecimento do Chrome)
   const ERROS_OUVIR = {
     nada: () => T('Não ouvi nada. Aperte e fale de novo.'),
     microfone: () => T('Não consegui usar o microfone. Confira se ele está conectado e liberado para apps em Privacidade > Microfone.'),
-    idioma: () => T('O Windows não tem reconhecimento de fala neste idioma.'),
-    rede: () => T('Sem internet para reconhecer a voz.'),
-    audio: () => T('Não deu para entender: muito barulho ou som baixo. Tente de novo mais perto do microfone.'),
-    desconhecido: () => T('O Windows não conseguiu reconhecer agora. Tente de novo.'),
-    privacidade: () => T('Ligue o "Reconhecimento de fala online" do Windows: abri a tela para você.'),
+    modelo: () => T('Não consegui baixar o modelo de voz. Confira a internet e tente de novo.'),
   };
+  const FASES_OUVIR = { ouvindo: () => '🎤 ' + T('Ouvindo…'), entendendo: () => '🎤 ' + T('Entendendo…') };
   async function ouvirNativo() {
     const inv = window.__TAURI__.core.invoke;
     if (ouvindo) { inv('parar_ouvir').catch(() => {}); return; }   // apertou de novo: para de ouvir
@@ -670,7 +668,15 @@
     cls(micBtn, 'on', true);
     avisoRadio('🎤 ' + T('Ouvindo…'));
     let texto = null, erro = null;
+    const acompanha = setInterval(async () => {   // baixando o modelo (1a vez), ouvindo, entendendo
+      try {
+        const e = await inv('estado_ouvido');
+        if (e.fase === 'baixando') avisoRadio('⬇ ' + T('Baixando o modelo de voz (só na primeira vez): %d%').replace('%d', e.baixado));
+        else if (FASES_OUVIR[e.fase]) avisoRadio(FASES_OUVIR[e.fase]());
+      } catch (err) { /* segue */ }
+    }, 300);
     try { texto = await inv('ouvir'); } catch (e) { erro = String(e); }
+    clearInterval(acompanha);
     fimOuvir();
     if (texto) {
       avisoRadio('🎤 “' + texto + '”');
@@ -680,7 +686,6 @@
     }
     const cod = (erro || '').split(':')[0];
     avisoRadio(ERROS_OUVIR[cod] ? ERROS_OUVIR[cod]() : T('Não consegui ouvir: ') + erro);
-    if (cod === 'privacidade') inv('abrir_privacidade_fala').catch(() => {});
   }
 
   function ouvir() {

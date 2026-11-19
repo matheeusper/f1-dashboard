@@ -141,12 +141,11 @@
     "Overlay F1 25": "F1 25 Overlay",
     "Não consegui usar o microfone. Confira se ele está conectado e liberado para apps em Privacidade > Microfone.":
       "Couldn't use the microphone. Check that it's connected and allowed for apps in Privacy > Microphone.",
-    "O Windows não tem reconhecimento de fala neste idioma.": "Windows doesn't have speech recognition for this language.",
-    "Ligue o \"Reconhecimento de fala online\" do Windows: abri a tela para você.": "Turn on Windows \"Online speech recognition\": I opened the screen for you.",
+    "Não consegui baixar o modelo de voz. Confira a internet e tente de novo.": "Couldn't download the voice model. Check your internet and try again.",
+    "Entendendo…": "Understanding…",
+    "Baixando o modelo de voz (só na primeira vez): %d%": "Downloading the voice model (first time only): %d%",
     "Não consegui ouvir: ": "Couldn't listen: ",
-    "Não deu para entender: muito barulho ou som baixo. Tente de novo mais perto do microfone.":
-      "Couldn't make it out: too much noise or too quiet. Try again closer to the microphone.",
-    "O Windows não conseguiu reconhecer agora. Tente de novo.": "Windows couldn't recognise it this time. Try again.",
+
     "Painel aberto pela rede": "Dashboard opened over the network", "Fonte: ": "Source: ", "iniciando…": "starting…",
     "No celular ou tablet, na mesma rede, abra:": "On your phone or tablet, on the same network, open:", "Ligando…": "Turning on…",
     "Trocando a fonte… o painel reconecta sozinho.": "Switching the source… the dashboard reconnects by itself.",

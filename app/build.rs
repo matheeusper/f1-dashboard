@@ -18,7 +18,7 @@ const COMANDOS: &[&str] = &[
     "restaurar_controles",
     "ouvir",
     "parar_ouvir",
-    "abrir_privacidade_fala",
+    "estado_ouvido",
     "sair",
 ];
 

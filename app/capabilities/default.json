@@ -22,7 +22,7 @@
     "allow-restaurar-controles",
     "allow-ouvir",
     "allow-parar-ouvir",
-    "allow-abrir-privacidade-fala",
+    "allow-estado-ouvido",
     "allow-sair"
   ]
 }
