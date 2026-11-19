@@ -132,6 +132,12 @@
     "PNEU": "TYRE", "PARADAS": "STOPS", "VOCÊ": "YOU", "NO PIT": "IN PIT", "◀ parou": "◀ pitted", "FORA": "OUT",
     "+%d V": "+%d L",
     "Acerto novo: ": "New setup: ",
+    "Reconhecimento de voz indisponível aqui. Use o Chrome ou o Edge no PC.": "Voice recognition isn't available here. Use Chrome or Edge on the PC.",
+    "Ouvindo…": "Listening…", "Permita o microfone para falar com o engenheiro.": "Allow the microphone to talk to the engineer.",
+    "Não ouvi nada. Aperte e fale de novo.": "Didn't hear anything. Press and talk again.",
+    "Sem internet para reconhecer a voz.": "No internet connection for voice recognition.",
+    "Nenhum microfone encontrado.": "No microphone found.", "O servidor do painel não respondeu.": "The dashboard server didn't respond.",
+    "Falar com o engenheiro (tecla M ou UDP Action 11)": "Talk to the engineer (key M or UDP Action 11)",
     "Acerto novo: a análise recomeça e aparece depois de 3 voltas lançadas.": "New setup: the analysis restarts and shows up after 3 flying laps."
   }/*FIM*/;
 

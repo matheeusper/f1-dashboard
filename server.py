@@ -112,7 +112,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.partition("?")[0]
-        if path not in ("/api/config", "/api/pergunta", "/api/treino"):
+        if path not in ("/api/config", "/api/pergunta", "/api/treino", "/api/voz"):
             return self._send(b"Nao encontrado", "text/plain", 404)
         origem = self.headers.get("Origin")
         if origem and origem.split("://", 1)[-1] != self.headers.get("Host"):
@@ -132,6 +132,13 @@ class Handler(BaseHTTPRequestHandler):
             with decoder.lock:
                 decoder.eng.ptt += 1
                 decoder.eng.tr_alternar(curva)
+            return self._json({"ok": True})
+        if path == "/api/voz":        # pergunta falada (o painel transcreve com o reconhecimento de voz do navegador)
+            texto = dados.get("texto")
+            if not isinstance(texto, str) or not texto.strip():
+                return self._send(b"texto vazio", "text/plain", 400)
+            with decoder.lock:
+                decoder.eng.ouvir(texto.strip()[:300])
             return self._json({"ok": True})
         if path == "/api/pergunta":   # teclas 1-0 do painel: o mesmo que os botoes do volante
             try:

@@ -633,10 +633,69 @@
     speak(T('Rádio ativado.'), 'normal');
   });
 
+  // ---- perguntar pela voz (UDP Action 11, tecla M ou 🎤): o navegador transcreve e o servidor entende
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micOk = !!SR && window.isSecureContext;   // no celular pela rede (http) o navegador nao deixa
+  const micBtn = $('micBtn');
+  let ouvindo = false, rec = null, recTimer = null;
+  cls(micBtn, 'sem', !micOk);
+  function avisoRadio(t) { txt(R.msg, t); cls(R.msg, 'p1', false); }
+  function fimOuvir() {
+    ouvindo = false;
+    clearTimeout(recTimer);
+    cls(R.box, 'ouvindo', false);
+    cls(micBtn, 'on', false);
+    const c = actx;
+    if (c && c.state === 'running') { const { out } = cadeia(c, false); fechaRadio(c, out, c.currentTime + 0.01); }
+  }
+  function ouvir() {
+    if (ouvindo) { if (rec) rec.stop(); return; }      // apertou de novo: para de ouvir
+    if (!micOk) { avisoRadio(T('Reconhecimento de voz indisponível aqui. Use o Chrome ou o Edge no PC.')); return; }
+    pararFala();                                         // ele para de falar para ouvir voce
+    const c = audioCtx();
+    if (c && c.state === 'running') { const { out } = cadeia(c, false); abreRadio(c, out, c.currentTime + 0.01); }
+    ouvindo = true;
+    cls(R.box, 'ouvindo', true);
+    cls(micBtn, 'on', true);
+    avisoRadio('🎤 ' + T('Ouvindo…'));
+    let final = '';
+    rec = new SR();
+    rec.lang = LOCALE;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.continuous = false;                              // para sozinho quando voce fica em silencio
+    rec.onresult = (e) => {
+      let parcial = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript;
+        else parcial += e.results[i][0].transcript;
+      }
+      avisoRadio('🎤 ' + (final + parcial || T('Ouvindo…')));
+    };
+    rec.onerror = (e) => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') avisoRadio(T('Permita o microfone para falar com o engenheiro.'));
+      else if (e.error === 'no-speech') avisoRadio(T('Não ouvi nada. Aperte e fale de novo.'));
+      else if (e.error === 'network') avisoRadio(T('Sem internet para reconhecer a voz.'));
+      else if (e.error === 'audio-capture') avisoRadio(T('Nenhum microfone encontrado.'));
+    };
+    rec.onend = () => {
+      fimOuvir();
+      const texto = final.trim();
+      if (!texto) return;
+      avisoRadio('🎤 “' + texto + '”');
+      fetch('/api/voz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto }) }).catch(() => avisoRadio(T('O servidor do painel não respondeu.')));
+    };
+    clearTimeout(recTimer);
+    recTimer = setTimeout(() => { if (ouvindo && rec) rec.stop(); }, 9000);   // no maximo 9 s por pergunta
+    try { rec.start(); } catch (e) { fimOuvir(); }
+  }
+  micBtn.addEventListener('click', (e) => { e.stopPropagation(); ouvir(); });
+
   const heard = new Set();
   const queue = [];
   const log = [];
-  let primed = false, shown = null, reportKey = '', lastPtt = null;
+  let primed = false, shown = null, reportKey = '', lastPtt = null, lastEscuta = null;
 
   function showMsg(m) {
     shown = m;
@@ -657,6 +716,10 @@
       volume = c.voice.volume / 100;
       radioFx = c.voice.radio !== false;
       chiado = (c.voice.chiado == null ? 35 : c.voice.chiado) / 100;
+    }
+    if (c.escuta !== lastEscuta) {     // apertou o botao de voz no volante: abre o radio e ouve
+      if (lastEscuta !== null && c.escuta != null) ouvir();
+      lastEscuta = c.escuta;
     }
     if (c.ptt !== lastPtt) {           // apertou o botao do radio no volante
       if (lastPtt !== null && mode !== 'mudo') clique();
@@ -709,7 +772,7 @@
     for (let i = queue.length - 1; i >= 0; i--) {
       if (now - queue[i].rx > queue[i].ttl * 1000) queue.splice(i, 1);
     }
-    if (speaking || blocked || !queue.length || mode === 'mudo') return;
+    if (speaking || blocked || ouvindo || !queue.length || mode === 'mudo') return;
     const ok = queue.filter((m) => mode === 'tudo' || m.pri <= 2);
     if (!ok.length) return;
     ok.sort((a, b) => a.pri - b.pri || a.rx - b.rx);
@@ -1127,6 +1190,7 @@
         body: JSON.stringify({ curva }) }).catch(() => {});
     } else if (k === 'a') toggleAnalysis();
     else if (k === 'p') toggleTower();
+    else if (k === 'm') ouvir();
     else if (k === 'v') cycleMode();
     else if (k === 'c') toggleCfg();
     else if (k === 'e') location.href = '/evolucao';

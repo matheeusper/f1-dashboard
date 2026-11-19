@@ -34,6 +34,7 @@ Painel em estilo cluster de carro para o **F1 25**, feito para um segundo monito
 - **Estrategista de pit:** aprende quanto custa um pit em cada pista e prevê onde você volta à pista.
 - **Torre de tempos (tecla P):** o grid inteiro com gaps, intervalo, composto e idade dos pneus, paradas, última e melhor volta.
 - **Botões do volante:** pergunte sobre pneus, gaps, combustível, estratégia e acerto sem tirar as mãos do volante.
+- **Pergunte pela voz:** aperte um botão e fale (*"como estão os pneus?"*, *"como estou na curva 3?"*): ele responde no rádio.
 - **Time Trial:** modo treino de uma curva, metas do dia e conquistas.
 - **Acerto:** detecta subesterço e sobresterço e sugere ajustes. Quando você muda o acerto na garagem, a análise recomeça sozinha.
 - **Layouts:** monitor em pé, monitor ou tablet deitado, e celular (compacto, letras grandes).
@@ -177,6 +178,17 @@ O F1 25 tem os botões **"UDP Action 1" a "UDP Action 12"**. Mapeie-os em **Conf
 
 No painel, as teclas **1 a 9** e **0** (que vale como 10) fazem as mesmas perguntas.
 
+### Falar com o engenheiro
+
+Aperte **UDP Action 11** no volante, a tecla **M** ou o **🎤** no rádio do painel. Você ouve um bipe, o rádio fica verde com *"Ouvindo…"*, e é só falar. Ele para de ouvir sozinho quando você fica em silêncio. Por exemplo:
+
+- *"Como estão os pneus?"*, *"qual o gap pro da frente?"*, *"quanto de combustível?"*, *"vai chover?"*
+- *"Onde estou perdendo tempo?"*, *"qual a estratégia de pit?"*, *"como está o acerto?"*
+- *"Como estou na curva 3?"*: perda, motivo e onde a referência freia naquela curva na última volta.
+- *"Repete"*, *"fica quieto"*.
+
+Usa o reconhecimento de voz do Chrome ou do Edge, que precisa de internet. Na primeira vez, o painel pede permissão para usar o microfone. Com fone, ele não ouve o próprio engenheiro. Não funciona no celular pela rede local, porque o navegador só libera o microfone em conexão segura.
+
 ### Modo treino com metas (só no Time Trial)
 
 - **Metas do dia:**
@@ -209,6 +221,7 @@ O engenheiro mede o equilíbrio do carro na entrada, no meio e na saída de cada
 |---|---|
 | **A** | Análise da última volta: mapa, telemetria comparada, metas e acerto. Use **← →** ou clique para trocar de curva. |
 | **P** | Torre de tempos: o grid inteiro (ou toque no P da posição) |
+| **M** | Falar com o engenheiro (ou o 🎤 no rádio) |
 | **E** | Página Evolução |
 | **C** | Ajustes do rádio: idioma, nome, voz, velocidade, volume e som de rádio |
 | **V** | Voz: tudo → só importante → desligada |

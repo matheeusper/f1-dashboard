@@ -34,6 +34,7 @@ A car-cluster style dashboard for **F1 25**, built for a vertical second monitor
 - **Pit strategist:** learns what a stop costs at each track and predicts where you'll rejoin.
 - **Timing tower (key P):** the whole grid with gaps, intervals, tyre compound and age, stops, last and best lap.
 - **Steering wheel buttons:** ask about tyres, gaps, fuel, strategy and setup without taking your hands off the wheel.
+- **Ask by voice:** press a button and talk (*"how are my tyres?"*, *"how am I doing in turn 3?"*): he answers on the radio.
 - **Time Trial:** single-corner practice mode, daily goals and achievements.
 - **Setup:** detects understeer and oversteer and suggests changes. When you change the setup in the garage, the analysis restarts by itself.
 - **Layouts:** portrait monitor, landscape monitor or tablet, and phone (compact, large text).
@@ -177,6 +178,17 @@ F1 25 has **"UDP Action 1" to "UDP Action 12"** buttons. Map them in **Settings 
 
 On the dashboard, keys **1 to 9** and **0** (which counts as 10) ask the same questions.
 
+### Talk to the engineer
+
+Press **UDP Action 11** on your wheel, the **M** key or the **🎤** on the dashboard radio. You hear a beep, the radio turns green with *"Listening…"*, and you just talk. He stops listening by himself when you go quiet. For example:
+
+- *"How are my tyres?"*, *"what's the gap ahead?"*, *"how much fuel?"*, *"is it going to rain?"*
+- *"Where am I losing time?"*, *"what's the pit strategy?"*, *"how's the setup?"*
+- *"How am I doing in turn 3?"*: time lost, why, and where the reference brakes in that corner on the last lap.
+- *"Say again"*, *"quiet please"*.
+
+It uses Chrome's or Edge's speech recognition, which needs the internet. The first time, the dashboard asks for permission to use the microphone. With headphones, it won't hear the engineer himself. It doesn't work on a phone over the local network, because the browser only allows the microphone on a secure connection.
+
 ### Practice mode with goals (Time Trial only)
 
 - **Daily goals:**
@@ -209,6 +221,7 @@ It's a starting point: change one thing at a time. When you change the setup in 
 |---|---|
 | **A** | Last lap analysis: map, telemetry comparison, goals and setup. Use **← →** or click to change corner. |
 | **P** | Timing tower: the whole grid (or tap the position) |
+| **M** | Talk to the engineer (or the 🎤 on the radio) |
 | **E** | Progress page |
 | **C** | Radio settings: language, name, voice, speed, volume and radio sound |
 | **V** | Voice: all → important only → off |

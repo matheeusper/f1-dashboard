@@ -17,6 +17,7 @@ from acerto import AcertoMixin
 from corrida import CorridaMixin, primeiro_nome
 from estrategia import EstrategiaMixin
 from idioma import N_, tx
+from ouvido import intencao
 from treino import TreinoMixin
 
 SECOS = (16, 17, 18)
@@ -26,7 +27,8 @@ MISTURA = [N_("pobre"), N_("padrão"), N_("rica"), N_("máxima")]
 # botoes "UDP Action N" do jogo (mapeie no volante): o que cada um pergunta ao engenheiro
 BOTOES = {1: N_("Pneus"), 2: N_("Gaps"), 3: N_("Combustível e bateria"), 4: N_("Onde estou perdendo"),
           5: N_("Clima e pit"), 6: N_("Repetir a última"), 7: N_("Silêncio (só o essencial)"), 8: N_("Estratégia de pit"),
-          9: N_("Metas e treino"), 10: N_("Acerto do carro")}
+          9: N_("Metas e treino"), 10: N_("Acerto do carro"), 11: N_("Falar com o engenheiro (voz)")}
+BOTAO_VOZ = 11
 PECAS = {"fwL": N_("na asa dianteira esquerda"), "fwR": N_("na asa dianteira direita"),
          "rearWing": N_("na asa traseira"), "floor": N_("no assoalho"), "diffuser": N_("no difusor"),
          "sidepod": N_("na lateral"), "gearbox": N_("no câmbio"), "engine": N_("no motor")}
@@ -62,6 +64,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self._ultima_frase = {}
         self.btn_prev = 0
         self.ptt = 0             # conta os apertos de botao (o painel toca o "clique" do radio)
+        self.escuta = 0          # conta os apertos do botao de voz (o painel comeca a ouvir o microfone)
         self.silencio = False    # botao 7: so o essencial
         try:
             from historico import Historico
@@ -934,6 +937,9 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
     # ================================================================ botoes do volante
     def pergunta(self, n):
         """Botao 'UDP Action n' (ou tecla n no painel): responde na hora."""
+        if n == BOTAO_VOZ:       # o painel abre o radio e ouve a pergunta (ver ouvir)
+            self.escuta += 1
+            return
         self.ptt += 1
         fn = {1: self._r_pneus, 2: self._r_gaps, 3: self._r_combustivel, 4: self._r_perdendo,
               5: self._r_clima, 6: self._r_repetir, 7: self._r_silencio, 8: self._r_estrategia,
@@ -942,6 +948,42 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             self.responde(tx("Botão %d ainda sem função.") % n)
         elif self._seguro(fn) is False:
             self.responde(tx("Ainda sem dados pra isso. Entra na pista que eu te passo."))
+
+    def ouvir(self, texto):
+        """Pergunta falada (o painel transcreve): vira uma das perguntas dos botoes ou 'curva N'."""
+        tipo, n = intencao(texto)
+        if tipo == "curva":
+            self.ptt += 1
+            self._seguro(self._r_curva, n)
+        elif tipo == "pergunta":
+            self.pergunta(n)
+        else:
+            self.responde(tx("Não entendi. Pergunte sobre pneus, gaps, combustível, estratégia ou uma curva."))
+
+    def _r_curva(self, n):
+        """'Como estou na curva N?': perda, motivo e alvo de frenagem da ultima volta nessa curva."""
+        rep = self.report
+        if not rep or not rep["corners"]:
+            self.responde(tx("Ainda não tenho volta pra comparar. Faz uma volta limpa e me pergunta de novo."))
+            return
+        c = next((c for c in rep["corners"] if c["n"] == n), None)
+        if c is None:
+            self.responde(tx("A pista tem %d curvas mapeadas, não achei a curva %d.") % (len(self.corners), n))
+            return
+        perda = c.get("loss")
+        if perda is None:
+            partes = [tx("Curva %d: ainda sem referência pra comparar.") % n]
+        elif perda <= -0.03:
+            partes = [tx("Curva %d: você foi %s mais rápido que a referência.") % (n, fala_dif(-perda))]
+        elif perda < 0.03:
+            partes = [tx("Curva %d: no mesmo tempo da referência.") % n]
+        else:
+            partes = [tx("Curva %d: perdeu %s") % (n, fala_dif(perda)) + (": " + c["tip"] if c.get("tip") else "") + "."]
+        if c.get("bpRef"):
+            partes.append(tx("A referência freia a %d metros.") % c["bpRef"])
+        if c.get("habit"):
+            partes.append(tx("Seu vício ali: %s.") % c["habit"])
+        self.responde(" ".join(partes))
 
     def responde(self, texto, show=None, tom="normal", chamar=None):
         self.say(texto, pri=2, ttl=15, show=show, tom=tom, resp=True, chamar=chamar)
@@ -1125,7 +1167,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
                       "ttl": m["ttl"], "tom": m["tom"], "resp": m["resp"],
                       "age": int((agora - m["t"]) * 1000)} for m in self.msgs],
             "voice": self._voz_view(),
-            "ptt": self.ptt, "silencio": self.silencio,
+            "ptt": self.ptt, "escuta": self.escuta, "silencio": self.silencio,
             "pit": self._seguro(self.es_view), "live": self.ms_view(),
             "treino": self.tr_view(), "acerto": self.ac_cache, "torre": self._seguro(self.torre_view),
             "talk": self.talk, "report": self.report, "mapVer": self.map_ver,
