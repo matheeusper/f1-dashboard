@@ -65,6 +65,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self.btn_prev = 0
         self.ptt = 0             # conta os apertos de botao (o painel toca o "clique" do radio)
         self.escuta = 0          # conta os apertos do botao de voz (o painel comeca a ouvir o microfone)
+        self.cmd = {"seq": 0, "acao": None}   # comando do app nativo para a tela (torre, analise...)
         self.silencio = False    # botao 7: so o essencial
         try:
             from historico import Historico
@@ -949,6 +950,18 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         elif self._seguro(fn) is False:
             self.responde(tx("Ainda sem dados pra isso. Entra na pista que eu te passo."))
 
+    COMANDOS = ("torre", "analise", "ajustes", "fechar")
+
+    def comando(self, acao):
+        """Comando vindo do app nativo (tecla global ou controle) para a tela do painel."""
+        if acao == "falar":
+            self.pergunta(BOTAO_VOZ)
+            return True
+        if acao not in self.COMANDOS:
+            return False
+        self.cmd = {"seq": self.cmd["seq"] + 1, "acao": acao}
+        return True
+
     def ouvir(self, texto):
         """Pergunta falada (o painel transcreve): vira uma das perguntas dos botoes ou 'curva N'."""
         tipo, n = intencao(texto)
@@ -1167,7 +1180,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
                       "ttl": m["ttl"], "tom": m["tom"], "resp": m["resp"],
                       "age": int((agora - m["t"]) * 1000)} for m in self.msgs],
             "voice": self._voz_view(),
-            "ptt": self.ptt, "escuta": self.escuta, "silencio": self.silencio,
+            "ptt": self.ptt, "escuta": self.escuta, "cmd": self.cmd, "silencio": self.silencio,
             "pit": self._seguro(self.es_view), "live": self.ms_view(),
             "treino": self.tr_view(), "acerto": self.ac_cache, "torre": self._seguro(self.torre_view),
             "talk": self.talk, "report": self.report, "mapVer": self.map_ver,

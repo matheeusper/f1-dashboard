@@ -695,7 +695,7 @@
   const heard = new Set();
   const queue = [];
   const log = [];
-  let primed = false, shown = null, reportKey = '', lastPtt = null, lastEscuta = null;
+  let primed = false, shown = null, reportKey = '', lastPtt = null, lastEscuta = null, lastCmd = null;
 
   function showMsg(m) {
     shown = m;
@@ -716,6 +716,16 @@
       volume = c.voice.volume / 100;
       radioFx = c.voice.radio !== false;
       chiado = (c.voice.chiado == null ? 35 : c.voice.chiado) / 100;
+    }
+    if (c.cmd && c.cmd.seq !== lastCmd) {   // comando do app nativo (tecla global ou controle)
+      if (lastCmd !== null) {
+        const a = c.cmd.acao;
+        if (a === 'torre') toggleTower();
+        else if (a === 'analise') toggleAnalysis();
+        else if (a === 'ajustes') toggleCfg();
+        else if (a === 'fechar') { toggleTower(false); toggleAnalysis(false); toggleCfg(false); }
+      }
+      lastCmd = c.cmd.seq;
     }
     if (c.escuta !== lastEscuta) {     // apertou o botao de voz no volante: abre o radio e ouve
       if (lastEscuta !== null && c.escuta != null) ouvir();

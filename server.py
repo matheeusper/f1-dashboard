@@ -35,6 +35,8 @@ STATIC = {
     "/evolucao": ("evolucao.html", "text/html; charset=utf-8"),
     "/evolucao.js": ("evolucao.js", "application/javascript; charset=utf-8"),
     "/i18n.js": ("i18n.js", "application/javascript; charset=utf-8"),
+    "/overlay": ("overlay.html", "text/html; charset=utf-8"),
+    "/overlay.js": ("overlay.js", "application/javascript; charset=utf-8"),
     "/icone.png": ("icone.png", "image/png"),
     "/favicon.ico": ("icone.png", "image/png"),
 }
@@ -112,7 +114,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.partition("?")[0]
-        if path not in ("/api/config", "/api/pergunta", "/api/treino", "/api/voz"):
+        if path not in ("/api/config", "/api/pergunta", "/api/treino", "/api/voz", "/api/comando"):
             return self._send(b"Nao encontrado", "text/plain", 404)
         origem = self.headers.get("Origin")
         if origem and origem.split("://", 1)[-1] != self.headers.get("Host"):
@@ -133,6 +135,11 @@ class Handler(BaseHTTPRequestHandler):
                 decoder.eng.ptt += 1
                 decoder.eng.tr_alternar(curva)
             return self._json({"ok": True})
+        if path == "/api/comando":    # app nativo (teclas globais, controle): abre telas no painel
+            acao = dados.get("acao")
+            with decoder.lock:
+                ok = decoder.eng.comando(acao)
+            return self._json({"ok": ok}) if ok else self._send(b"acao invalida", "text/plain", 400)
         if path == "/api/voz":        # pergunta falada (o painel transcreve com o reconhecimento de voz do navegador)
             texto = dados.get("texto")
             if not isinstance(texto, str) or not texto.strip():

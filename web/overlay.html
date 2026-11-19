@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overlay F1 25</title>
+<style>
+  :root {
+    --fundo: rgba(8, 11, 17, .78); --linha: rgba(255, 255, 255, .10); --texto: #eaf0f8; --dim: #8a96a8;
+    --ciano: #2de2e6; --verde: #3ddc84; --amarelo: #ffd23f; --vermelho: #ff4d5a; --roxo: #b973ff;
+  }
+  html, body { margin: 0; background: transparent; overflow: hidden; }
+  body { font-family: "Bahnschrift", "Segoe UI", system-ui, sans-serif; color: var(--texto); user-select: none; }
+  .hud { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px;
+    align-items: stretch; transition: opacity .4s; }
+  .hud.off { opacity: 0; }
+  .c { background: var(--fundo); border: 1px solid var(--linha); border-radius: 12px; padding: 6px 14px;
+    display: flex; flex-direction: column; justify-content: center; min-width: 70px; backdrop-filter: blur(6px); }
+  .l { font-size: 11px; letter-spacing: 1.6px; color: var(--dim); text-transform: uppercase; white-space: nowrap; }
+  .v { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .v small { font-size: 14px; color: var(--dim); font-weight: 500; }
+  .neg { color: var(--verde); } .pos { color: var(--vermelho); } .warn { color: var(--amarelo); }
+  .rival { display: grid; grid-template-columns: auto auto; column-gap: 10px; row-gap: 2px; align-items: baseline; }
+  .rival .v { font-size: 17px; }
+  .radio { position: absolute; top: 86px; left: 50%; transform: translateX(-50%); max-width: 900px;
+    background: var(--fundo); border: 1px solid var(--linha); border-left: 4px solid var(--ciano); border-radius: 12px;
+    padding: 8px 16px; font-size: 19px; line-height: 1.3; opacity: 0; transition: opacity .35s; }
+  .radio.show { opacity: 1; }
+  .radio.p1 { border-left-color: var(--vermelho); }
+  .radio b { color: var(--ciano); font-size: 12px; letter-spacing: 1.6px; display: block; }
+  .ms { position: absolute; top: 86px; right: 24px; background: var(--fundo); border: 1px solid var(--linha);
+    border-radius: 12px; padding: 6px 14px; font-size: 22px; font-weight: 700; opacity: 0; transition: opacity .3s; }
+  .ms.show { opacity: 1; }
+  .ms small { display: block; font-size: 11px; letter-spacing: 1.6px; color: var(--dim); font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="hud off" id="hud">
+    <div class="c"><span class="l">POS</span><span class="v" id="pos">–</span></div>
+    <div class="c"><span class="l" id="lapL">VOLTA</span><span class="v" id="lap">–</span></div>
+    <div class="c"><span class="l">DELTA</span><span class="v" id="delta">—</span></div>
+    <div class="c rival"><span class="l">▲</span><span class="v" id="frente">—</span><span class="l">▼</span><span class="v" id="atras">—</span></div>
+    <div class="c"><span class="l">ERS</span><span class="v" id="ers">–</span></div>
+    <div class="c"><span class="l">COMB.</span><span class="v" id="fuel">–</span></div>
+  </div>
+  <div class="radio" id="radio"><b>RÁDIO</b><span id="msg"></span></div>
+  <div class="ms" id="ms"></div>
+<script src="i18n.js"></script>
+<script src="overlay.js"></script>
+</body>
+</html>

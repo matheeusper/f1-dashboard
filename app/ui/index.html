@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Painel F1 25</title>
+<style>
+  :root {
+    --bg: #05070b; --card: #111823; --card2: #1a2433; --linha: #26324a; --texto: #eaf0f8; --dim: #8a96a8;
+    --ciano: #2de2e6; --verde: #3ddc84; --vermelho: #ff4d5a; --amarelo: #ffd23f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--texto);
+    font-family: "Bahnschrift", "Segoe UI", system-ui, sans-serif; user-select: none; }
+  body { padding: 22px 26px; display: flex; flex-direction: column; gap: 16px; }
+  .topo { display: flex; align-items: center; gap: 14px; }
+  .topo img { width: 58px; height: 58px; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: .5px; }
+  .sub { color: var(--dim); font-size: 14px; }
+  .modos { display: flex; flex-direction: column; gap: 9px; }
+  .modo { background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 11px 16px; cursor: pointer;
+    transition: background .12s, border-color .12s; position: relative; }
+  .modo:hover { background: var(--card2); }
+  .modo.ativo { border-color: var(--ciano); }
+  .modo b { display: block; font-size: 16px; }
+  .modo span { color: var(--dim); font-size: 13px; }
+  .modo .estado { position: absolute; right: 14px; top: 12px; font-size: 12px; letter-spacing: 1px; }
+  .estado.ok { color: var(--verde); } .estado.sub { color: var(--amarelo); } .estado.erro { color: var(--vermelho); }
+  .info { background: var(--card); border: 1px solid var(--linha); border-radius: 12px; padding: 10px 14px; font-size: 13px;
+    color: var(--dim); line-height: 1.45; }
+  .info b { color: var(--texto); font-weight: 600; }
+  .lan { color: var(--ciano); font-size: 20px; font-weight: 700; user-select: text; }
+  .erro { color: var(--vermelho); }
+  .botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+  button { font-family: inherit; font-size: 14px; font-weight: 600; color: var(--texto); background: var(--card);
+    border: 1px solid var(--linha); border-radius: 10px; padding: 9px 14px; cursor: pointer; }
+  button:hover { background: var(--card2); }
+  button.principal { background: var(--ciano); color: var(--bg); border-color: var(--ciano); }
+  button.on { border-color: var(--verde); color: var(--verde); }
+  .rodape { margin-top: auto; display: flex; justify-content: space-between; font-size: 12px; color: var(--dim); }
+  .rodape a { color: var(--dim); cursor: pointer; text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="topo">
+    <img src="icone.png" alt="">
+    <div><h1>PAINEL F1 25</h1><div class="sub" id="sub"></div></div>
+  </div>
+  <div class="modos" id="modos"></div>
+  <div class="info" id="info"></div>
+  <div class="botoes">
+    <button class="principal" id="bPainel"></button>
+    <button id="bOverlay"></button>
+    <button id="bEvolucao"></button>
+  </div>
+  <div class="info" id="atalhos"></div>
+  <div class="rodape">
+    <span id="bandeja"></span>
+    <span><a id="bIdioma"></a> · <a id="bSair"></a></span>
+  </div>
+<script src="inicio.js"></script>
+</body>
+</html>

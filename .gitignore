@@ -17,3 +17,7 @@ dados/
 .claude/
 Thumbs.db
 .DS_Store
+
+# app nativo (Rust/Tauri)
+app/target/
+app/gen/
