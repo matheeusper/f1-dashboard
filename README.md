@@ -48,7 +48,7 @@ Não precisa instalar nada: é um arquivo só.
    - **Demo: corrida simulada** e **Demo: Time Trial**: para ver tudo funcionando sem o jogo;
    - **Painel no celular ou tablet**: libera o painel na rede local e mostra o endereço para digitar no aparelho.
 
-Depois de escolher, a janela mostra o status e tem botões para reabrir o painel, abrir a página Evolução ou trocar de modo. **Fechar essa janela desliga o painel.**
+Depois de escolher, o menu vai para a barra de tarefas. Lá ele mostra o status e tem botões para trazer o painel para a frente, abrir a página Evolução ou trocar de modo. **Fechar essa janela desliga o painel.**
 
 Na primeira vez, o Windows pode mostrar *"O Windows protegeu o computador"*, porque o programa não é assinado digitalmente. Clique em **Mais informações → Executar assim mesmo**.
 

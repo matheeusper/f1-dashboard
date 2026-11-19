@@ -206,6 +206,43 @@ def achar_navegador():
     return None
 
 
+def focar_painel():
+    """Traz para a frente a janela do painel, se ja estiver aberta (so no Windows).
+    Devolve True se achou; assim 'Abrir painel' nao abre uma segunda janela."""
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    from ctypes import wintypes
+    user32 = ctypes.windll.user32
+    achadas = []
+
+    @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    def cada(hwnd, _):
+        if user32.IsWindowVisible(hwnd):
+            titulo = ctypes.create_unicode_buffer(256)
+            classe = ctypes.create_unicode_buffer(256)
+            user32.GetWindowTextW(hwnd, titulo, 256)
+            user32.GetClassNameW(hwnd, classe, 256)
+            # janela do Chrome/Edge com a pagina do painel (o menu tambem se chama assim, mas e Tk)
+            if titulo.value.startswith("Painel F1 25") and classe.value.startswith("Chrome_WidgetWin"):
+                achadas.append(hwnd)
+        return True
+
+    user32.EnumWindows(cada, 0)
+    if not achadas:
+        return False
+    h = achadas[0]
+    if user32.IsIconic(h):
+        user32.ShowWindow(h, 9)   # SW_RESTORE
+    user32.SetForegroundWindow(h)
+    return True
+
+
+def abrir_ou_focar(url):
+    if not focar_painel():
+        abrir_painel(url)
+
+
 def abrir_painel(url):
     exe = achar_navegador()
     if not exe:
@@ -286,7 +323,7 @@ def iniciar(args):
                          daemon=True).start()
     url = "http://127.0.0.1:%d" % args.porta_web
     if args.abrir:
-        abrir_painel(url)
+        abrir_ou_focar(url)   # depois de "Trocar de modo" a janela antiga continua aberta
     return url
 
 

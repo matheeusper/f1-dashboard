@@ -187,22 +187,31 @@ class Menu:
 
         botoes = tk.Frame(self.corpo, bg=BG)
         botoes.pack(fill="x", pady=(16, 0))
-        from server import abrir_painel
-        self._botao(botoes, "Abrir painel", lambda: abrir_painel(self.url), principal=True).pack(side="left")
+        from server import abrir_ou_focar
+        self._botao(botoes, "Abrir painel", lambda: abrir_ou_focar(self.url), principal=True).pack(side="left")
         self._botao(botoes, "Evolução", lambda: webbrowser.open(self.url + "/evolucao")).pack(side="left", padx=8)
         self._botao(botoes, "Trocar de modo", self.reiniciar).pack(side="left")
         info("Fechar esta janela desliga o painel.", tam=10)
         self._centralizar()
+        if chave != "lan":   # o painel ja abriu: o menu sai da frente e fica na barra de tarefas
+            self.root.after(1500, self.root.iconify)
 
     # ------------------------------------------------------------ sair / reiniciar
     def reiniciar(self):
         """O jeito limpo de trocar de modo: abre o programa de novo no menu e fecha este."""
         portas = ["--porta-udp", str(self.base.porta_udp), "--porta-web", str(self.base.porta_web)]
+        env = os.environ.copy()
         if CONGELADO:
             cmd = [sys.executable, "--menu"] + portas
+            # Sem isso o exe novo reaproveita a pasta temporaria deste (_MEI...), que e apagada
+            # quando este fecha: o novo quebrava com "No module named '_tkinter'".
+            env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+            for k in list(env):
+                if k.startswith("_PYI") or k == "_MEIPASS2":
+                    del env[k]
         else:
             cmd = [sys.executable, os.path.join(APP_DIR, "server.py"), "--menu"] + portas
-        subprocess.Popen(cmd)
+        subprocess.Popen(cmd, env=env)
         os._exit(0)
 
     def sair(self):
