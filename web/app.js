@@ -655,6 +655,8 @@
     microfone: () => T('Não consegui usar o microfone. Confira se ele está conectado e liberado para apps em Privacidade > Microfone.'),
     idioma: () => T('O Windows não tem reconhecimento de fala neste idioma.'),
     rede: () => T('Sem internet para reconhecer a voz.'),
+    audio: () => T('Não deu para entender: muito barulho ou som baixo. Tente de novo mais perto do microfone.'),
+    desconhecido: () => T('O Windows não conseguiu reconhecer agora. Tente de novo.'),
     privacidade: () => T('Ligue o "Reconhecimento de fala online" do Windows: abri a tela para você.'),
   };
   async function ouvirNativo() {

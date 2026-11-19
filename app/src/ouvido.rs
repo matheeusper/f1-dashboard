@@ -10,14 +10,18 @@ mod win {
     use std::sync::Mutex;
     use windows::{
         core::HSTRING,
-        Foundation::TimeSpan,
+        Foundation::{TimeSpan, TypedEventHandler},
         Globalization::Language,
-        Media::SpeechRecognition::{SpeechRecognitionResultStatus, SpeechRecognizer},
+        Media::SpeechRecognition::{
+            SpeechRecognitionHypothesisGeneratedEventArgs, SpeechRecognitionResultStatus, SpeechRecognizer,
+        },
         Win32::System::WinRT::{RoInitialize, RO_INIT_MULTITHREADED},
     };
 
     // o reconhecedor em uso (para "parar" quando aperta de novo)
     static ATUAL: Mutex<Option<SpeechRecognizer>> = Mutex::new(None);
+    // o que o Windows ja entendeu enquanto voce falava (usado se o final vier com erro)
+    static PARCIAL: Mutex<String> = Mutex::new(String::new());
 
     const PRIVACIDADE: i32 = 0x8004_5509u32 as i32; // SPERR_SPEECH_PRIVACY_POLICY_NOT_ACCEPTED
     const SEM_MICROFONE: [i32; 2] = [0x8004_5303u32 as i32, 0x8007_0005u32 as i32]; // sem dispositivo / acesso negado
@@ -56,10 +60,19 @@ mod win {
             let _ = RoInitialize(RO_INIT_MULTITHREADED); // ja inicializado: tudo bem
         }
         let rec = reconhecedor(idioma).map_err(codigo)?;
-        let t = rec.Timeouts().map_err(codigo)?;
-        let _ = t.SetInitialSilenceTimeout(ms(5.0)); // espera ate 5 s voce comecar a falar
-        let _ = t.SetEndSilenceTimeout(ms(0.9)); // e para ~1 s depois que voce para
-        let _ = t.SetBabbleTimeout(ms(9.0));
+        // so o tempo para comecar a falar; o resto fica no padrao do Windows (mexer nele dava status 6)
+        let _ = rec.Timeouts().and_then(|t| t.SetInitialSilenceTimeout(ms(5.0)));
+        PARCIAL.lock().unwrap().clear();
+        let _ = rec.HypothesisGenerated(&TypedEventHandler::<SpeechRecognizer, SpeechRecognitionHypothesisGeneratedEventArgs>::new(
+            |_, args| {
+                if let Some(a) = args.as_ref() {
+                    if let Ok(t) = a.Hypothesis().and_then(|h| h.Text()) {
+                        *PARCIAL.lock().unwrap() = t.to_string();
+                    }
+                }
+                Ok(())
+            },
+        ));
         let comp = rec.CompileConstraintsAsync().map_err(codigo)?.get().map_err(codigo)?;
         if comp.Status().map_err(codigo)? != SpeechRecognitionResultStatus::Success {
             return Err(status(comp.Status().unwrap_or(SpeechRecognitionResultStatus::Unknown)));
@@ -67,12 +80,26 @@ mod win {
         *ATUAL.lock().unwrap() = Some(rec.clone());
         let r = rec.RecognizeAsync().map_err(codigo).and_then(|op| op.get().map_err(codigo));
         *ATUAL.lock().unwrap() = None;
-        let r = r?;
+        let parcial = PARCIAL.lock().unwrap().clone();
+        let r = match r {
+            Ok(r) => r,
+            Err(e) if !parcial.trim().is_empty() => {
+                eprintln!("ouvir: {e}; usando o que ja tinha entendido");
+                return Ok(parcial);
+            }
+            Err(e) => return Err(e),
+        };
         let st = r.Status().map_err(codigo)?;
         if st != SpeechRecognitionResultStatus::Success {
+            if !parcial.trim().is_empty() {
+                return Ok(parcial); // o final falhou, mas ele ja tinha entendido a pergunta
+            }
             return Err(status(st));
         }
-        let texto = r.Text().map_err(codigo)?.to_string();
+        let mut texto = r.Text().map_err(codigo)?.to_string();
+        if texto.trim().is_empty() {
+            texto = parcial;
+        }
         if texto.trim().is_empty() {
             return Err("nada".into());
         }
@@ -85,6 +112,8 @@ mod win {
             SpeechRecognitionResultStatus::MicrophoneUnavailable => "microfone".into(),
             SpeechRecognitionResultStatus::NetworkFailure => "rede".into(),
             SpeechRecognitionResultStatus::TimeoutExceeded | SpeechRecognitionResultStatus::UserCanceled => "nada".into(),
+            SpeechRecognitionResultStatus::AudioQualityFailure => "audio".into(),
+            SpeechRecognitionResultStatus::Unknown => "desconhecido".into(),
             outro => format!("outro: status {}", outro.0),
         }
     }

@@ -144,6 +144,9 @@
     "O Windows não tem reconhecimento de fala neste idioma.": "Windows doesn't have speech recognition for this language.",
     "Ligue o \"Reconhecimento de fala online\" do Windows: abri a tela para você.": "Turn on Windows \"Online speech recognition\": I opened the screen for you.",
     "Não consegui ouvir: ": "Couldn't listen: ",
+    "Não deu para entender: muito barulho ou som baixo. Tente de novo mais perto do microfone.":
+      "Couldn't make it out: too much noise or too quiet. Try again closer to the microphone.",
+    "O Windows não conseguiu reconhecer agora. Tente de novo.": "Windows couldn't recognise it this time. Try again.",
     "Painel aberto pela rede": "Dashboard opened over the network", "Fonte: ": "Source: ", "iniciando…": "starting…",
     "No celular ou tablet, na mesma rede, abra:": "On your phone or tablet, on the same network, open:", "Ligando…": "Turning on…",
     "Trocando a fonte… o painel reconecta sozinho.": "Switching the source… the dashboard reconnects by itself.",
