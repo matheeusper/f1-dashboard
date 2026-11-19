@@ -91,8 +91,8 @@
 
   // Ordem das rodas no jogo: [TE, TD, DE, DD]
   const WHEELS = [
-    { k: 'fl', i: 2, name: 'DIANT. ESQ.' }, { k: 'fr', i: 3, name: 'DIANT. DIR.' },
-    { k: 'rl', i: 0, name: 'TRAS. ESQ.' }, { k: 'rr', i: 1, name: 'TRAS. DIR.' },
+    { k: 'fl', i: 2, name: T('DIANT. ESQ.') }, { k: 'fr', i: 3, name: T('DIANT. DIR.') },
+    { k: 'rl', i: 0, name: T('TRAS. ESQ.') }, { k: 'rr', i: 1, name: T('TRAS. DIR.') },
   ];
   for (const w of WHEELS) {
     const card = $('t_' + w.k);
@@ -101,9 +101,9 @@
       '<div class="t-temp" data-r="surf">–<small>°</small></div>' +
       '<div class="t-wearbar"><i data-r="wearBar"></i></div>' +
       '<div class="t-rows">' +
-      '<div><span class="lbl">INTERNA</span><b data-r="inner">–</b></div>' +
-      '<div><span class="lbl">PRESSÃO</span><b data-r="psi">–</b></div>' +
-      '<div><span class="lbl">FREIO</span><b data-r="brake">–</b></div></div>';
+      '<div><span class="lbl">' + T('INTERNA') + '</span><b data-r="inner">–</b></div>' +
+      '<div><span class="lbl">' + T('PRESSÃO') + '</span><b data-r="psi">–</b></div>' +
+      '<div><span class="lbl">' + T('FREIO') + '</span><b data-r="brake">–</b></div></div>';
     w.card = card;
     w.wheel = $('w_' + w.k);
     for (const el of card.querySelectorAll('[data-r]')) w[el.dataset.r] = el;
@@ -119,8 +119,8 @@
   }
 
   const stat = {};
-  for (const [id, label] of [['last', 'ÚLTIMA'], ['best', 'MELHOR'], ['front', 'À FRENTE'],
-    ['leader', 'LÍDER'], ['pen', 'PUNIÇÕES'], ['warns', 'AVISOS']]) {
+  for (const [id, label] of [['last', T('ÚLTIMA')], ['best', T('MELHOR')], ['front', T('À FRENTE')],
+    ['leader', T('LÍDER')], ['pen', T('PUNIÇÕES')], ['warns', T('AVISOS')]]) {
     const el = document.createElement('div');
     el.className = 'stat';
     el.innerHTML = '<span class="lbl">' + label + '</span><span class="v">—</span>';
@@ -128,10 +128,10 @@
     stat[id] = el.querySelector('.v');
   }
 
-  const DMG = [['fwL', 'Asa diant. E', ['d_fwL']], ['fwR', 'Asa diant. D', ['d_fwR']],
-    ['rearWing', 'Asa traseira', ['d_rw']], ['floor', 'Assoalho', ['d_floor']],
-    ['diffuser', 'Difusor', ['d_diffuser']], ['sidepod', 'Sidepods', ['d_spL', 'd_spR']],
-    ['gearbox', 'Câmbio', ['d_gearbox']], ['engine', 'Motor', ['d_engine']]];
+  const DMG = [['fwL', T('Asa diant. E'), ['d_fwL']], ['fwR', T('Asa diant. D'), ['d_fwR']],
+    ['rearWing', T('Asa traseira'), ['d_rw']], ['floor', T('Assoalho'), ['d_floor']],
+    ['diffuser', T('Difusor'), ['d_diffuser']], ['sidepod', 'Sidepods', ['d_spL', 'd_spR']],
+    ['gearbox', T('Câmbio'), ['d_gearbox']], ['engine', T('Motor'), ['d_engine']]];
   for (const d of DMG) {
     const el = document.createElement('div');
     el.innerHTML = '<span>' + d[1] + '</span><b>OK</b>';
@@ -150,9 +150,9 @@
   }
 
   const chip = {};
-  for (const [id, label] of [['bias', 'BIAS'], ['diff', 'DIF.'], ['tc', 'TC'], ['abs', 'ABS'],
-    ['engine', 'MOTOR'], ['window', 'JANELA PIT'], ['drsFault', 'FALHA DRS'], ['ersFault', 'FALHA ERS'],
-    ['blown', 'MOTOR QUEBRADO']]) {
+  for (const [id, label] of [['bias', 'BIAS'], ['diff', T('DIF.')], ['tc', 'TC'], ['abs', 'ABS'],
+    ['engine', T('MOTOR')], ['window', T('JANELA PIT')], ['drsFault', T('FALHA DRS')], ['ersFault', T('FALHA ERS')],
+    ['blown', T('MOTOR QUEBRADO')]]) {
     const el = document.createElement('div');
     el.className = 'chip';
     el.innerHTML = label + ' <b></b>';
@@ -197,10 +197,10 @@
   const lightEls = [...E.lights.children];
   let waitHidden = false;   // "Ver o painel": esconde a tela de espera mesmo sem telemetria
 
-  const FUEL_MIX = ['POBRE', 'PADRÃO', 'RICA', 'MÁXIMA'];
-  const ERS_MODE = ['NENHUM', 'MÉDIO', 'HOTLAP', 'OVERTAKE'];
-  const VISUAL = { 16: ['S', '#ff4d5a', 'Macio'], 17: ['M', '#ffd23f', 'Médio'], 18: ['H', '#eaf0f8', 'Duro'],
-    7: ['I', '#3ddc84', 'Intermediário'], 8: ['W', '#4da3ff', 'Chuva'] };
+  const FUEL_MIX = [T('POBRE'), T('PADRÃO'), T('RICA'), T('MÁXIMA')];
+  const ERS_MODE = [T('NENHUM'), T('MÉDIO'), 'HOTLAP', 'OVERTAKE'];
+  const VISUAL = { 16: ['S', '#ff4d5a', T('Macio')], 17: ['M', '#ffd23f', T('Médio')], 18: ['H', '#eaf0f8', T('Duro')],
+    7: ['I', '#3ddc84', T('Intermediário')], 8: ['W', '#4da3ff', T('Chuva')] };
   const ACTUAL = { 16: 'C5', 17: 'C4', 18: 'C3', 19: 'C2', 20: 'C1', 21: 'C0', 22: 'C6' };
   const GEAR = (g) => (g === 0 ? 'N' : g < 0 ? 'R' : String(g));
 
@@ -219,23 +219,23 @@
 
     // conexao e avisos
     cls(E.wait, 'show', !S.connected && !waitHidden);
-    txt(E.waitMsg, 'Nenhuma telemetria chegando. No jogo, abra:');
-    txt(E.conn, !S.connected ? 'SEM SINAL' : S.demo ? 'DEMO' : 'AO VIVO · UDP ' + S.format);
+    txt(E.waitMsg, T('Nenhuma telemetria chegando. No jogo, abra:'));
+    txt(E.conn, !S.connected ? T('SEM SINAL') : S.demo ? 'DEMO' : T('AO VIVO · UDP ') + S.format);
     cls(E.conn, 'live', S.connected && !S.demo);
     cls(E.conn, 'demo', S.connected && S.demo);
     txt(E.warn, S.warn || '');
 
     // topo
     txt(E.track, ses ? ses.track : '—');
-    txt(E.sessionType, ses ? ses.type : 'Sem sessão');
+    txt(E.sessionType, ses ? ses.type : T('Sem sessão'));
     txt(E.weather, ses ? ses.weather : '—');
     txt(E.trackTemp, ses ? String(ses.trackTemp) : '–');
     txt(E.airTemp, ses ? String(ses.airTemp) : '–');
     let rain = '';
     if (ses && ses.rain.length) {
-      rain = ' · chuva ' + ses.rain[0][1] + '%';
+      rain = T(' · chuva ') + ses.rain[0][1] + '%';
       const later = ses.rain.find((r) => r[0] > 0 && r[1] !== ses.rain[0][1]);
-      if (later) rain += ' → ' + later[1] + '% em ' + later[0] + ' min';
+      if (later) rain += ' → ' + later[1] + T('% em ') + later[0] + ' min';
     }
     txt(E.rain, rain);
     txt(E.pos, lap && lap.pos ? String(lap.pos) : '–');
@@ -247,10 +247,10 @@
     const sc = ses ? ses.safetyCar : 0;
     if (sc === 1) { flag = 'SAFETY CAR'; fcls = 'f-yellow'; }
     else if (sc === 2) { flag = 'VSC'; fcls = 'f-yellow'; }
-    else if (sc === 3) { flag = 'VOLTA DE FORMAÇÃO'; }
-    else if (st.flag === 3) { flag = 'BANDEIRA AMARELA'; fcls = 'f-yellow'; }
-    else if (st.flag === 2) { flag = 'BANDEIRA AZUL'; fcls = 'f-blue'; pill = 'blue'; }
-    else if (st.flag === 1) { flag = 'BANDEIRA VERDE'; fcls = 'f-green'; pill = 'green'; }
+    else if (sc === 3) { flag = T('VOLTA DE FORMAÇÃO'); }
+    else if (st.flag === 3) { flag = T('BANDEIRA AMARELA'); fcls = 'f-yellow'; }
+    else if (st.flag === 2) { flag = T('BANDEIRA AZUL'); fcls = 'f-blue'; pill = 'blue'; }
+    else if (st.flag === 1) { flag = T('BANDEIRA VERDE'); fcls = 'f-green'; pill = 'green'; }
     txt(E.flag, flag);
     cls(E.flag, 'blue', pill === 'blue');
     cls(E.flag, 'green', pill === 'green');
@@ -271,7 +271,7 @@
     const dash = (clamp(t.rpm / maxRpm, 0, 1) * 1000).toFixed(1) + ' 1000';
     sty(E.arcVal, 'strokeDasharray', dash);
     sty(E.arcGlow, 'strokeDasharray', dash);
-    txt(E.rpmTxt, t.rpm.toLocaleString('pt-BR'));
+    txt(E.rpmTxt, t.rpm.toLocaleString(LOCALE));
     txt(E.gear, GEAR(t.gear));
     txt(E.speed, String(t.speed));
     txt(E.suggested, t.suggested > 0 && t.suggested !== t.gear ? '▸ ' + t.suggested : '');
@@ -303,16 +303,16 @@
     cls(E.drsBadge, 'active', dActive && !drsFault);
     cls(E.drsBadge, 'avail', dAvail && !dActive && !drsFault);
     cls(E.drsBadge, 'fault', drsFault);
-    txt(E.drsSub, drsFault ? 'FALHA' : dActive ? (regs26 ? 'MODO RETA' : 'ABERTO') : dAvail ? 'DISPONÍVEL'
-      : dDist > 0 ? 'em ' + dDist + ' m' : '');
+    txt(E.drsSub, drsFault ? T('FALHA') : dActive ? (regs26 ? T('MODO RETA') : T('ABERTO')) : dAvail ? T('DISPONÍVEL')
+      : dDist > 0 ? T('em ') + dDist + ' m' : '');
     cls(E.otBadge, 'show', regs26);
     if (regs26) {
       cls(E.otBadge, 'active', t2.otActive === 1);
       cls(E.otBadge, 'avail', t2.otAvail === 1 && !t2.otActive);
-      txt(E.otSub, t2.otActive ? 'ATIVO' : t2.otAvail ? 'DISPONÍVEL' : t2.otDist > 0 ? 'em ' + t2.otDist + ' m' : '');
+      txt(E.otSub, t2.otActive ? T('ATIVO') : t2.otAvail ? T('DISPONÍVEL') : t2.otDist > 0 ? T('em ') + t2.otDist + ' m' : '');
     }
     cls(E.pitBadge, 'warnon', st.pitLimiter);
-    txt(E.pitSub, st.pitLimiter && ses && ses.pitLimit ? ses.pitLimit + ' km/h' : 'LIMITADOR');
+    txt(E.pitSub, st.pitLimiter && ses && ses.pitLimit ? ses.pitLimit + ' km/h' : T('LIMITADOR'));
 
     // tempos
     txt(E.curLap, fmtLap(lap ? lap.cur : 0));
@@ -320,7 +320,7 @@
     cls(E.invalid, 'on', lap && lap.invalid);
     let pit = '';
     if (lap && lap.pitStatus) {
-      pit = lap.pitStatus === 1 ? 'PIT LANE' : 'NOS BOXES';
+      pit = lap.pitStatus === 1 ? 'PIT LANE' : T('NOS BOXES');
       if (lap.pitLaneMs) pit += ' ' + (lap.pitLaneMs / 1000).toFixed(1) + 's';
     }
     txt(E.pitInfo, pit);
@@ -357,7 +357,7 @@
     html(E.ersPct, Math.round(ersFrac * 100) + '<small>%</small>');
     sty(E.ersBar, 'transform', 'scaleX(' + ersFrac.toFixed(3) + ')');
     cls(E.ersBar.parentNode, 'low', ersFrac < 0.15);
-    const modes = S.format >= 2026 ? ['NENHUM', 'MÉDIO', 'HOTLAP', 'BOOST'] : ERS_MODE;
+    const modes = S.format >= 2026 ? [T('NENHUM'), T('MÉDIO'), 'HOTLAP', 'BOOST'] : ERS_MODE;
     txt(E.ersMode, modes[st.ersMode] || '—');
     cls(E.ersMode, 'hot', st.ersMode === 3);
     const harvMax = st.ersLimit || 4e6;
@@ -383,7 +383,7 @@
     txt(E.compound, vis ? vis[0] : '–');
     sty(E.compound, 'borderColor', vis ? vis[1] : '');
     txt(E.compoundTxt, vis ? vis[2] + (ACTUAL[st.compound] ? ' ' + ACTUAL[st.compound] : '') + ' · ' +
-      st.tyreAge + (st.tyreAge === 1 ? ' volta' : ' voltas') : '—');
+      st.tyreAge + (st.tyreAge === 1 ? T(' volta') : T(' voltas')) : '—');
     for (const w of WHEELS) {
       const surf = t.tyreSurf[w.i], col = S.tel ? tyreColor(surf) : '';
       html(w.surf, (S.tel ? surf : '–') + '<small>°</small>');
@@ -422,7 +422,7 @@
     };
     setChip('bias', st.brakeBias + '%', true);
     setChip('diff', S.setup ? S.setup.diffOn + '%' : '–', !!S.setup);
-    setChip('tc', ['OFF', 'MÉDIO', 'TOTAL'][st.tc] || '–', true);
+    setChip('tc', ['OFF', T('MÉDIO'), 'TOTAL'][st.tc] || '–', true);
     setChip('abs', st.abs ? 'ON' : 'OFF', true);
     setChip('engine', t.engineTemp + '°', true, t.engineTemp >= 125);
     setChip('window', ses ? ses.pitIdeal + '–' + ses.pitLatest : '', !!(ses && ses.isRace && ses.pitIdeal), false);
@@ -438,7 +438,7 @@
   const R = { box: $('radio'), msg: $('radioMsg'), mode: $('voiceMode'), corners: $('rCorners'),
     age: $('radioAge'), an: $('analysis'), aSub: $('aSub'), aRows: $('aRows'), aMap: $('aMap'),
     aLog: $('aLog') };
-  const MODES = [['tudo', 'VOZ: TUDO'], ['importante', 'VOZ: SÓ IMPORTANTE'], ['mudo', 'VOZ: DESLIGADA']];
+  const MODES = [['tudo', T('VOZ: TUDO')], ['importante', T('VOZ: SÓ IMPORTANTE')], ['mudo', T('VOZ: DESLIGADA')]];
   const synth = window.speechSynthesis;
   let mode = 'tudo';
   try { mode = localStorage.getItem('painel.voz') || 'tudo'; } catch (e) { /* sem storage */ }
@@ -461,8 +461,10 @@
   let voice = null, blocked = false, speaking = false, speakStart = 0, talkOk = true;
   function pickVoice() {
     const vs = synth ? synth.getVoices() : [];
-    voice = vs.find((v) => /pt[-_]BR/i.test(v.lang) && /Maria|Francisca|Thalita|Daniel/i.test(v.name)) ||
-      vs.find((v) => /pt[-_]BR/i.test(v.lang)) || vs.find((v) => /^pt/i.test(v.lang)) || null;
+    voice = LANG_EN
+      ? vs.find((v) => /en[-_]GB/i.test(v.lang)) || vs.find((v) => /^en/i.test(v.lang)) || null
+      : vs.find((v) => /pt[-_]BR/i.test(v.lang) && /Maria|Francisca|Thalita|Daniel/i.test(v.name)) ||
+        vs.find((v) => /pt[-_]BR/i.test(v.lang)) || vs.find((v) => /^pt/i.test(v.lang)) || null;
   }
   if (synth) { pickVoice(); synth.onvoiceschanged = pickVoice; synth.cancel(); }
 
@@ -474,7 +476,7 @@
   }
   function bloqueado() {
     blocked = true;
-    txt(R.msg, 'Clique aqui (ou em qualquer lugar do painel) para ativar a voz do engenheiro.');
+    txt(R.msg, T('Clique aqui (ou em qualquer lugar do painel) para ativar a voz do engenheiro.'));
     cls(R.msg, 'blocked', true);
   }
 
@@ -564,7 +566,7 @@
     const ok = c && c.state === 'running';
     const u = new SpeechSynthesisUtterance(text);
     if (voice) u.voice = voice;
-    u.lang = 'pt-BR';
+    u.lang = LOCALE;
     u.rate = 1.12;
     u.volume = volume;
     falando(true);
@@ -615,7 +617,7 @@
     if (!blocked) return;
     blocked = false;
     cls(R.msg, 'blocked', false);
-    speak('Rádio ativado.', 'normal');
+    speak(T('Rádio ativado.'), 'normal');
   });
 
   const heard = new Set();
@@ -669,10 +671,10 @@
     if (lastFlash === null) lastFlash = fseq;          // ao abrir o painel nao pisca o antigo
     else if (fseq !== lastFlash) { lastFlash = fseq; if (fl) mostraFlash(fl); }
     const p = c.pit;
-    html(pitPrev, p ? 'PIT AGORA → <b>P' + p.pos + '</b>' + (p.frente ? ' · atrás de ' + esc(p.frente[0]) +
-      ' (' + String(p.frente[1]).replace('.', ',') + ' s)' : '') : '');
+    html(pitPrev, p ? T('PIT AGORA → ') + '<b>P' + p.pos + '</b>' + (p.frente ? T(' · atrás de ') + esc(p.frente[0]) +
+      ' (' + DEC(p.frente[1]) + ' s)' : '') : '');
     const tr = c.treino || {};
-    txt(treinoChip, tr.curva ? 'TREINO · C' + tr.curva : '');
+    txt(treinoChip, tr.curva ? T('TREINO · C') + tr.curva : '');
     const key = (c.report ? c.report.lap + ':' + c.report.ms : '') + '|' + Object.keys(c.habits || {}).join(',') +
       '|' + (c.live ? c.live.lap + ':' + c.live.corners.length : '') + '|' + c.nCorners + '|' +
       (tr.curva || '') + (tr.metas || []).map((m) => m.prog + (m.feito ? '!' : '')).join(',') + '|' +
@@ -687,7 +689,7 @@
 
   function pump() {
     const now = performance.now();
-    if (shown) txt(R.age, 'há ' + Math.max(0, Math.round((now - shown.rx) / 1000)) + ' s');
+    if (shown) txt(R.age, T('há %d s').replace('%d', Math.max(0, Math.round((now - shown.rx) / 1000))));
     if (speaking && now - speakStart > 25000) speaking = false;   // protecao se o navegador travar a fala
     for (let i = queue.length - 1; i >= 0; i--) {
       if (now - queue[i].rx > queue[i].ttl * 1000) queue.splice(i, 1);
@@ -712,7 +714,7 @@
     if (l <= -0.03) return 'lgood';
     return '';
   }
-  const sgn = (x, d) => (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(d).replace('.', ',');
+  const sgn = (x, d) => (x > 0 ? '+' : x < 0 ? '−' : '') + DEC(Math.abs(x).toFixed(d));
 
   // curvas no radio: as ja feitas nesta volta aparecem ao vivo; as outras mostram a volta anterior, apagadas
   function renderCorners(c) {
@@ -721,8 +723,8 @@
     if (c.live && c.live.corners) for (const k of c.live.corners) vivo[k.n] = k.d;
     const temVivo = Object.keys(vivo).length > 0;
     if ((!rep || !rep.corners.length) && !temVivo) {
-      html(R.corners, '<span class="empty">' + (c.nCorners ? c.nCorners + ' CURVAS MAPEADAS · ANÁLISE APÓS A PRÓXIMA VOLTA'
-        : 'AS CURVAS SÃO MAPEADAS NA PRIMEIRA VOLTA LIMPA') + '</span>');
+      html(R.corners, '<span class="empty">' + (c.nCorners ? c.nCorners + T(' CURVAS MAPEADAS · ANÁLISE APÓS A PRÓXIMA VOLTA')
+        : T('AS CURVAS SÃO MAPEADAS NA PRIMEIRA VOLTA LIMPA')) + '</span>');
       return;
     }
     const antes = {};
@@ -747,23 +749,23 @@
     const tr = c.treino || {}, ac = c.acerto || {};
     let mt;
     if (!tr.tt) {
-      mt = '<p class="dim">Modo treino e metas só no Time Trial.</p>';
+      mt = '<p class="dim">' + T('Modo treino e metas só no Time Trial.') + '</p>';
     } else {
       mt = tr.curva
-        ? '<p class="a-tc">Treinando a <b>curva ' + tr.curva + '</b>' + (tr.cons ? ' · variação ±' +
-          tr.cons.seg.toFixed(3).replace('.', ',') + ' s' + (tr.cons.bp != null ? ' / ±' + String(tr.cons.bp).replace('.', ',') + ' m' : '') : '') +
-          ' <span class="dim">(T para parar)</span></p>'
-        : '<p class="dim">Selecione uma curva e aperte T para treiná-la.</p>';
+        ? '<p class="a-tc">' + T('Treinando a') + ' <b>' + T('curva ') + tr.curva + '</b>' + (tr.cons ? T(' · variação ±') +
+          DEC(tr.cons.seg.toFixed(3)) + ' s' + (tr.cons.bp != null ? ' / ±' + DEC(tr.cons.bp) + ' m' : '') : '') +
+          ' <span class="dim">' + T('(T para parar)') + '</span></p>'
+        : '<p class="dim">' + T('Selecione uma curva e aperte T para treiná-la.') + '</p>';
       mt += (tr.metas || []).map((m) => '<div class="meta' + (m.feito ? ' ok' : '') + '"><span>' + (m.feito ? '🏆 ' : '') +
         esc(m.texto) + '</span><span class="mbar"><i style="transform:scaleX(' + Math.min(1, m.prog / m.meta).toFixed(2) +
-        ')"></i></span><b>' + (m.feito ? 'feita' : m.prog + '/' + m.meta) + '</b></div>').join('') ||
-        '<p class="dim">As metas aparecem depois da primeira volta limpa.</p>';
+        ')"></i></span><b>' + (m.feito ? T('feita') : m.prog + '/' + m.meta) + '</b></div>').join('') ||
+        '<p class="dim">' + T('As metas aparecem depois da primeira volta limpa.') + '</p>';
     }
     html($('aMetas'), mt);
     let at;
-    if (!ac.voltas) at = '<p class="dim">A análise aparece depois de 3 voltas lançadas.</p>';
-    else if (!ac.ok) at = '<p class="dim">Analisando: ' + ac.voltas + ' de 3 voltas.</p>';
-    else if (!ac.achados.length) at = '<p>Carro equilibrado: nada de subesterço ou sobresterço que se repita.</p>';
+    if (!ac.voltas) at = '<p class="dim">' + T('A análise aparece depois de 3 voltas lançadas.') + '</p>';
+    else if (!ac.ok) at = '<p class="dim">' + T('Analisando: %d de 3 voltas.').replace('%d', ac.voltas) + '</p>';
+    else if (!ac.achados.length) at = '<p>' + T('Carro equilibrado: nada de subesterço ou sobresterço que se repita.') + '</p>';
     else {
       at = '<ul>' + ac.achados.map((a) => '<li>' + esc(a) + '</li>').join('') + '</ul>';
       if (ac.sugestoes.length) at += '<ul class="sug">' + ac.sugestoes.map((s) => '<li>' + esc(s) + '</li>').join('') + '</ul>';
@@ -772,7 +774,7 @@
   }
   let flashTimer = null, lastFlash = null;
   function mostraFlash(f) {
-    msF.innerHTML = '<small>CURVA ' + f.n + '</small>' + sgn(f.d, 3);
+    msF.innerHTML = '<small>' + T('CURVA ') + f.n + '</small>' + sgn(f.d, 3);
     msF.className = 'ms-flash show ' + lossClass(f.d);
     clearTimeout(flashTimer);
     flashTimer = setTimeout(() => msF.classList.remove('show'), 1800);
@@ -781,7 +783,7 @@
 
   function fmtMeters(v, early, late) {
     if (v == null) return '—';
-    if (Math.abs(v) < 5) return 'igual';
+    if (Math.abs(v) < 5) return T('igual');
     return Math.abs(v) + ' m ' + (v < 0 ? early : late);
   }
 
@@ -789,22 +791,22 @@
     const rep = c.report;
     if (rep && (tcSel == null || tcSel > c.nCorners)) tcSel = curvaPadrao();
     if (!rep) {
-      txt(R.aSub, c.nCorners ? c.nCorners + ' curvas mapeadas. A análise aparece ao fim da próxima volta.'
-        : 'Faça uma volta limpa para o engenheiro mapear as curvas.');
+      txt(R.aSub, c.nCorners ? c.nCorners + T(' curvas mapeadas. A análise aparece ao fim da próxima volta.')
+        : T('Faça uma volta limpa para o engenheiro mapear as curvas.'));
       html(R.aRows, '');
     } else {
-      const ref = rep.ref ? ' vs ' + (rep.kind === 'recorde' ? 'seu recorde ' : 'sua melhor da sessão ') + fmtLap(rep.ref) : '';
-      txt(R.aSub, 'Volta ' + rep.lap + ': ' + fmtLap(rep.ms) + (rep.valid ? '' : ' (inválida)') + ref);
+      const ref = rep.ref ? ' vs ' + (rep.kind === 'recorde' ? T('seu recorde ') : T('sua melhor da sessão ')) + fmtLap(rep.ref) : '';
+      txt(R.aSub, T('Volta ') + rep.lap + ': ' + fmtLap(rep.ms) + (rep.valid ? '' : T(' (inválida)')) + ref);
       html(R.aRows, rep.corners.map((k) => {
         const habit = c.habits && c.habits[k.n];
         let obs = k.tip || '';
-        if (habit) obs += (obs ? ' · ' : '') + '<span class="habit">vício: ' + habit + '</span>';
-        const dv = k.dv == null ? '—' : Math.abs(k.dv) < 2 ? 'igual' : sgn(k.dv, 0) + ' km/h';
+        if (habit) obs += (obs ? ' · ' : '') + '<span class="habit">' + T('vício: ') + habit + '</span>';
+        const dv = k.dv == null ? '—' : Math.abs(k.dv) < 2 ? T('igual') : sgn(k.dv, 0) + ' km/h';
         // frenagem em metros antes da entrada da curva: a sua e a da referencia
-        const fr = k.bpEu != null ? k.bpEu + ' m <span class="dim">(ref ' + k.bpRef + ')</span>' : fmtMeters(k.db, 'cedo', 'tarde');
+        const fr = k.bpEu != null ? k.bpEu + ' m <span class="dim">(ref ' + k.bpRef + ')</span>' : fmtMeters(k.db, T('cedo'), T('tarde'));
         return '<tr data-n="' + k.n + '"' + (k.n === tcSel ? ' class="sel"' : '') + '><td class="n">' + k.n + '</td><td class="' +
           lossClass(k.loss) + '">' + (k.loss == null ? '—' : sgn(k.loss, 3) + ' s') + '</td><td>' + fr +
-          '</td><td>' + dv + '</td><td>' + fmtMeters(k.dt, 'antes', 'tarde') + '</td><td>' + (obs || '—') + '</td></tr>';
+          '</td><td>' + dv + '</td><td>' + fmtMeters(k.dt, T('antes'), T('tarde')) + '</td><td>' + (obs || '—') + '</td></tr>';
       }).join(''));
     }
     html(R.aLog, log.map((t) => '<li>' + t.replace(/</g, '&lt;') + '</li>').join(''));
@@ -822,7 +824,7 @@
   function paintMap() {
     const svg = R.aMap;
     if (!mapData || mapData.pts.length < 20) {
-      svg.innerHTML = '<text class="empty" x="500" y="235">O mapa aparece depois da primeira volta limpa.</text>';
+      svg.innerHTML = '<text class="empty" x="500" y="235">' + T('O mapa aparece depois da primeira volta limpa.') + '</text>';
       return;
     }
     let pts = mapData.pts, cs = mapData.corners;
@@ -870,7 +872,7 @@
     const rep = coach && coach.report;
     if (!rep) {
       tcKey = '';
-      TC.svg.innerHTML = '<text class="empty" x="500" y="200">O gráfico aparece depois de uma volta analisada.</text>';
+      TC.svg.innerHTML = '<text class="empty" x="500" y="200">' + T('O gráfico aparece depois de uma volta analisada.') + '</text>';
       return;
     }
     if (tcSel == null || tcSel > coach.nCorners) tcSel = curvaPadrao() || 1;
@@ -886,11 +888,11 @@
   }
   function desenhaTelemetria(t) {
     if (!t.ok || !t.d.length) {
-      TC.svg.innerHTML = '<text class="empty" x="500" y="200">Sem dados dessa curva na última volta.</text>';
+      TC.svg.innerHTML = '<text class="empty" x="500" y="200">' + T('Sem dados dessa curva na última volta.') + '</text>';
       return;
     }
-    const alvo = t.kind === 'recorde' ? 'RECORDE' : 'MELHOR DA SESSÃO';
-    txt(TC.titulo, 'TELEMETRIA · CURVA ' + t.n + ' · VOLTA ' + t.lap + (t.ref ? ' x ' + alvo : ''));
+    const alvo = t.kind === 'recorde' ? T('RECORDE') : T('MELHOR DA SESSÃO');
+    txt(TC.titulo, T('TELEMETRIA · CURVA ') + t.n + T(' · VOLTA ') + t.lap + (t.ref ? ' x ' + alvo : ''));
     const L = 78, Rr = 985, d0 = t.d[0], d1 = t.d[t.d.length - 1];
     const X = t.d.map((v) => L + (Rr - L) * (v - d0) / ((d1 - d0) || 1));
     const xDe = (v) => L + (Rr - L) * (v - d0) / ((d1 - d0) || 1);
@@ -904,12 +906,12 @@
     g += '<text class="eixo" x="' + (L - 8) + '" y="' + (yv(vmax - 8) + 5) + '" text-anchor="end">' + Math.round(vmax - 8) + '</text>';
     g += '<text class="eixo" x="' + (L - 8) + '" y="' + (yv(vmin + 8) + 5) + '" text-anchor="end">' + Math.round(vmin + 8) + '</text>';
     g += '<text class="rot" x="' + (L - 8) + '" y="106" text-anchor="end">KM/H</text>';
-    g += '<text class="rot" x="' + (L - 8) + '" y="257" text-anchor="end">PEDAIS</text>';
-    g += '<text class="rot" x="' + (L - 8) + '" y="357" text-anchor="end">TEMPO</text>';
+    g += '<text class="rot" x="' + (L - 8) + '" y="257" text-anchor="end">' + T('PEDAIS') + '</text>';
+    g += '<text class="rot" x="' + (L - 8) + '" y="357" text-anchor="end">' + T('TEMPO') + '</text>';
     // eixo de distancia: metros a partir da entrada da curva
     const passoM = (d1 - d0) > 500 ? 100 : 50;
     for (let m = Math.ceil(d0 / passoM) * passoM; m <= d1; m += passoM) {
-      g += '<text class="eixo" x="' + xDe(m) + '" y="398" text-anchor="middle">' + (m === 0 ? 'entrada' : (m > 0 ? '+' : '') + m + ' m') + '</text>';
+      g += '<text class="eixo" x="' + xDe(m) + '" y="398" text-anchor="middle">' + (m === 0 ? T('entrada') : (m > 0 ? '+' : '') + m + ' m') + '</text>';
     }
     // marcas: freio da referencia, seu freio, apice
     const mk = t.marcas || {};
@@ -923,8 +925,8 @@
     };
     g += marca(mk.apex, 'm-apex', '', 0);
     const refAntes = mk.ref != null && mk.eu != null ? mk.ref <= mk.eu : true;
-    if (mk.ref != null) g += marca(mk.ref, 'm-ref', 'freio ref ' + Math.round(-mk.ref) + ' m', 40, refAntes);
-    if (mk.eu != null) g += marca(mk.eu, 'm-eu', 'você ' + Math.round(-mk.eu) + ' m', 40, !refAntes);
+    if (mk.ref != null) g += marca(mk.ref, 'm-ref', T('freio ref ') + Math.round(-mk.ref) + ' m', 40, refAntes);
+    if (mk.eu != null) g += marca(mk.eu, 'm-eu', T('você ') + Math.round(-mk.eu) + ' m', 40, !refAntes);
     // linhas
     if (t.ref) {
       g += '<path class="l-ref" d="' + caminho(X, t.ref.v.map(yv)) + '"/>';
@@ -960,7 +962,7 @@
     if (open && coach) renderAnalysis(coach);
   }
   // ---- ajustes do radio (nome, voz, velocidade, volume)
-  const C = { box: $('cfg'), nome: $('cfgNome'), nomeJogo: $('cfgNomeJogo'), nomeInfo: $('cfgNomeInfo'), voz: $('cfgVoz'), vel: $('cfgVel'), velTxt: $('cfgVelTxt'),
+  const C = { box: $('cfg'), idioma: $('cfgIdioma'), nome: $('cfgNome'), nomeJogo: $('cfgNomeJogo'), nomeInfo: $('cfgNomeInfo'), voz: $('cfgVoz'), vel: $('cfgVel'), velTxt: $('cfgVelTxt'),
     vol: $('cfgVol'), volTxt: $('cfgVolTxt'), status: $('cfgStatus'), radio: $('cfgRadio'),
     chiado: $('cfgChiado'), chiadoTxt: $('cfgChiadoTxt'), chiadoRow: $('cfgChiadoRow'), botoes: $('cfgBotoes') };
   let cfgTimer = null;
@@ -970,10 +972,14 @@
     if (document.activeElement !== C.nome) C.nome.value = a.nome;
     C.nomeJogo.checked = a.nome_jogo;
     nomeRadio = r.nomeAtual || '';
-    C.nomeInfo.innerHTML = !a.nome_jogo ? 'O engenheiro usa o nome digitado acima.'
-      : r.nomeJogo ? 'No jogo você está como <b>' + esc(r.nomeJogo) + '</b>: é assim que o engenheiro vai te chamar.'
-      : (r.online ? 'Online o jogo manda o seu gamertag, então vale o nome digitado acima.'
-        : 'Assim que o jogo mandar os pilotos, o engenheiro usa o seu. Até lá, vale o nome digitado acima.');
+    C.nomeInfo.innerHTML = !a.nome_jogo ? T('O engenheiro usa o nome digitado acima.')
+      : r.nomeJogo ? T('No jogo você está como <b>%s</b>: é assim que o engenheiro vai te chamar.').replace('%s', esc(r.nomeJogo))
+      : (r.online ? T('Online o jogo manda o seu gamertag, então vale o nome digitado acima.')
+        : T('Assim que o jogo mandar os pilotos, o engenheiro usa o seu. Até lá, vale o nome digitado acima.'));
+    if (!C.idioma.options.length && r.idiomas) {
+      C.idioma.innerHTML = Object.keys(r.idiomas).map((k) => '<option value="' + k + '">' + r.idiomas[k] + '</option>').join('');
+    }
+    C.idioma.value = a.idioma;
     if (!C.voz.options.length) {
       C.voz.innerHTML = r.vozes.map((v) => '<option value="' + v.id + '">' + v.nome + ' (' + v.tipo + ')</option>').join('');
     }
@@ -1008,18 +1014,23 @@
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome: C.nome.value, nome_jogo: C.nomeJogo.checked, voz: C.voz.value, velocidade: +C.vel.value, volume: +C.vol.value,
         radio: C.radio.checked, chiado: +C.chiado.value }),
-    }).then((x) => x.json()).then(cfgMostra).catch(() => txt(C.status, 'Não consegui salvar.'));
+    }).then((x) => x.json()).then(cfgMostra).catch(() => txt(C.status, T('Não consegui salvar.')));
   }
   function cfgAgenda() { clearTimeout(cfgTimer); cfgTimer = setTimeout(cfgSalva, 350); }
   for (const el of [C.nome, C.vel, C.vol, C.chiado]) el.addEventListener('input', cfgAgenda);
   C.voz.addEventListener('change', cfgSalva);
   C.radio.addEventListener('change', cfgSalva);
   C.nomeJogo.addEventListener('change', cfgSalva);
+  C.idioma.addEventListener('change', () => {   // a pagina recarrega no idioma novo (textos, voz e engenheiro)
+    fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idioma: C.idioma.value }) }).then(() => location.reload())
+      .catch(() => txt(C.status, T('Não consegui salvar.')));
+  });
   $('cfgTest').addEventListener('click', () => {
     clearTimeout(cfgTimer);
     cfgSalva().then(() => {
       const n = nomeRadio;
-      speak('Rádio check' + (n ? ', ' + n : '') + '. Tô contigo, vamos buscar esse recorde hoje.', 'normal');
+      speak(T('Rádio check') + (n ? ', ' + n : '') + T('. Tô contigo, vamos buscar esse recorde hoje.'), 'normal');
     });
   });
   function toggleCfg(force) {
@@ -1086,7 +1097,10 @@
   let state = null, dirty = false, lastMsg = 0;
   function connect() {
     const es = new EventSource('/stream');
-    es.onmessage = (e) => { state = JSON.parse(e.data); lastMsg = performance.now(); dirty = true; };
+    es.onmessage = (e) => {
+      state = JSON.parse(e.data); lastMsg = performance.now(); dirty = true;
+      if (state.lang && state.lang !== (LANG_EN ? 'en' : 'pt')) location.reload();   // idioma trocado no menu ou nos ajustes
+    };
   }
   connect();
 
@@ -1096,8 +1110,8 @@
     pump();
     if (performance.now() - lastMsg > 2500) {
       cls(E.wait, 'show', true);
-      txt(E.waitMsg, 'O servidor do painel está desligado. Abra o "Iniciar Painel.bat" e depois, no jogo:');
-      txt(E.conn, 'SEM SINAL');
+      txt(E.waitMsg, T('O servidor do painel está desligado. Abra o PainelF1.exe e depois, no jogo:'));
+      txt(E.conn, T('SEM SINAL'));
       cls(E.conn, 'live', false);
       cls(E.conn, 'demo', false);
     }

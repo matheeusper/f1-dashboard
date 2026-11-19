@@ -16,19 +16,20 @@ from analise import num as numero
 from acerto import AcertoMixin
 from corrida import CorridaMixin, primeiro_nome
 from estrategia import EstrategiaMixin
+from idioma import N_, tx
 from treino import TreinoMixin
 
 SECOS = (16, 17, 18)
-COMPOSTOS = {16: "macios", 17: "médios", 18: "duros", 7: "intermediários", 8: "de chuva"}
-PNEU = ["traseiro esquerdo", "traseiro direito", "dianteiro esquerdo", "dianteiro direito"]
-MISTURA = ["pobre", "padrão", "rica", "máxima"]
+COMPOSTOS = {16: N_("macios"), 17: N_("médios"), 18: N_("duros"), 7: N_("intermediários"), 8: N_("de chuva")}
+PNEU = [N_("traseiro esquerdo"), N_("traseiro direito"), N_("dianteiro esquerdo"), N_("dianteiro direito")]
+MISTURA = [N_("pobre"), N_("padrão"), N_("rica"), N_("máxima")]
 # botoes "UDP Action N" do jogo (mapeie no volante): o que cada um pergunta ao engenheiro
-BOTOES = {1: "Pneus", 2: "Gaps", 3: "Combustível e bateria", 4: "Onde estou perdendo",
-          5: "Clima e pit", 6: "Repetir a última", 7: "Silêncio (só o essencial)", 8: "Estratégia de pit",
-          9: "Metas e treino", 10: "Acerto do carro"}
-PECAS = {"fwL": "na asa dianteira esquerda", "fwR": "na asa dianteira direita",
-         "rearWing": "na asa traseira", "floor": "no assoalho", "diffuser": "no difusor",
-         "sidepod": "na lateral", "gearbox": "no câmbio", "engine": "no motor"}
+BOTOES = {1: N_("Pneus"), 2: N_("Gaps"), 3: N_("Combustível e bateria"), 4: N_("Onde estou perdendo"),
+          5: N_("Clima e pit"), 6: N_("Repetir a última"), 7: N_("Silêncio (só o essencial)"), 8: N_("Estratégia de pit"),
+          9: N_("Metas e treino"), 10: N_("Acerto do carro")}
+PECAS = {"fwL": N_("na asa dianteira esquerda"), "fwR": N_("na asa dianteira direita"),
+         "rearWing": N_("na asa traseira"), "floor": N_("no assoalho"), "diffuser": N_("no difusor"),
+         "sidepod": N_("na lateral"), "gearbox": N_("no câmbio"), "engine": N_("no motor")}
 
 
 def fmt_volta(ms):
@@ -346,32 +347,32 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         if not s:
             return
         if s["isRace"] and s["totalLaps"] and num == s["totalLaps"]:
-            self.say(self.escolhe("ultima", ["Última volta%s! Traz pra casa." % self.vn(),
-                                             "Última volta. Foco total, traz pra casa.",
-                                             "Bandeira branca%s, última volta!" % self.vn()]),
+            self.say(self.escolhe("ultima", [tx("Última volta%s! Traz pra casa.") % self.vn(),
+                                             tx("Última volta. Foco total, traz pra casa."),
+                                             tx("Bandeira branca%s, última volta!") % self.vn()]),
                      pri=2, chave="ultima", cool=600, tom="animado", chamar=False)
         if s["isRace"] and d.lap and num - self.cr_ultimo_pit_volta > 5:   # estrategia do jogo
             ideal, ultima = s["pitIdeal"], s["pitLatest"]
             if ideal and num == ideal - 1:
-                self.say("Box na próxima volta.", pri=2, chave="box_prox_%d" % ideal, cool=99999)
+                self.say(tx("Box na próxima volta."), pri=2, chave="box_prox_%d" % ideal, cool=99999)
             elif ideal and num == ideal:
                 volta = " " + (self._seguro(self.texto_previsao) or
-                               ("Se parar agora, deve voltar em P%d." % s["pitRejoin"] if s["pitRejoin"] else ""))
+                               (tx("Se parar agora, deve voltar em P%d.") % s["pitRejoin"] if s["pitRejoin"] else ""))
                 volta = volta.rstrip()
-                self.say("Box, box. Box nesta volta." + volta, pri=1, tom="urgente",
-                         chave="box_%d" % ideal, cool=99999, show="BOX, BOX · box nesta volta." + volta)
+                self.say(tx("Box, box. Box nesta volta.") + volta, pri=1, tom="urgente",
+                         chave="box_%d" % ideal, cool=99999, show=tx("BOX, BOX · box nesta volta.") + volta)
             elif ultima and num == ultima and ultima != ideal:
-                self.say("Última volta da janela de pit. Box, box.", pri=1, chave="box_ultima_%d" % ultima,
+                self.say(tx("Última volta da janela de pit. Box, box."), pri=1, chave="box_ultima_%d" % ultima,
                          cool=99999)
         # sem erro recente para lembrar? lembra o vicio mais forte a cada 4 voltas
         if self.cue is None and self.resumo and self.resumo["habitos"] and num % 4 == 0:
             n, (motivo, pct, _q, _t) = max(self.resumo["habitos"].items(), key=lambda kv: kv[1][1])
             c = next((c for c in self.corners if c["n"] == n), None)
             if c and DICA.get(motivo):
-                dica = DICA[motivo]
+                dica = tx(DICA[motivo])
                 alvo = self._alvo_frenagem(c) if motivo in ("cedo", "tarde") else None
                 if alvo:
-                    dica = "o recorde freia a %d metros" % (5 * round(alvo / 5))
+                    dica = tx("o recorde freia a %d metros") % (5 * round(alvo / 5))
                 self._define_dica(c, dica, num, lembrete=True)
 
     def _alvo_frenagem(self, c):
@@ -389,23 +390,23 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
     def _texto_motivo(self, x, tipo):
         """(fala, tela) do motivo principal; frenagem com os metros da referencia."""
         motivo, valor = x["motivos"][0]
-        alvo = "o recorde" if tipo == "recorde" else "a sua melhor"
+        alvo = tx("o recorde") if tipo == "recorde" else tx("a sua melhor")
         if motivo in ("cedo", "tarde") and x["dist"]:
             eu, ref = x["dist"]
-            extra = " e passou do ponto" if motivo == "tarde" else ""
-            return ("freou a %d metros%s, %s freia a %d" % (eu, extra, alvo, ref),
-                    "freou a %d m%s (ref. %d m)" % (eu, extra, ref))
+            extra = tx(" e passou do ponto") if motivo == "tarde" else ""
+            return (tx("freou a %d metros%s, %s freia a %d") % (eu, extra, alvo, ref),
+                    tx("freou a %d m%s (ref. %d m)") % (eu, extra, ref))
         t = texto_meu(motivo, valor)
         return t, t
 
     def _define_dica(self, c, dica, volta, lembrete=False):
         n = c["n"]
         if lembrete:
-            texto = self.escolhe("lembrete", ["Curva %d: lembra, %s." % (n, dica),
-                                              "Na %d, lembra: %s." % (n, dica)])
+            texto = self.escolhe("lembrete", [tx("Curva %d: lembra, %s.") % (n, dica),
+                                              tx("Na %d, lembra: %s.") % (n, dica)])
         else:
-            texto = self.escolhe("dica", ["Curva %d, %s." % (n, dica), "Atenção na %d: %s." % (n, dica),
-                                          cap("%s na %d." % (dica, n))])
+            texto = self.escolhe("dica", [tx("Curva %d, %s.") % (n, dica), tx("Atenção na %d: %s.") % (n, dica),
+                                          cap(tx("%s na %d.") % (dica, n))])
         self.cue = (c, texto)
         self.cue_lap = volta
         self.preparar(texto, "calmo")
@@ -544,7 +545,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
                 item["tip"] = self._texto_motivo(x, tipo)[1]
             h = habitos.get(x["c"]["n"])
             if h:
-                item["habit"] = HABITO.get(h[0])
+                item["habit"] = tx(HABITO.get(h[0]))
             cs.append(item)
         self.report = {"lap": num, "ms": ms, "ref": ref_ms, "kind": tipo, "valid": valida, "corners": cs}
 
@@ -558,67 +559,67 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         if novo_rec and recorde_ant:
             ganho = fala_dif((recorde_ant - ms) / 1000)
             fala = [self.escolhe("recorde", [
-                "Isso%s! %s, novo recorde pessoal! %s mais rápido." % (vn, t, cap(ganho)),
-                "Que volta%s! %s. Recorde pessoal, %s melhor que o anterior." % (vn, t, ganho),
-                "%s! É recorde%s! Tiramos %s." % (t, vn, ganho),
+                tx("Isso%s! %s, novo recorde pessoal! %s mais rápido.") % (vn, t, cap(ganho)),
+                tx("Que volta%s! %s. Recorde pessoal, %s melhor que o anterior.") % (vn, t, ganho),
+                tx("%s! É recorde%s! Tiramos %s.") % (t, vn, ganho),
             ])]
-            tela.append("RECORDE PESSOAL " + fmt_dif((ms - recorde_ant) / 1000))
+            tela.append(tx("RECORDE PESSOAL ") + fmt_dif((ms - recorde_ant) / 1000))
             pri, tom, chamar = 2, "animado", False
         elif novo_rec:
-            fala = ["%s." % t, "Referência salva. A partir de agora eu comparo cada curva com ela."
-                    if primeira_ref else "Primeiro recorde salvo nesta pista."]
-            tela.append("referência salva")
+            fala = ["%s." % t, tx("Referência salva. A partir de agora eu comparo cada curva com ela.")
+                    if primeira_ref else tx("Primeiro recorde salvo nesta pista.")]
+            tela.append(tx("referência salva"))
         elif novo_sess and ref_ms:
             fala = [self.escolhe("melhor_sessao", [
-                "%s, melhor volta da sessão. Boa%s." % (t, vn),
-                "Melhor da sessão: %s. Continua assim." % t,
-                "%s. Essa foi a melhor de hoje." % t,
+                tx("%s, melhor volta da sessão. Boa%s.") % (t, vn),
+                tx("Melhor da sessão: %s. Continua assim.") % t,
+                tx("%s. Essa foi a melhor de hoje.") % t,
             ])]
-            tela.append("melhor da sessão")
+            tela.append(tx("melhor da sessão"))
             tom = "animado"
         else:
-            fala = [self.escolhe("abre_volta", ["%s." % t, "%s nessa." % t, "Volta %d, %s." % (num, t)])]
+            fala = [self.escolhe("abre_volta", ["%s." % t, tx("%s nessa.") % t, tx("Volta %d, %s.") % (num, t)])]
             if ref_ms:
                 dif = (ms - ref_ms) / 1000
-                alvo = "do recorde" if tipo == "recorde" else "da sua melhor"
+                alvo = tx("do recorde") if tipo == "recorde" else tx("da sua melhor")
                 if dif < 0.05:
-                    fala.append(self.escolhe("no_ritmo", ["Em cima %s." % alvo, "No ritmo %s." % alvo,
-                                                          "Mesmo tempo %s." % alvo]))
+                    fala.append(self.escolhe("no_ritmo", [tx("Em cima %s.") % alvo, tx("No ritmo %s.") % alvo,
+                                                          tx("Mesmo tempo %s.") % alvo]))
                 else:
                     d_ = fala_dif(dif)
-                    fala.append(self.escolhe("dif", ["Mais %s %s." % (d_, alvo), cap("%s %s." % (d_, alvo)),
-                                                     cap("%s atrás %s." % (d_, alvo))]))
+                    fala.append(self.escolhe("dif", [tx("Mais %s %s.") % (d_, alvo), cap(tx("%s %s.") % (d_, alvo)),
+                                                     cap(tx("%s atrás %s.") % (d_, alvo))]))
                 tela.append(fmt_dif(dif))
         if not valida:
-            fala.append(self.escolhe("invalida", ["Volta inválida.", "Essa foi invalidada."]))
-            tela.append("inválida")
+            fala.append(self.escolhe("invalida", [tx("Volta inválida."), tx("Essa foi invalidada.")]))
+            tela.append(tx("inválida"))
         for i, x in enumerate(piores):
             motivo, valor = x["motivos"][0]
             n = x["c"]["n"]
             oque, tela_oque = self._texto_motivo(x, tipo)
             quanto = fala_dif(x["perda"])
             if motivo == "geral":
-                frase = "Mais %s na curva %d." % (quanto, n)
+                frase = tx("Mais %s na curva %d.") % (quanto, n)
             else:
                 frase = self.escolhe("curva%d" % i, [
-                    "Curva %d: %s, %s." % (n, oque, quanto),
-                    "Perdemos %s na %d: %s." % (quanto, n, oque),
-                    "Na %d você %s, %s." % (n, oque, quanto),
+                    tx("Curva %d: %s, %s.") % (n, oque, quanto),
+                    tx("Perdemos %s na %d: %s.") % (quanto, n, oque),
+                    tx("Na %d você %s, %s.") % (n, oque, quanto),
                 ])
             h = habitos.get(n)
             if h and h[0] == motivo:
-                frase += " " + self.escolhe("vicio", ["De novo: é o seu vício nessa curva.",
-                                                      "Esse erro de novo, é o seu vício ali.",
-                                                      "Mesmo erro de sempre nessa curva."])
+                frase += " " + self.escolhe("vicio", [tx("De novo: é o seu vício nessa curva."),
+                                                      tx("Esse erro de novo, é o seu vício ali."),
+                                                      tx("Mesmo erro de sempre nessa curva.")])
             fala.append(frase)
             tela.append("C%d %s %s" % (n, fmt_dif(x["perda"]), tela_oque))
         ganhos = [x for x in resultado if x["perda"] is not None and x["perda"] <= -0.08]
         if (novo_sess or novo_rec) and ganhos and recorde_ant:
             g = min(ganhos, key=lambda x: x["perda"])
-            fala.append("O ganho maior foi na curva %d." % g["c"]["n"])
+            fala.append(tx("O ganho maior foi na curva %d.") % g["c"]["n"])
         if ref_ms and not piores and not novo_rec and not novo_sess and valida:
-            fala.append(self.escolhe("boa", ["Sem perdas grandes, boa volta.", "Volta limpa, mantém.",
-                                             "Muito bom%s, consistente." % vn, "Tudo certo por curva."]))
+            fala.append(self.escolhe("boa", [tx("Sem perdas grandes, boa volta."), tx("Volta limpa, mantém."),
+                                             tx("Muito bom%s, consistente.") % vn, tx("Tudo certo por curva.")]))
         self.say(" ".join(fala), pri=pri, ttl=40, show=" · ".join(tela), tom=tom, chamar=chamar)
 
         # ------------- dica para a proxima volta (ja deixa o audio pronto)
@@ -626,9 +627,9 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             x = piores[0]
             motivo = x["motivos"][0][0]
             if DICA.get(motivo) and x["perda"] >= 0.1:
-                dica = DICA[motivo]
+                dica = tx(DICA[motivo])
                 if motivo in ("cedo", "tarde") and x["dist"]:   # numero concreto para mirar
-                    dica = "freie a %d metros" % (5 * round(x["dist"][1] / 5))
+                    dica = tx("freie a %d metros") % (5 * round(x["dist"][1] / 5))
                 self._define_dica(x["c"], dica, num + 1)
 
         # guarda a volta para o grafico de telemetria comparada
@@ -674,7 +675,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             if res:
                 ganho, c, m, r = res
                 motivo, valor = diagnostico(m, r)[0]
-                self.say("%s é %s mais rápido na curva %d%s." % (self.rotulo(pos - 1), fala_dif(ganho), c["n"],
+                self.say(tx("%s é %s mais rápido na curva %d%s.") % (self.rotulo(pos - 1), fala_dif(ganho), c["n"],
                                                                  motivo_outro(motivo, valor)),
                          pri=3, ttl=30, chave="rival", cool=self.voltas(2))
         elif self.best_other and time.monotonic() >= self.cool.get("melhor_outro", 0):
@@ -686,7 +687,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             if res:
                 ganho, c, m, r = res
                 motivo, valor = diagnostico(m, r)[0]
-                self.say("Contra a volta mais rápida da sessão, a maior diferença é na curva %d, %s%s."
+                self.say(tx("Contra a volta mais rápida da sessão, a maior diferença é na curva %d, %s%s.")
                          % (c["n"], fala_dif(ganho), motivo_outro(motivo, valor)),
                          pri=3, ttl=30, chave="melhor_outro", cool=self.voltas(2))
 
@@ -711,28 +712,28 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
                 ritmo = (ult[-1][2] - ult[0][2]) / 3.0
                 if ritmo <= -150 and gap_f > 1000:
                     voltas = max(1, round((gap_f - 500) / -ritmo))
-                    self.say("Você tira %s por volta %s. Alcança em %d voltas."
+                    self.say(tx("Você tira %s por volta %s. Alcança em %d voltas.")
                              % (fala_dif(ritmo / 1000), self.de(self.idx_pos(pos - 1)), voltas), pri=2,
                              chave="alcanca", cool=self.voltas(3))
                 elif ritmo >= 250:
-                    self.say("%s está abrindo %s por volta." % (self.rotulo(pos - 1), fala_dif(ritmo / 1000)),
+                    self.say(tx("%s está abrindo %s por volta.") % (self.rotulo(pos - 1), fala_dif(ritmo / 1000)),
                              pri=3, chave="abrindo", cool=self.voltas(5))
             if all(g[3] for g in ult):
                 ritmo_t = (ult[-1][3] - ult[0][3]) / 3.0
                 if ritmo_t <= -150 and gap_t < 4000:
-                    self.say("%s se aproxima %s por volta, está a %s."
+                    self.say(tx("%s se aproxima %s por volta, está a %s.")
                              % (self.rotulo(pos + 1), fala_dif(ritmo_t / 1000), fala_gap(gap_t)), pri=2,
                              chave="aproxima", cool=self.voltas(3))
         if gap_t is not None and 0 < gap_t < 1000:
-            self.say("%s a %s, dentro do DRS. Defenda nas retas." % (self.rotulo(pos + 1), fala_gap(gap_t)),
+            self.say(tx("%s a %s, dentro do DRS. Defenda nas retas.") % (self.rotulo(pos + 1), fala_gap(gap_t)),
                      pri=2, chave="drs_atras", cool=self.voltas(2))
         if gap_f is not None and 0 < gap_f < 1000 and st:
             if d.t2 and d.t2.get("regs2026"):
-                dica = "Use o overtake na reta." if d.t2.get("otAvail") else "Fique no vácuo."
+                dica = tx("Use o overtake na reta.") if d.t2.get("otAvail") else tx("Fique no vácuo.")
             elif st["ersStore"] >= 0.5 * 4e6:
-                dica = "Bateria em %d por cento, use o modo overtake na reta." % (st["ersStore"] / 4e4)
+                dica = tx("Bateria em %d por cento, use o modo overtake na reta.") % (st["ersStore"] / 4e4)
             else:
-                dica = "Carregue a bateria e ataque na próxima."
+                dica = tx("Carregue a bateria e ataque na próxima.")
             self.say("A %s %s. %s" % (fala_gap(gap_f), self.de(self.idx_pos(pos - 1)), dica), pri=2,
                      chave="ataque", cool=self.voltas(2))
         if st and s and s["totalLaps"] and num >= 2:
@@ -740,12 +741,12 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             restantes = s["totalLaps"] - num
             if sobra < -0.25 and restantes > 0:
                 lc = sorted(self.corners, key=lambda c: -c["vin"])[:2]
-                onde = (" antes das curvas %s" % " e ".join(str(c["n"]) for c in sorted(lc, key=lambda c: c["n"]))
+                onde = (tx(" antes das curvas %s") % tx(" e ").join(str(c["n"]) for c in sorted(lc, key=lambda c: c["n"]))
                         if lc else "")
-                self.say("Combustível negativo, %s volta. Faça lift and coast%s." % (numero(sobra), onde),
+                self.say(tx("Combustível negativo, %s volta. Faça lift and coast%s.") % (numero(sobra), onde),
                          pri=1 if sobra < -1 else 2, chave="comb", cool=self.voltas(3))
             elif sobra > 1.2 and 0 < restantes <= 6 and st["fuelMix"] < 2:
-                self.say("Combustível sobrando, pode usar a mistura rica.", pri=3, chave="comb_rica",
+                self.say(tx("Combustível sobrando, pode usar a mistura rica."), pri=3, chave="comb_rica",
                          cool=99999)
 
     def _desgaste(self, num):
@@ -766,17 +767,17 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             return
         s = d.session
         if w >= 70:
-            self.say("Pneus com %d por cento de desgaste, perdendo rendimento. Box quando puder." % w,
+            self.say(tx("Pneus com %d por cento de desgaste, perdendo rendimento. Box quando puder.") % w,
                      pri=1, chave="pneu70", cool=self.voltas(3))
             return
         ate70 = (70 - w) / taxa
         if ate70 <= 3:
-            self.say("Pneus com %d por cento. No ritmo atual chegam a 70 em %d voltas. Pense no pit."
+            self.say(tx("Pneus com %d por cento. No ritmo atual chegam a 70 em %d voltas. Pense no pit.")
                      % (w, max(1, round(ate70))), pri=2, chave="pneu_proj", cool=self.voltas(3))
         elif s and s["isRace"] and s["totalLaps"]:
             restantes = s["totalLaps"] - num
             if 0 < restantes <= 8 and ate70 > restantes + 1:
-                self.say("Os pneus aguentam até o fim.", pri=3, chave="pneu_fim_%s" % composto, cool=99999)
+                self.say(tx("Os pneus aguentam até o fim."), pri=3, chave="pneu_fim_%s" % composto, cool=99999)
 
     # ================================================================ regras (2x por segundo)
     def _regras(self):
@@ -801,38 +802,38 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
 
         # punicoes e avisos
         if estado["pen"] > b["pen"]:
-            self.say("Punição de %d segundos. Total %d." % (estado["pen"] - b["pen"], estado["pen"]), pri=1)
+            self.say(tx("Punição de %d segundos. Total %d.") % (estado["pen"] - b["pen"], estado["pen"]), pri=1)
         if estado["dt"] > b["dt"]:
-            self.say("Drive-through para cumprir.", pri=1)
+            self.say(tx("Drive-through para cumprir."), pri=1)
         if estado["sg"] > b["sg"]:
-            self.say("Stop and go para cumprir.", pri=1)
+            self.say(tx("Stop and go para cumprir."), pri=1)
         if estado["warn"] > b["warn"]:
-            extra = " Cuidado, os avisos viram punição." if estado["warn"] >= 2 else ""
-            self.say("Aviso de limite de pista, já são %d.%s" % (estado["warn"], extra), pri=2,
-                     show="Aviso de limite de pista (%d)" % estado["warn"])
+            extra = tx(" Cuidado, os avisos viram punição.") if estado["warn"] >= 2 else ""
+            self.say(tx("Aviso de limite de pista, já são %d.%s") % (estado["warn"], extra), pri=2,
+                     show=tx("Aviso de limite de pista (%d)") % estado["warn"])
         # danos
         if estado["dmg"] and b["dmg"]:
             for k, nome in PECAS.items():
                 novo, velho = estado["dmg"][k], b["dmg"][k]
                 if novo >= velho + 8:
-                    texto = "Dano %s, %d por cento." % (nome, novo)
+                    texto = tx("Dano %s, %d por cento.") % (tx(nome), novo)
                     if k in ("fwL", "fwR") and novo >= 40:
-                        texto += " Recomendo parar e trocar o bico."
+                        texto += tx(" Recomendo parar e trocar o bico.")
                     self.say(texto, pri=1)
         # safety car e bandeiras
         if estado["sc"] != b["sc"]:
             sc = estado["sc"]
             if sc == 1:
-                self.say("Safety car na pista. Diminua e respeite o delta.", pri=1)
+                self.say(tx("Safety car na pista. Diminua e respeite o delta."), pri=1)
             elif sc == 2:
-                self.say("Virtual safety car. Respeite o delta.", pri=1)
+                self.say(tx("Virtual safety car. Respeite o delta."), pri=1)
             elif sc == 0 and b["sc"] in (1, 2):
-                self.say("Bandeira verde, corrida liberada!", pri=1)
+                self.say(tx("Bandeira verde, corrida liberada!"), pri=1)
         if estado["flag"] != b["flag"]:
             if estado["flag"] == 3:
-                self.say("Bandeira amarela, cuidado.", pri=1, chave="amarela", cool=20)
+                self.say(tx("Bandeira amarela, cuidado."), pri=1, chave="amarela", cool=20)
             elif estado["flag"] == 2:
-                self.say("Bandeira azul, deixe passar.", pri=2, chave="azul", cool=30)
+                self.say(tx("Bandeira azul, deixe passar."), pri=2, chave="azul", cool=30)
         self.base = estado
 
         if st is None:
@@ -843,22 +844,22 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         sup = tel["tyreSurf"]
         tras, diant = (sup[0] + sup[1]) / 2, (sup[2] + sup[3]) / 2
         if self._segura("tras_quente", rapido and tras > quente, 8):
-            self.say("Pneus traseiros superaquecendo, %d graus. Cuidado na tração." % tras, pri=2,
+            self.say(tx("Pneus traseiros superaquecendo, %d graus. Cuidado na tração.") % tras, pri=2,
                      chave="tras_quente", cool=120)
         if self._segura("diant_quente", rapido and diant > quente, 8):
-            self.say("Dianteiros superaquecendo, %d graus. Menos volante na entrada." % diant, pri=2,
+            self.say(tx("Dianteiros superaquecendo, %d graus. Menos volante na entrada.") % diant, pri=2,
                      chave="diant_quente", cool=120)
         sc_ativo = s and s["safetyCar"] in (1, 2)
         if self._segura("frio", tel["speed"] > 150 and max(sup) < frio and not sc_ativo
                         and (v[14] >= 2 or not corrida), 15):
-            self.say("Pneus frios, %d graus. Aqueça os pneus." % max(sup), pri=3, chave="frio", cool=180)
+            self.say(tx("Pneus frios, %d graus. Aqueça os pneus.") % max(sup), pri=3, chave="frio", cool=180)
         if self._segura("freio", max(tel["brakeTemp"]) > 1050, 3):
-            self.say("Freios muito quentes.", pri=2, chave="freio", cool=120)
+            self.say(tx("Freios muito quentes."), pri=2, chave="freio", cool=120)
         if self._segura("motor", tel["engineTemp"] >= 128, 5):
-            self.say("Motor esquentando, %d graus." % tel["engineTemp"], pri=2, chave="motor", cool=180)
+            self.say(tx("Motor esquentando, %d graus.") % tel["engineTemp"], pri=2, chave="motor", cool=180)
         bat = st["ersStore"] / 4e6
         if corrida and self._segura("bateria", (st["ersMode"] >= 2 and bat < 0.15) or bat < 0.05, 5):
-            self.say("Bateria baixa. Mude para o modo médio e recarregue.", pri=2, chave="bateria",
+            self.say(tx("Bateria baixa. Mude para o modo médio e recarregue."), pri=2, chave="bateria",
                      cool=self.voltas(2))
         # clima
         if s:
@@ -867,37 +868,37 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
                 agora = s["rain"][0][1] if s["rain"] else 0
                 if chuva and agora < 40:
                     # so avisa de novo quando a previsao mudar
-                    self.say("Chuva forte prevista em %d minutos, %d por cento." % (chuva[0][0], chuva[0][1]),
+                    self.say(tx("Chuva forte prevista em %d minutos, %d por cento.") % (chuva[0][0], chuva[0][1]),
                              pri=2, chave="chuva_%d_%d" % (chuva[0][0], chuva[0][1]), cool=99999)
                 if s["weatherId"] >= 3:
-                    self.say("Está chovendo e você está de pneu liso.", pri=1, chave="chuva_liso", cool=120)
+                    self.say(tx("Está chovendo e você está de pneu liso."), pri=1, chave="chuva_liso", cool=120)
             elif vis in (7, 8) and s["weatherId"] <= 1 and s["rain"] and s["rain"][0][1] < 10:
-                self.say("Pista secando, considere pneus de pista seca.", pri=2, chave="secando", cool=240)
+                self.say(tx("Pista secando, considere pneus de pista seca."), pri=2, chave="secando", cool=240)
 
     # ================================================================ memoria
     def _saudacao(self):
         s, r = self.d.session, self.resumo
         vn = self.vn()
-        abre = self.escolhe("saudacao", ["Rádio check%s. Me ouve bem?" % vn,
-                                         "Oi%s, rádio funcionando." % vn,
-                                         "Fala%s, tô contigo no rádio." % vn])
-        partes = [abre, "%s." % s["track"]]
+        abre = self.escolhe("saudacao", [tx("Rádio check%s. Me ouve bem?") % vn,
+                                         tx("Oi%s, rádio funcionando.") % vn,
+                                         tx("Fala%s, tô contigo no rádio.") % vn])
+        partes = [abre, "%s." % tx(s["track"])]
         if not r or not r["voltas"]:
-            partes.append("Primeira vez aqui. Faz uma volta limpa pra eu montar sua referência.")
+            partes.append(tx("Primeira vez aqui. Faz uma volta limpa pra eu montar sua referência."))
         else:
             # curto como no radio: recorde, o que da pra buscar e o ponto de atencao do dia
             if self.recorde_ms:
-                partes.append("Recorde: %s." % fala_volta(self.recorde_ms))
+                partes.append(tx("Recorde: %s.") % fala_volta(self.recorde_ms))
             if r["ideal"] and self.recorde_ms and self.recorde_ms - r["ideal"] >= 100:
-                partes.append("Tem %s pra buscar." % fala_dif((self.recorde_ms - r["ideal"]) / 1000))
+                partes.append(tx("Tem %s pra buscar.") % fala_dif((self.recorde_ms - r["ideal"]) / 1000))
             if r["habitos"]:
                 n, h = max(r["habitos"].items(), key=lambda kv: kv[1][1])
-                partes.append("Atenção na %d: você costuma %s." % (n, HABITO.get(h[0], h[0])))
+                partes.append(tx("Atenção na %d: você costuma %s.") % (n, tx(HABITO.get(h[0], h[0]))))
             elif r["fraca"] and r["fraca_ganho"] >= 80:
-                partes.append("Foco na curva %d hoje." % r["fraca"])
-            partes.append(self.escolhe("bora", ["Bora.", "Vamos nessa.", "Bom trabalho hoje."]))
+                partes.append(tx("Foco na curva %d hoje.") % r["fraca"])
+            partes.append(self.escolhe("bora", [tx("Bora."), tx("Vamos nessa."), tx("Bom trabalho hoje.")]))
         self.say(" ".join(partes), pri=3, ttl=90, tom="calmo", chamar=False,
-                 show="Rádio check · " + " ".join(partes[1:]))
+                 show=tx("Rádio check · ") + " ".join(partes[1:]))
 
     def end_session(self):
         """Resumo falado quando a sessao acaba (ou o jogo troca de sessao)."""
@@ -906,26 +907,26 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             return
         from historico import _media_limpa
         media, desvio = _media_limpa(validas)
-        partes = ["Resumo da sessão: %d voltas válidas, melhor %s, média %s, variação de %s."
+        partes = [tx("Resumo da sessão: %d voltas válidas, melhor %s, média %s, variação de %s.")
                   % (len(validas), fala_volta(min(validas)), fala_volta(media), fala_dif(desvio / 1000))]
-        tela = ["Sessão: %d voltas · melhor %s · média %s · ±%s"
+        tela = [tx("Sessão: %d voltas · melhor %s · média %s · ±%s")
                 % (len(validas), fmt_volta(min(validas)), fmt_volta(int(media)), numero(desvio / 1000, 2))]
         r = self.resumo
         if r and r.get("anterior") and self.hist and self.sess_id:
             ant = r["anterior"]
             dif = (media - ant["media"]) / 1000
-            partes.append("A média ficou %s %s que na sessão anterior."
-                          % (fala_dif(dif), "mais rápida" if dif < 0 else "mais lenta"))
+            partes.append(tx("A média ficou %s %s que na sessão anterior.")
+                          % (fala_dif(dif), tx("mais rápida") if dif < 0 else tx("mais lenta")))
             atual, antes = self._seguro(self.hist.comparar_sessoes, self.sess_id, ant["id"]) or ({}, {})
             evol = {n: atual[n] - antes[n] for n in atual if n in antes}
             if evol:
                 n = min(evol, key=evol.get)
                 if evol[n] <= -50:
-                    partes.append("Evoluiu mais na curva %d, %s por volta." % (n, fala_dif(evol[n] / 1000)))
+                    partes.append(tx("Evoluiu mais na curva %d, %s por volta.") % (n, fala_dif(evol[n] / 1000)))
         self._atualiza_resumo()
         r = self.resumo
         if r and r.get("fraca") and r.get("fraca_ganho", 0) >= 80:
-            partes.append("Para a próxima: trabalhe a curva %d, ainda tem %s nela."
+            partes.append(tx("Para a próxima: trabalhe a curva %d, ainda tem %s nela.")
                           % (r["fraca"], fala_dif(r["fraca_ganho"] / 1000)))
         self.say(" ".join(partes), pri=2, ttl=120, show=" · ".join(tela), tom="calmo", chamar=False)
 
@@ -937,9 +938,9 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
               5: self._r_clima, 6: self._r_repetir, 7: self._r_silencio, 8: self._r_estrategia,
               9: self._r_metas, 10: self._r_acerto}.get(n)
         if fn is None:
-            self.responde("Botão %d ainda sem função." % n)
+            self.responde(tx("Botão %d ainda sem função.") % n)
         elif self._seguro(fn) is False:
-            self.responde("Ainda sem dados pra isso. Entra na pista que eu te passo.")
+            self.responde(tx("Ainda sem dados pra isso. Entra na pista que eu te passo."))
 
     def responde(self, texto, show=None, tom="normal", chamar=None):
         self.say(texto, pri=2, ttl=15, show=show, tom=tom, resp=True, chamar=chamar)
@@ -949,28 +950,28 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         st, dmg, tel = d.status, d.damage, d.tel
         if not st or not dmg or not tel:
             return False
-        comp = COMPOSTOS.get(st["visual"])
-        partes = ["Pneus %s com %d voltas." % (comp, st["tyreAge"]) if comp else
-                  "Pneus com %d voltas." % st["tyreAge"]]
+        comp = tx(COMPOSTOS.get(st["visual"]))
+        partes = [tx("Pneus %s com %d voltas.") % (comp, st["tyreAge"]) if comp else
+                  tx("Pneus com %d voltas.") % st["tyreAge"]]
         w = dmg["wear"]
         pior = max(range(4), key=lambda k: w[k])
-        partes.append("Desgaste de %d por cento, o pior é o %s com %d."
-                      % (round(sum(w) / 4), PNEU[pior], round(w[pior])))
+        partes.append(tx("Desgaste de %d por cento, o pior é o %s com %d.")
+                      % (round(sum(w) / 4), tx(PNEU[pior]), round(w[pior])))
         quente, frio = (105, 78) if st["visual"] in SECOS or st["visual"] == 0 else (95, 55)
         sup = tel["tyreSurf"]
         tras, diant = (sup[0] + sup[1]) / 2, (sup[2] + sup[3]) / 2
         if diant > quente:
-            partes.append("Dianteiros quentes, %d graus. Menos volante na entrada." % diant)
+            partes.append(tx("Dianteiros quentes, %d graus. Menos volante na entrada.") % diant)
         elif tras > quente:
-            partes.append("Traseiros quentes, %d graus. Cuidado na tração." % tras)
+            partes.append(tx("Traseiros quentes, %d graus. Cuidado na tração.") % tras)
         elif max(sup) < frio:
-            partes.append("Estão frios, %d graus." % max(sup))
+            partes.append(tx("Estão frios, %d graus.") % max(sup))
         else:
-            partes.append("Temperaturas na janela.")
+            partes.append(tx("Temperaturas na janela."))
         if len(self.desgaste) >= 3 and max(w) < 70:
             taxa = (self.desgaste[-1][1] - self.desgaste[-3][1]) / 2.0
             if taxa > 0.3:
-                partes.append("No ritmo atual chegam a 70 por cento em umas %d voltas." % max(1, round((70 - max(w)) / taxa)))
+                partes.append(tx("No ritmo atual chegam a 70 por cento em umas %d voltas.") % max(1, round((70 - max(w)) / taxa)))
         self.responde(" ".join(partes))
 
     def _r_gaps(self):
@@ -983,29 +984,29 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         hist = [g for g in self.gaps[-4:] if g[1] == pos]
         gap_f = v[7] * 60000 + v[6]
         if pos > 1 and gap_f > 0:
-            frase = "%s, P%d, está a %s" % (self.rotulo(pos - 1), pos - 1, fala_gap(gap_f)) \
-                if self.piloto(self.idx_pos(pos - 1)) else "O P%d está a %s" % (pos - 1, fala_gap(gap_f))
+            frase = tx("%s, P%d, está a %s") % (self.rotulo(pos - 1), pos - 1, fala_gap(gap_f)) \
+                if self.piloto(self.idx_pos(pos - 1)) else tx("O P%d está a %s") % (pos - 1, fala_gap(gap_f))
             if len(hist) >= 2 and all(g[2] for g in hist):
                 ritmo = (hist[-1][2] - hist[0][2]) / (len(hist) - 1)
                 if ritmo <= -80:
-                    frase += ", você tira %s por volta" % fala_dif(ritmo / 1000)
+                    frase += tx(", você tira %s por volta") % fala_dif(ritmo / 1000)
                 elif ritmo >= 80:
-                    frase += ", ele abre %s por volta" % fala_dif(ritmo / 1000)
+                    frase += tx(", ele abre %s por volta") % fala_dif(ritmo / 1000)
             partes.append(frase + ".")
         if d.all_lap:
             atras = next((lv for lv in d.all_lap if lv[13] == pos + 1 and lv[26] == 2), None)
             if atras:
                 gap_t = atras[7] * 60000 + atras[6]
                 if gap_t > 0:
-                    frase = "%s, P%d, está a %s" % (self.rotulo(pos + 1), pos + 1, fala_gap(gap_t)) \
-                        if self.piloto(self.idx_pos(pos + 1)) else "O P%d está a %s" % (pos + 1, fala_gap(gap_t))
+                    frase = tx("%s, P%d, está a %s") % (self.rotulo(pos + 1), pos + 1, fala_gap(gap_t)) \
+                        if self.piloto(self.idx_pos(pos + 1)) else tx("O P%d está a %s") % (pos + 1, fala_gap(gap_t))
                     if len(hist) >= 2 and all(g[3] for g in hist):
                         ritmo = (hist[-1][3] - hist[0][3]) / (len(hist) - 1)
                         if ritmo <= -80:
-                            frase += ", vindo %s por volta" % fala_dif(ritmo / 1000)
-                    partes.append(frase + ("" if gap_t >= 1000 else ", dentro do DRS") + ".")
+                            frase += tx(", vindo %s por volta") % fala_dif(ritmo / 1000)
+                    partes.append(frase + ("" if gap_t >= 1000 else tx(", dentro do DRS")) + ".")
         if len(partes) == 1 and self.sess_ms:
-            partes.append("Sua melhor na sessão é %s." % fala_volta(self.sess_ms))
+            partes.append(tx("Sua melhor na sessão é %s.") % fala_volta(self.sess_ms))
         self.responde(" ".join(partes))
 
     def _r_combustivel(self):
@@ -1014,71 +1015,71 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         if not st:
             return False
         sobra = st["fuelLaps"]
-        partes = ["Combustível %s %s volta, mistura %s."
-                  % ("mais" if sobra >= 0 else "menos", numero(abs(sobra)), MISTURA[st["fuelMix"]]
-                     if 0 <= st["fuelMix"] < 4 else "padrão")]
+        partes = [tx("Combustível %s %s volta, mistura %s.")
+                  % (tx("mais") if sobra >= 0 else tx("menos"), numero(abs(sobra)), tx(MISTURA[st["fuelMix"]])
+                     if 0 <= st["fuelMix"] < 4 else tx("padrão"))]
         if sobra < -0.2 and self.corners:
             lc = sorted(sorted(self.corners, key=lambda c: -c["vin"])[:2], key=lambda c: c["n"])
-            partes.append("Precisamos economizar: lift and coast antes da %s." % " e da ".join(str(c["n"]) for c in lc))
+            partes.append(tx("Precisamos economizar: lift and coast antes da %s.") % tx(" e da ").join(str(c["n"]) for c in lc))
         elif sobra > 1.0:
-            partes.append("Tem sobra, pode usar mistura rica.")
-        partes.append("Bateria em %d por cento." % round(st["ersStore"] / 4e4))
+            partes.append(tx("Tem sobra, pode usar mistura rica."))
+        partes.append(tx("Bateria em %d por cento.") % round(st["ersStore"] / 4e4))
         if d.t2 and d.t2.get("regs2026"):
-            partes.append("Overtake disponível." if d.t2.get("otAvail") else "Overtake ainda não.")
+            partes.append(tx("Overtake disponível.") if d.t2.get("otAvail") else tx("Overtake ainda não."))
         self.responde(" ".join(partes))
 
     def _r_perdendo(self):
         rep = self.report
         if not rep or not rep["corners"]:
-            self.responde("Ainda não tenho volta pra comparar. Faz uma volta limpa e me pergunta de novo.")
+            self.responde(tx("Ainda não tenho volta pra comparar. Faz uma volta limpa e me pergunta de novo."))
             return
         piores = sorted((c for c in rep["corners"] if c.get("loss") and c["loss"] >= 0.05),
                         key=lambda c: -c["loss"])[:2]
         if not piores:
-            partes = ["Na última volta você não perdeu nada relevante em nenhuma curva. Tá voando."]
+            partes = [tx("Na última volta você não perdeu nada relevante em nenhuma curva. Tá voando.")]
         else:
-            partes = ["Na última volta você perdeu mais"]
+            partes = [tx("Na última volta você perdeu mais")]
             for i, c in enumerate(piores):
-                partes.append("%s %d, %s%s." % ("na" if i == 0 else "Depois na", c["n"], fala_dif(c["loss"]),
+                partes.append("%s %d, %s%s." % (tx("na") if i == 0 else tx("Depois na"), c["n"], fala_dif(c["loss"]),
                                                 ": " + c["tip"] if c.get("tip") else ""))
         hab = (self.resumo or {}).get("habitos") or {}
         if hab:
             n, h = max(hab.items(), key=lambda kv: kv[1][1])
-            partes.append("E fica de olho na %d: você costuma %s." % (n, HABITO.get(h[0], h[0])))
+            partes.append(tx("E fica de olho na %d: você costuma %s.") % (n, tx(HABITO.get(h[0], h[0]))))
         self.responde(" ".join(partes))
 
     def _r_clima(self):
         s = self.d.session
         if not s:
             return False
-        partes = ["%s, pista a %d graus, ar a %d." % (s["weather"], s["trackTemp"], s["airTemp"])]
+        partes = [tx("%s, pista a %d graus, ar a %d.") % (tx(s["weather"]), s["trackTemp"], s["airTemp"])]
         prox = [r for r in s["rain"] if r[0] > 0]
         chuva = next((r for r in prox if r[1] >= 40), None)
         if chuva:
-            partes.append("Chuva de %d por cento em %d minutos." % (chuva[1], chuva[0]))
+            partes.append(tx("Chuva de %d por cento em %d minutos.") % (chuva[1], chuva[0]))
         elif prox:
-            partes.append("Sem chuva forte prevista.")
+            partes.append(tx("Sem chuva forte prevista."))
         if s["isRace"] and s["pitIdeal"]:
             if s["pitLatest"] and s["pitLatest"] != s["pitIdeal"]:
-                partes.append("Janela de pit entre as voltas %d e %d." % (s["pitIdeal"], s["pitLatest"]))
+                partes.append(tx("Janela de pit entre as voltas %d e %d.") % (s["pitIdeal"], s["pitLatest"]))
             else:
-                partes.append("Volta ideal pro pit: %d." % s["pitIdeal"])
+                partes.append(tx("Volta ideal pro pit: %d.") % s["pitIdeal"])
         self.responde(" ".join(partes))
 
     def _r_repetir(self):
         ultima = next((m for m in reversed(self.msgs) if not m.get("resp")), None)
         if ultima is None:
-            self.responde("Nada pra repetir ainda.")
+            self.responde(tx("Nada pra repetir ainda."))
         else:
             self.say(ultima["text"], pri=2, ttl=15, tom=ultima["tom"], chamar=False, resp=True, show=ultima["show"])
 
     def _r_silencio(self):
         self.silencio = not self.silencio
         if self.silencio:
-            self.responde(self.escolhe("silencio_on", ["Entendido, só o essencial a partir de agora.",
-                                                       "Copiado. Fico quieto, só o importante."]), chamar=False)
+            self.responde(self.escolhe("silencio_on", [tx("Entendido, só o essencial a partir de agora."),
+                                                       tx("Copiado. Fico quieto, só o importante.")]), chamar=False)
         else:
-            self.responde(self.escolhe("silencio_off", ["Rádio normal de novo.", "Ok, voltei a falar tudo."]),
+            self.responde(self.escolhe("silencio_off", [tx("Rádio normal de novo."), tx("Ok, voltei a falar tudo.")]),
                           chamar=False)
 
     def on_event(self, code, data, player):
@@ -1093,21 +1094,21 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             return
         self._seguro(self._cr_evento, code, data)
         if code == "LGOT":
-            self.say(self.escolhe("largada", ["Luzes apagadas! Vai%s!" % vn, "Vai, vai, vai!",
-                                              "Largou! Boa corrida%s." % vn]),
+            self.say(self.escolhe("largada", [tx("Luzes apagadas! Vai%s!") % vn, tx("Vai, vai, vai!"),
+                                              tx("Largou! Boa corrida%s.") % vn]),
                      pri=2, ttl=5, tom="animado", chamar=False)
         elif code == "CHQF" and self.d.lap:
             pos = self.d.lap[13]
             if pos == 1:
-                texto = self.escolhe("vitoria", ["Vencemos%s! Que corrida! P1!" % vn,
-                                                 "É P1! Vitória%s, que pilotagem!" % vn])
+                texto = self.escolhe("vitoria", [tx("Vencemos%s! Que corrida! P1!") % vn,
+                                                 tx("É P1! Vitória%s, que pilotagem!") % vn])
             elif pos <= 3:
-                texto = "Pódio%s! P%d, grande corrida!" % (vn, pos)
+                texto = tx("Pódio%s! P%d, grande corrida!") % (vn, pos)
             else:
-                texto = self.escolhe("chegada", ["Bandeira quadriculada. P%d%s, bom trabalho." % (pos, vn),
-                                                 "Fim de corrida, P%d. Valeu o esforço%s." % (pos, vn)])
+                texto = self.escolhe("chegada", [tx("Bandeira quadriculada. P%d%s, bom trabalho.") % (pos, vn),
+                                                 tx("Fim de corrida, P%d. Valeu o esforço%s.") % (pos, vn)])
             self.say(texto, pri=2, tom="animado" if pos <= 3 else "normal", chamar=False,
-                     show="Bandeira quadriculada · P%d" % pos)
+                     show=tx("Bandeira quadriculada · P%d") % pos)
         elif code == "SEND":
             self._seguro(self._cr_fim_sessao)
             self._seguro(self.end_session)
@@ -1129,7 +1130,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             "talk": self.talk, "report": self.report, "mapVer": self.map_ver,
             "nCorners": len(self.corners), "ref": ref_ms, "refKind": tipo,
             "record": self.recorde_ms, "ideal": r.get("ideal", 0),
-            "habits": {str(k): HABITO.get(h[0], h[0]) for k, h in r.get("habitos", {}).items()},
+            "habits": {str(k): tx(HABITO.get(h[0], h[0])) for k, h in r.get("habitos", {}).items()},
         }
 
     def telemetria(self, n):

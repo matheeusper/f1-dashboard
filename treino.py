@@ -10,6 +10,7 @@
 import statistics
 
 from analise import HABITO, TRAVA, fala_dif, fala_volta
+from idioma import tx
 
 TIME_TRIAL = 18
 
@@ -26,8 +27,8 @@ def fala_cent(seg):
     if c >= 10:
         return fala_dif(seg)
     if c == 0:
-        return "menos de um centésimo"
-    return "um centésimo" if c == 1 else "%d centésimos" % c
+        return tx("menos de um centésimo")
+    return tx("um centésimo") if c == 1 else tx("%d centésimos") % c
 
 
 class TreinoMixin:
@@ -49,16 +50,16 @@ class TreinoMixin:
     # ---------------------------------------------------------------- escolher a curva
     def tr_alternar(self, n=None):
         if not self.tr_disponivel():
-            self.responde("O modo treino só funciona no Time Trial.")
+            self.responde(tx("O modo treino só funciona no Time Trial."))
             return
         if not self.corners:
-            self.responde("Ainda não mapeei as curvas. Faz uma volta limpa primeiro.")
+            self.responde(tx("Ainda não mapeei as curvas. Faz uma volta limpa primeiro."))
             return
         if n is None and self.tr_curva is not None or n is not None and n == self.tr_curva:
             antiga = self.tr_curva
             self.tr_curva = None
             self.tr_metas = [m for m in self.tr_metas if m["id"] != "curva"]
-            self.responde("Treino da curva %d encerrado." % antiga, chamar=False)
+            self.responde(tx("Treino da curva %d encerrado.") % antiga, chamar=False)
             return
         if n is None:   # sem escolha: a curva onde voce mais perde
             n = (self.resumo or {}).get("fraca")
@@ -73,13 +74,13 @@ class TreinoMixin:
         self.tr_seg = []
         self.tr_metas = [m for m in self.tr_metas if m["id"] != "curva"]
         self.tr_metas.append({"id": "curva", "curva": n, "meta": 5, "prog": 0, "feito": False,
-                              "texto": "Curva %d: 5 voltas seguidas a menos de 5 centésimos do seu melhor" % n})
-        partes = ["Treino na curva %d. Vou cobrar consistência nela." % n]
+                              "texto": tx("Curva %d: 5 voltas seguidas a menos de 5 centésimos do seu melhor") % n})
+        partes = [tx("Treino na curva %d. Vou cobrar consistência nela.") % n]
         alvo = self._alvo_frenagem(c)
         if alvo:
-            partes.append("Alvo de frenagem: %d metros." % (5 * round(alvo / 5)))
-            self._define_dica(c, "freie a %d metros" % (5 * round(alvo / 5)), self.lap_no or 0)
-        partes.append("Meta: 5 voltas seguidas a menos de 5 centésimos do seu melhor trecho.")
+            partes.append(tx("Alvo de frenagem: %d metros.") % (5 * round(alvo / 5)))
+            self._define_dica(c, tx("freie a %d metros") % (5 * round(alvo / 5)), self.lap_no or 0)
+        partes.append(tx("Meta: 5 voltas seguidas a menos de 5 centésimos do seu melhor trecho."))
         self.responde(" ".join(partes))
 
     # ---------------------------------------------------------------- metas do dia
@@ -95,29 +96,29 @@ class TreinoMixin:
             ganho = max(100, (rec - ideal) * 0.5) if rec and ideal and rec > ideal else (100 if rec else 500)
             alvo = int((base - ganho) // 100 * 100)
             metas.append({"id": "tempo", "alvo": alvo, "meta": 1, "prog": 0, "feito": False,
-                          "texto": "Bater %s hoje" % fmt_meta(alvo)})
+                          "texto": tx("Bater %s hoje") % fmt_meta(alvo)})
         metas.append({"id": "sem_trava", "meta": 5, "prog": 0, "feito": False,
-                      "texto": "5 voltas seguidas sem travar"})
+                      "texto": tx("5 voltas seguidas sem travar")})
         metas.append({"id": "constante", "meta": 3, "prog": 0, "feito": False,
-                      "texto": "3 voltas seguidas a menos de 3 décimos do recorde"})
+                      "texto": tx("3 voltas seguidas a menos de 3 décimos do recorde")})
         hab = r.get("habitos") or {}
         if hab:
             n, h = max(hab.items(), key=lambda kv: kv[1][1])
             metas.append({"id": "vicio", "curva": n, "motivo": h[0], "meta": 5, "prog": 0, "feito": False,
-                          "texto": "Curva %d: 5 voltas seguidas sem %s" % (n, HABITO.get(h[0], h[0]))})
+                          "texto": tx("Curva %d: 5 voltas seguidas sem %s") % (n, tx(HABITO.get(h[0], h[0])))})
         self.tr_metas = metas + [m for m in self.tr_metas if m["id"] == "curva"]
         lista = ", ".join(m["texto"][:1].lower() + m["texto"][1:] for m in metas)
         if metas and metas[0]["id"] == "tempo":
             lista = lista.replace(fmt_meta(metas[0]["alvo"]), fala_volta(metas[0]["alvo"]))
-        self.say("Time Trial. Metas de hoje: %s. Aperte T no painel para treinar uma curva." % lista,
-                 pri=3, ttl=60, tom="calmo", show="Metas de hoje: " + " · ".join(m["texto"] for m in metas))
+        self.say(tx("Time Trial. Metas de hoje: %s. Aperte T no painel para treinar uma curva.") % lista,
+                 pri=3, ttl=60, tom="calmo", show=tx("Metas de hoje: ") + " · ".join(m["texto"] for m in metas))
 
     def _tr_conquista(self, meta):
         meta["feito"] = True
         meta["prog"] = meta["meta"]
-        self.say("Meta cumprida%s: %s!" % (self.vn(), meta["texto"].lower() if meta["id"] != "tempo"
+        self.say(tx("Meta cumprida%s: %s!") % (self.vn(), meta["texto"].lower() if meta["id"] != "tempo"
                                            else "bateu " + fala_volta(meta["alvo"])),
-                 pri=2, tom="animado", chamar=False, show="🏆 Meta cumprida: " + meta["texto"])
+                 pri=2, tom="animado", chamar=False, show=tx("🏆 Meta cumprida: ") + meta["texto"])
         if self.hist and self.chave:
             self._seguro(self.hist.salvar_conquista, self.chave, self.sess_id, meta["texto"])
 
@@ -149,19 +150,19 @@ class TreinoMixin:
                 if valida and ms <= meta["alvo"]:
                     self._tr_conquista(meta)
             elif meta["id"] == "sem_trava":
-                self._tr_conta(meta, valida and not travou, "Mais uma volta sem travar e a meta está batida.")
+                self._tr_conta(meta, valida and not travou, tx("Mais uma volta sem travar e a meta está batida."))
             elif meta["id"] == "constante":
                 ok = valida and self.recorde_ms and ms - self.recorde_ms <= 300
-                self._tr_conta(meta, ok, "Mais uma volta nesse ritmo e a meta de constância está batida.")
+                self._tr_conta(meta, ok, tx("Mais uma volta nesse ritmo e a meta de constância está batida."))
             elif meta["id"] == "vicio":
                 x = por_curva.get(meta["curva"])
                 ok = valida and x is not None and meta["motivo"] not in [k for k, _ in x["motivos"]]
-                self._tr_conta(meta, ok, "Curva %d: mais uma volta sem o vício e a meta está batida." % meta["curva"])
+                self._tr_conta(meta, ok, tx("Curva %d: mais uma volta sem o vício e a meta está batida.") % meta["curva"])
             elif meta["id"] == "curva":
                 x = por_curva.get(meta["curva"])
                 melhor = self._tr_melhor(meta["curva"])
                 ok = valida and x is not None and melhor and x["m"]["seg"] - melhor <= 50
-                self._tr_conta(meta, ok, "Curva %d: mais uma e a meta está batida." % meta["curva"])
+                self._tr_conta(meta, ok, tx("Curva %d: mais uma e a meta está batida.") % meta["curva"])
         self._tr_feedback(por_curva, valida)
 
     def _tr_feedback(self, por_curva, valida):
@@ -178,41 +179,41 @@ class TreinoMixin:
         melhor = self._tr_melhor(n)
         partes = []
         if melhor and seg <= melhor + 5:
-            partes.append("Curva %d: melhor trecho seu nessa curva!" % n)
+            partes.append(tx("Curva %d: melhor trecho seu nessa curva!") % n)
         elif melhor:
-            partes.append("Curva %d: %s do seu melhor." % (n, fala_cent((seg - melhor) / 1000)))
+            partes.append(tx("Curva %d: %s do seu melhor.") % (n, fala_cent((seg - melhor) / 1000)))
         if bp is not None and x.get("dist"):
             alvo = x["dist"][1]
-            partes.append("Frenagem a %d metros, alvo %d." % (bp, 5 * round(alvo / 5)))
+            partes.append(tx("Frenagem a %d metros, alvo %d.") % (bp, 5 * round(alvo / 5)))
         if len(self.tr_seg) >= 3:
             segs = [s for s, _ in self.tr_seg]
             bps = [b for _, b in self.tr_seg if b is not None]
-            var = "Variação de %s" % fala_cent(statistics.pstdev(segs) / 1000)
+            var = tx("Variação de %s") % fala_cent(statistics.pstdev(segs) / 1000)
             if len(bps) >= 3:
-                var += " e %d metros na frenagem" % round(statistics.pstdev(bps))
-            partes.append(var + " nas últimas %d." % len(segs))
+                var += tx(" e %d metros na frenagem") % round(statistics.pstdev(bps))
+            partes.append(var + tx(" nas últimas %d.") % len(segs))
         if not valida:
-            partes.append("Volta inválida, não conta para as metas.")
+            partes.append(tx("Volta inválida, não conta para as metas."))
         self.say(" ".join(partes), pri=2, ttl=30, tom="calmo", chamar=False)
         # dica fixa da curva treinada para a proxima volta
         c = x["c"]
         alvo_m = self._alvo_frenagem(c)
-        self._define_dica(c, "freie a %d metros" % (5 * round(alvo_m / 5)) if alvo_m else "foco total",
+        self._define_dica(c, tx("freie a %d metros") % (5 * round(alvo_m / 5)) if alvo_m else tx("foco total"),
                           (self.lap_no or 0) + 1)
 
     # ---------------------------------------------------------------- botao 9 e tela
     def _r_metas(self):
         if not self.tr_disponivel():
-            self.responde("Metas e treino só no Time Trial.")
+            self.responde(tx("Metas e treino só no Time Trial."))
             return
         if not self.tr_metas:
-            self.responde("As metas aparecem depois da primeira volta limpa.")
+            self.responde(tx("As metas aparecem depois da primeira volta limpa."))
             return
         partes = []
         for m in self.tr_metas:
-            partes.append("%s: %s" % (m["texto"], "feita" if m["feito"] else "%d de %d" % (m["prog"], m["meta"])))
+            partes.append("%s: %s" % (m["texto"], tx("feita") if m["feito"] else tx("%d de %d") % (m["prog"], m["meta"])))
         if self.tr_curva:
-            partes.append("Treinando a curva %d" % self.tr_curva)
+            partes.append(tx("Treinando a curva %d") % self.tr_curva)
         self.responde(". ".join(partes) + ".")
 
     def tr_view(self):

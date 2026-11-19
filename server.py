@@ -20,9 +20,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs
 
 import historico
+import idioma
 import voz as vozmod
 from caminhos import CONGELADO, RECURSOS
 from f1_packets import Decoder
+from idioma import tx
 
 WEB_DIR = os.path.join(RECURSOS, "web")
 STATIC = {
@@ -32,6 +34,7 @@ STATIC = {
     "/app.js": ("app.js", "application/javascript; charset=utf-8"),
     "/evolucao": ("evolucao.html", "text/html; charset=utf-8"),
     "/evolucao.js": ("evolucao.js", "application/javascript; charset=utf-8"),
+    "/i18n.js": ("i18n.js", "application/javascript; charset=utf-8"),
     "/icone.png": ("icone.png", "image/png"),
     "/favicon.ico": ("icone.png", "image/png"),
 }
@@ -46,8 +49,10 @@ decoder.eng.ajustes = ajustes
 def config_view():
     from engenheiro import BOTOES
     eng = decoder.eng
-    return {"ajustes": ajustes.get(), "vozes": vozmod.VOZES, "status": voz.status(), "neural": voz.neural(),
-            "botoes": BOTOES, "nomeJogo": eng._seguro(eng.nome_do_jogo), "nomeAtual": eng._seguro(eng.nome) or "",
+    a = ajustes.get()
+    return {"ajustes": a, "vozes": vozmod.vozes(a["idioma"]), "idiomas": idioma.IDIOMAS,
+            "status": voz.status(), "neural": voz.neural(),
+            "botoes": {n: tx(t) for n, t in BOTOES.items()}, "nomeJogo": eng._seguro(eng.nome_do_jogo), "nomeAtual": eng._seguro(eng.nome) or "",
             "online": bool((decoder.session or {}).get("online"))}
 
 
@@ -100,7 +105,10 @@ class Handler(BaseHTTPRequestHandler):
         if not entry:
             return self._send(b"Nao encontrado", "text/plain", 404)
         with open(os.path.join(WEB_DIR, entry[0]), "rb") as f:
-            self._send(f.read(), entry[1])
+            corpo = f.read()
+        if entry[0].endswith(".html") and idioma.ingles():   # a pagina se traduz sozinha pelo lang do <html>
+            corpo = corpo.replace(b'<html lang="pt-BR">', b'<html lang="en">', 1)
+        self._send(corpo, entry[1])
 
     def do_POST(self):
         path = self.path.partition("?")[0]
@@ -304,14 +312,14 @@ def iniciar(args):
         udp.bind((host, args.porta_udp))
     except OSError:
         udp.close()
-        raise ErroInicio("A porta UDP %d já está em uso: outro app de telemetria (SimHub, Crew Chief...) "
-                         "ou o próprio painel já está aberto." % args.porta_udp)
+        raise ErroInicio(tx("A porta UDP %d já está em uso: outro app de telemetria (SimHub, Crew Chief...) "
+                            "ou o próprio painel já está aberto.") % args.porta_udp)
     try:
         ThreadingHTTPServer.daemon_threads = True
         httpd = ThreadingHTTPServer((host, args.porta_web), Handler)
     except OSError:
         udp.close()
-        raise ErroInicio("A porta %d já está em uso: o painel já está aberto?" % args.porta_web)
+        raise ErroInicio(tx("A porta %d já está em uso: o painel já está aberto?") % args.porta_web)
 
     threading.Thread(target=udp_loop, args=(udp,), daemon=True).start()
     threading.Thread(target=httpd.serve_forever, daemon=True).start()

@@ -14,6 +14,7 @@ from collections import Counter, defaultdict
 
 from analise import Trace
 from caminhos import DADOS
+from idioma import tx
 
 PASTA = DADOS
 ARQUIVO = os.path.join(PASTA, "historico.sqlite3")
@@ -200,7 +201,7 @@ def api_pistas(caminho=ARQUIVO):
             "min(case when v.valida=1 then v.tempo_ms end), max(s.inicio) "
             "from sessoes s join voltas v on v.sessao_id=s.id group by s.pista_key "
             "order by max(s.inicio) desc").fetchall()
-        return [{"key": r[0], "pista": r[1], "sessoes": r[2], "voltas": r[3], "recorde": r[4] or 0,
+        return [{"key": r[0], "pista": tx(r[1]), "sessoes": r[2], "voltas": r[3], "recorde": r[4] or 0,
                  "ultima": r[5]} for r in rows]
     finally:
         db.close()
@@ -218,7 +219,7 @@ def api_evolucao(chave, caminho=ARQUIVO):
                 continue
             validas = [t for t, ok in linhas if ok]
             media, desvio = _media_limpa(validas)
-            sessoes.append({"id": sid, "inicio": inicio, "tipo": tipo, "voltas": len(linhas),
+            sessoes.append({"id": sid, "inicio": inicio, "tipo": tx(tipo), "voltas": len(linhas),
                             "validas": len(validas), "melhor": min(validas) if validas else 0,
                             "media": round(media), "desvio": round(desvio)})
         ref = db.execute("select tempo_ms, curvas from referencias where pista_key=?", (chave,)).fetchone()
@@ -244,7 +245,7 @@ def api_evolucao(chave, caminho=ARQUIVO):
                            "habito": hab[0] if hab else None, "habito_pct": hab[1] if hab else 0})
         conquistas = [{"texto": t, "quando": q} for t, q in db.execute(
             "select texto, quando from conquistas where pista_key=? order by quando desc limit 40", (chave,))]
-        return {"key": chave, "pista": pista, "recorde": ref[0] if ref else 0, "ideal": resumo["ideal"],
+        return {"key": chave, "pista": tx(pista), "recorde": ref[0] if ref else 0, "ideal": resumo["ideal"],
                 "voltas": resumo["voltas"], "sessoes": sessoes, "curvas": curvas, "conquistas": conquistas}
     finally:
         db.close()

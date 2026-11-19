@@ -1,6 +1,8 @@
 # Painel F1 25: telemetria e engenheiro de corrida com voz
 
-Painel em estilo cluster de carro para o **F1 25**, feito para um segundo monitor na vertical, um tablet ou o celular. Vem com um **engenheiro de corrida que fala com você em português**:
+**Português** · [English](README.en.md)
+
+Painel em estilo cluster de carro para o **F1 25**, feito para um segundo monitor na vertical, um tablet ou o celular. Vem com um **engenheiro de corrida que fala com você pelo rádio, em português ou em inglês**:
 
 - analisa cada curva, aprende os seus vícios e acompanha a sua evolução;
 - faz a estratégia de pit;
@@ -34,6 +36,7 @@ Painel em estilo cluster de carro para o **F1 25**, feito para um segundo monito
 - **Time Trial:** modo treino de uma curva, metas do dia e conquistas.
 - **Acerto:** detecta subesterço e sobresterço e sugere ajustes.
 - **Layouts:** monitor em pé, monitor ou tablet deitado, e celular (compacto, letras grandes).
+- **Dois idiomas:** português e inglês, no menu, no painel e na voz do engenheiro.
 
 ## Instalação (Windows)
 
@@ -47,6 +50,8 @@ Não precisa instalar nada: é um arquivo só.
    - **Iniciar painel**: recebe a telemetria do jogo e abre o painel;
    - **Demo: corrida simulada** e **Demo: Time Trial**: para ver tudo funcionando sem o jogo;
    - **Painel no celular ou tablet**: libera o painel na rede local e mostra o endereço para digitar no aparelho.
+
+O menu segue o idioma do Windows. Para trocar, clique em **🌐 English / Português** no rodapé do menu, ou use **⚙ AJUSTES → IDIOMA** no painel.
 
 Depois de escolher, o menu vai para a barra de tarefas. Lá ele mostra o status e tem botões para trazer o painel para a frente, abrir a página Evolução ou trocar de modo. **Fechar essa janela desliga o painel.**
 
@@ -91,8 +96,9 @@ No menu, escolha **Demo: corrida simulada** (rivais, pit stops, safety car e err
 O engenheiro fala com você e mostra as mensagens na faixa **RÁDIO DO ENGENHEIRO**. Ele só fala nas retas, nunca na frenagem ou no meio da curva. Avisos urgentes, como dano, punição ou safety car, esperam no máximo 2 segundos.
 
 **Voz e personalidade:** aperte **C**, ou clique em **⚙ AJUSTES** no rádio, para escolher:
+- **Idioma:** português ou inglês. O painel inteiro e o engenheiro mudam juntos.
 - **Seu nome no rádio:** ele chama você pelo primeiro nome (*"Isso, Max! Recorde pessoal!"*). Por padrão, usa o nome do piloto que você escolheu no jogo, inclusive um piloto personalizado do Modo Carreira ou do My Team. Online, ou com a opção desligada nos Ajustes, vale o nome que você digitou.
-- **A voz:** Antonio, Francisca ou Thalita, que são vozes neurais da Microsoft e soam humanas. Ou a voz do Windows, que funciona sem internet.
+- **A voz:** Antonio, Francisca ou Thalita, que são vozes neurais da Microsoft e soam humanas (em inglês: Ryan, Sonia, Andrew ou William). Ou a voz do Windows, que funciona sem internet.
 - **Velocidade e volume.** O botão **▶ TESTAR VOZ** faz um rádio check.
 - **Som de rádio de equipe:** bipes ao abrir e fechar a transmissão, voz filtrada e chiado regulável.
 
@@ -202,7 +208,7 @@ O engenheiro mede o equilíbrio do carro na entrada, no meio e na saída de cada
 |---|---|
 | **A** | Análise da última volta: mapa, telemetria comparada, metas e acerto. Use **← →** ou clique para trocar de curva. |
 | **E** | Página Evolução |
-| **C** | Ajustes do rádio: nome, voz, velocidade, volume e som de rádio |
+| **C** | Ajustes do rádio: idioma, nome, voz, velocidade, volume e som de rádio |
 | **V** | Voz: tudo → só importante → desligada |
 | **1 a 9, 0** | Perguntas ao engenheiro (as mesmas dos botões do volante) |
 | **T** | Time Trial: treinar a curva selecionada |
@@ -263,15 +269,19 @@ Só biblioteca padrão do Python, mais o [`edge-tts`](https://pypi.org/project/e
 | `acerto.py` | Análise do acerto do carro |
 | `historico.py` | Histórico em SQLite e dados da página Evolução |
 | `voz.py` | Voz neural (edge-tts) e ajustes |
+| `idioma.py`, `textos_en.py` | Idioma e a tradução inglesa do engenheiro, do menu e do servidor |
 | `simulador.py` | Gera telemetria falsa no formato do jogo, para testes |
 | `menu.py` | Janela de menu: iniciar painel, demo, Time Trial, celular |
 | `caminhos.py` | Onde ficam os arquivos, rodando pelo código ou como executável |
-| `web/` | Painel e página Evolução |
+| `web/` | Painel e página Evolução (o `web/i18n.js` traduz as páginas) |
 
 ```bash
 uv run server.py --demo --abrir           # painel com corrida simulada
 uv run simulador.py --porta 20777         # só o simulador, enviando para um servidor já aberto
+uv run tools/checar_traducao.py           # confere se todo texto tem tradução em inglês
 ```
+
+**Traduções:** os textos ficam escritos em português dentro de `tx("...")` (ou `N_("...")` em listas do módulo) no Python e de `T('...')` nas páginas. As versões em inglês ficam em `textos_en.py` e `web/i18n.js`, com o texto em português como chave. O `tools/checar_traducao.py` aponta o que faltar.
 
 **Executável:** o `build.ps1` gera o `dist\PainelF1.exe`, um arquivo só, sem console e com ícone, usando o PyInstaller (`powershell -ExecutionPolicy Bypass -File build.ps1`). O mesmo build roda sozinho no GitHub Actions (`.github/workflows/executavel.yml`): a cada release publicada, o `.exe` é compilado num Windows e anexado à release. O ícone é gerado por `tools/gerar_icone.py` (`icone.ico` e `web/icone.png`).
 

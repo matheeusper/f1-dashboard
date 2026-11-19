@@ -220,6 +220,8 @@
   <div id="cfg" class="cfg">
     <div class="cfg-card">
       <div class="a-title">RÁDIO E VOZ</div>
+      <label class="cfg-row"><span class="lbl">IDIOMA · LANGUAGE</span>
+        <select id="cfgIdioma"></select></label>
       <label class="cfg-row"><span class="lbl">SEU NOME NO RÁDIO</span>
         <input id="cfgNome" maxlength="24" placeholder="Ex.: Max" autocomplete="off"></label>
       <label class="cfg-check"><input id="cfgNomeJogo" type="checkbox"> Chamar pelo nome do piloto que estou usando no jogo</label>
@@ -259,7 +261,7 @@
         <li>Taxa de envio: <b>60 Hz</b></li>
         <li>Formato UDP: <b>2025</b> ou <b>2026</b></li>
       </ol>
-      <p class="dim">O painel acende sozinho quando você entrar na pista. Para testar sem o jogo, use o Demo.bat.</p>
+      <p class="dim">O painel acende sozinho quando você entrar na pista. Para testar sem o jogo, escolha o Demo no menu do programa.</p>
       <div class="wait-actions">
         <button id="wCfg" class="a-btn" type="button">⚙ AJUSTES DO RÁDIO</button>
         <a class="a-btn" href="/evolucao">📈 EVOLUÇÃO</a>
@@ -268,6 +270,7 @@
     </div>
   </div>
 </div>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -12,18 +12,19 @@ import unicodedata
 
 from analise import fala_dif, fala_gap, fala_volta
 from analise import num as numero
+from idioma import N_, ingles, tx
 
 SECOS = (16, 17, 18)
-COMPOSTO = {16: "macios", 17: "médios", 18: "duros", 7: "intermediários", 8: "de chuva"}
-PNEU = ["traseiro esquerdo", "traseiro direito", "dianteiro esquerdo", "dianteiro direito"]
+COMPOSTO = {16: N_("macios"), 17: N_("médios"), 18: N_("duros"), 7: N_("intermediários"), 8: N_("de chuva")}
+PNEU = [N_("traseiro esquerdo"), N_("traseiro direito"), N_("dianteiro esquerdo"), N_("dianteiro direito")]
 TREINO = (1, 2, 3, 4)
 QUALI = tuple(range(5, 15))
 QUALI_Q1 = (5, 10)     # Q1 e Sprint Shootout 1
 QUALI_Q2 = (6, 11)     # Q2 e Sprint Shootout 2
-MOTIVO_ABANDONO = {3: "batida", 6: "bandeira preta", 8: "falha mecânica"}
-MOTIVO_DRS = {0: "pista molhada", 1: "safety car", 2: "bandeira vermelha"}
-ALERTA_TEMPO = [(600, "Dez minutos restantes."), (300, "Cinco minutos restantes."),
-                (120, "Dois minutos restantes."), (60, "Último minuto!")]
+MOTIVO_ABANDONO = {3: N_("batida"), 6: N_("bandeira preta"), 8: N_("falha mecânica")}
+MOTIVO_DRS = {0: N_("pista molhada"), 1: N_("safety car"), 2: N_("bandeira vermelha")}
+ALERTA_TEMPO = [(600, N_("Dez minutos restantes.")), (300, N_("Cinco minutos restantes.")),
+                (120, N_("Dois minutos restantes.")), (60, N_("Último minuto!"))]
 
 
 def nome_curto(bruto):
@@ -99,16 +100,16 @@ class CorridaMixin:
         return al[i][13] if al and i is not None and 0 <= i < len(al) else None
 
     def quem(self, i):
-        """'o Norris' (ou 'o P3' se o nome nao vier)."""
+        """'o Norris' (ou 'o P3' se o nome nao vier). Em ingles, so 'Norris' / 'P3'."""
         n = self.piloto(i)
         if n:
-            return "o " + n
+            return n if ingles() else "o " + n
         p = self._pos_de(i)
-        return "o P%d" % p if p else "o carro"
+        return tx("o P%d") % p if p else tx("o carro")
 
     def de(self, i):
-        """'do Norris' / 'do P3'."""
-        return "d" + self.quem(i)
+        """'do Norris' / 'do P3' (em ingles, igual a quem)."""
+        return self.quem(i) if ingles() else "d" + self.quem(i)
 
     def rotulo(self, pos):
         """Quem esta na posicao: 'Norris' (ou 'P3' sem nome), para comecar frases."""
@@ -133,7 +134,7 @@ class CorridaMixin:
         if s["isRace"]:
             if s["safetyCar"] == 3 and not self.cr_formacao:
                 self.cr_formacao = True
-                self.say("Volta de formação. Aqueça pneus e freios e mantenha a posição. Você larga em P%d."
+                self.say(tx("Volta de formação. Aqueça pneus e freios e mantenha a posição. Você larga em P%d.")
                          % v[24], pri=2, ttl=40, tom="calmo")
             self._cr_posicao(v, s, agora)
             self._cr_pit(v, st, s)
@@ -168,21 +169,21 @@ class CorridaMixin:
         ganhou = pos < self.cr_pos_anunciada
         if ganhou:
             if pos == 1:
-                texto = "Você lidera! P1!"
+                texto = tx("Você lidera! P1!")
             elif ov and ov[0] == "passou":
                 q = self.quem(ov[1])
-                texto = self.escolhe("passou", ["Passou %s! P%d." % (q, pos),
-                                                "Boa! %s ficou pra trás, P%d." % (cap(q), pos),
-                                                "Isso! Deixou %s pra trás, P%d." % (q, pos)])
+                texto = self.escolhe("passou", [tx("Passou %s! P%d.") % (q, pos),
+                                                tx("Boa! %s ficou pra trás, P%d.") % (cap(q), pos),
+                                                tx("Isso! Deixou %s pra trás, P%d.") % (q, pos)])
             else:
-                texto = self.escolhe("ganhou", ["P%d, ganhou posição." % pos, "Subiu pra P%d." % pos])
+                texto = self.escolhe("ganhou", [tx("P%d, ganhou posição.") % pos, tx("Subiu pra P%d.") % pos])
         else:
             if ov and ov[0] == "perdeu":
                 q = self.quem(ov[1])
-                texto = self.escolhe("perdeu", ["%s passou. P%d." % (cap(q), pos),
-                                                "Perdemos a posição pr%s, P%d." % (q, pos)])
+                texto = self.escolhe("perdeu", [tx("%s passou. P%d.") % (cap(q), pos),
+                                                tx("Perdemos a posição pr%s, P%d.") % (q, pos)])
             else:
-                texto = "Perdeu posição, P%d." % pos
+                texto = tx("Perdeu posição, P%d.") % pos
         self.say(texto, pri=2, ttl=10, chave="posicao", cool=4, tom="animado" if ganhou else "normal")
         self.cr_pos_anunciada = pos
         self.cr_ovtk = None
@@ -192,7 +193,7 @@ class CorridaMixin:
         pit, tel = v[15], self.d.tel
         if st and tel and self._segura("limitador", pit >= 1 and st["pitLimiter"] == 0
                                        and tel["speed"] > s["pitLimit"] + 3, 0.3):
-            self.say("Limitador! Limitador!", pri=1, ttl=4, chave="limitador", cool=15, tom="urgente",
+            self.say(tx("Limitador! Limitador!"), pri=1, ttl=4, chave="limitador", cool=15, tom="urgente",
                      chamar=False)
         if pit:
             self.cr_pit_max = (max(self.cr_pit_max[0], v[29]), max(self.cr_pit_max[1], v[28]))
@@ -204,17 +205,17 @@ class CorridaMixin:
                 parada = self.cr_pit_max[0]
                 partes = []
                 if parada:
-                    partes.append("Parada de %s segundos." % numero(parada / 1000))
-                partes.append("Voltou em P%d." % v[13])
+                    partes.append(tx("Parada de %s segundos.") % numero(parada / 1000))
+                partes.append(tx("Voltou em P%d.") % v[13])
                 atras = self.idx_pos(v[13] + 1)
                 if atras is not None:
                     lv = self.d.all_lap[atras]
                     gap = lv[7] * 60000 + lv[6]
                     if 0 < gap < 5000:
-                        partes.append("%s está %s atrás." % (cap(self.quem(atras)), fala_gap(gap)))
-                comp = COMPOSTO.get(st["visual"]) if st else None
-                partes.append("Pneus %s frios, cuidado nas primeiras curvas." % comp if comp else
-                              "Pneus frios, cuidado nas primeiras curvas.")
+                        partes.append(tx("%s está %s atrás.") % (cap(self.quem(atras)), fala_gap(gap)))
+                comp = tx(COMPOSTO.get(st["visual"])) if st else None
+                partes.append(tx("Pneus %s frios, cuidado nas primeiras curvas.") % comp if comp else
+                              tx("Pneus frios, cuidado nas primeiras curvas."))
                 self.say(" ".join(partes), pri=2, ttl=25)
                 self.cr_ultimo_pit_volta = v[14]
             self.cr_pit_max = (0, 0)
@@ -238,13 +239,13 @@ class CorridaMixin:
             if not lv[15] and r["pit"] and lv[16] > r["pits"]:   # acabou de sair do pit depois de parar
                 antes = r["pos"]
                 if abs(antes - minha) <= 3 or antes == 1:
-                    comp = COMPOSTO.get(d.all_status[i][0]) if d.all_status and i < len(d.all_status) else None
-                    frase = "%s, que era P%d, parou%s." % (cap(self.quem(i)), antes,
-                                                           ", colocou pneus " + comp if comp else "")
+                    comp = tx(COMPOSTO.get(d.all_status[i][0])) if d.all_status and i < len(d.all_status) else None
+                    frase = tx("%s, que era P%d, parou%s.") % (cap(self.quem(i)), antes,
+                                                           tx(", colocou pneus ") + comp if comp else "")
                     if v[15] == 0 and antes == minha - 1:
-                        frase += " Pista livre na frente: força agora pra ganhar no overcut."
+                        frase += tx(" Pista livre na frente: força agora pra ganhar no overcut.")
                     elif v[15] == 0 and antes == minha + 1:
-                        frase += " Cuidado com o undercut. Se pararmos na próxima, cobrimos."
+                        frase += tx(" Cuidado com o undercut. Se pararmos na próxima, cobrimos.")
                     self.say(frase, pri=2 if abs(antes - minha) <= 1 else 3, ttl=25)
             r["pits"], r["pit"] = lv[16], lv[15]
             if not lv[15]:
@@ -260,7 +261,7 @@ class CorridaMixin:
         restantes = s["totalLaps"] - v[14]
         seco = all(c in SECOS for c in self.cr_compostos)
         if seco and len(self.cr_compostos) < 2 and 0 < restantes <= 6 and v[16] == 0:
-            self.say("Lembra da regra dos dois compostos: em corrida seca ainda falta parar.", pri=2,
+            self.say(tx("Lembra da regra dos dois compostos: em corrida seca ainda falta parar."), pri=2,
                      chave="dois_compostos", cool=99999)
 
     # ---------------------------------------------------------------- furo
@@ -274,10 +275,10 @@ class CorridaMixin:
             return
         for i in range(4):
             if atual[i] >= 50 > self.cr_pneu_dmg[i]:
-                self.say("Pneu %s muito danificado, %d por cento. Pode ser furo: box, box!" % (PNEU[i], atual[i]),
+                self.say(tx("Pneu %s muito danificado, %d por cento. Pode ser furo: box, box!") % (tx(PNEU[i]), atual[i]),
                          pri=1, tom="urgente")
             elif atual[i] >= self.cr_pneu_dmg[i] + 20:
-                self.say("Dano no pneu %s, %d por cento." % (PNEU[i], atual[i]), pri=1)
+                self.say(tx("Dano no pneu %s, %d por cento.") % (tx(PNEU[i]), atual[i]), pri=1)
         self.cr_pneu_dmg = list(atual)
 
     # ---------------------------------------------------------------- classificacao e treino
@@ -290,17 +291,17 @@ class CorridaMixin:
             if tl and tl <= lim and lim not in self.cr_alertas_tempo:
                 self.cr_alertas_tempo.add(lim)
                 if tl > lim - 20:   # acabou de cruzar (ao entrar no meio da sessao, nao fala os antigos)
-                    self.say(texto, pri=2, ttl=15, tom="calmo", chamar=lim <= 60)
+                    self.say(tx(texto), pri=2, ttl=15, tom="calmo", chamar=lim <= 60)
         ds = v[25]
         if ds != self.cr_driver_status:
             antes, self.cr_driver_status = self.cr_driver_status, ds
             if antes is not None and not v[15]:
                 if ds == 3:
-                    self.say(self.escolhe("saida", ["Volta de saída. Aqueça os pneus e abra espaço pra volta rápida.",
-                                                    "Volta de saída: pneus e freios na temperatura e procura espaço."]),
+                    self.say(self.escolhe("saida", [tx("Volta de saída. Aqueça os pneus e abra espaço pra volta rápida."),
+                                                    tx("Volta de saída: pneus e freios na temperatura e procura espaço.")]),
                              pri=3, ttl=15, tom="calmo")
                 elif ds == 2 and antes == 1:
-                    self.say("Volta de entrada, pode recolher.", pri=3, ttl=15, tom="calmo")
+                    self.say(tx("Volta de entrada, pode recolher."), pri=3, ttl=15, tom="calmo")
         if tipo in QUALI_Q1 + QUALI_Q2:
             self._cr_corte(v, s, tipo, agora)
 
@@ -325,18 +326,18 @@ class CorridaMixin:
         if not meu:
             if not tl_ok(s):
                 return
-            texto = "Você ainda não tem tempo marcado. Precisa de uma volta limpa."
+            texto = tx("Você ainda não tem tempo marcado. Precisa de uma volta limpa.")
         elif pos > corte:
             dif = (meu - tc) / 1000 if tc else 0
-            texto = "P%d, zona de eliminação. O corte é %s, P%d%s." % (
+            texto = tx("P%d, zona de eliminação. O corte é %s, P%d%s.") % (
                 pos, self.quem(ic) if ic is not None else "o P%d" % corte, corte,
-                ", faltam %s" % fala_dif(dif) if dif > 0 else "")
+                tx(", faltam %s") % fala_dif(dif) if dif > 0 else "")
         elif pos > corte - 3:
             ip = self.idx_pos(corte + 1)
             tp = d.hist.get(ip, (0,))[0] if ip is not None else 0
             margem = (tp - meu) / 1000 if tp else 0
-            texto = ("P%d, perto do corte. Margem de %s para o P%d." % (pos, fala_dif(margem), corte + 1)
-                     if margem > 0 else "P%d, perto do corte." % pos)
+            texto = (tx("P%d, perto do corte. Margem de %s para o P%d.") % (pos, fala_dif(margem), corte + 1)
+                     if margem > 0 else tx("P%d, perto do corte.") % pos)
         else:
             return
         self.say(texto, pri=2, ttl=20, chave="corte", cool=60)
@@ -353,11 +354,11 @@ class CorridaMixin:
                 continue
             delta = (lv[10] - minha) % L
             if ds == 1 and 40 < delta < 450 and lv[25] in (2, 3):
-                self.say("Carro lento à frente: %s em volta %s." % (self.quem(i), "de saída" if lv[25] == 3
-                                                                    else "de entrada"),
+                self.say(tx("Carro lento à frente: %s em volta %s.") % (self.quem(i), tx("de saída") if lv[25] == 3
+                                                                    else tx("de entrada")),
                          pri=2, ttl=6, chave="trafego_frente", cool=25)
             elif ds in (2, 3) and L - 450 < delta < L - 30 and lv[25] == 1:
-                self.say("Carro em volta rápida atrás, %s. Deixe passar." % self.quem(i), pri=1, ttl=6,
+                self.say(tx("Carro em volta rápida atrás, %s. Deixe passar.") % self.quem(i), pri=1, ttl=6,
                          chave="trafego_atras", cool=25, tom="normal", chamar=False)
 
     # ================================================================ eventos do jogo
@@ -378,37 +379,37 @@ class CorridaMixin:
                 return
             pos = self._pos_de(i)
             minha = d.lap[13] if d.lap else 0
-            extra = MOTIVO_ABANDONO.get(motivo)
-            self.say("%s abandonou%s." % (cap(self.quem(i)), ", " + extra if extra else ""),
+            extra = tx(MOTIVO_ABANDONO.get(motivo))
+            self.say(tx("%s abandonou%s.") % (cap(self.quem(i)), ", " + extra if extra else ""),
                      pri=2 if pos and abs(pos - minha) <= 2 else 3, ttl=20)
         elif code == "FTLP" and corrida:
             i = data[33]
             t = struct.unpack_from("<f", data, 34)[0]
             if i != p and t > 0:
-                self.say("Volta mais rápida %s: %s." % (self.de(i), fala_volta(int(t * 1000))), pri=3, ttl=15,
+                self.say(tx("Volta mais rápida %s: %s.") % (self.de(i), fala_volta(int(t * 1000))), pri=3, ttl=15,
                          chave="ftlp_outro", cool=20, chamar=False)
         elif code == "RCWN" and corrida:
             if data[33] != p:
-                self.say("%s vence a corrida." % cap(self.quem(data[33])), pri=3, ttl=30, chamar=False)
+                self.say(tx("%s vence a corrida.") % cap(self.quem(data[33])), pri=3, ttl=30, chamar=False)
         elif code == "DRSE" and corrida:
-            self.say("DRS habilitado.", pri=2, ttl=8, chave="drs_on", cool=30, chamar=False)
+            self.say(tx("DRS habilitado."), pri=2, ttl=8, chave="drs_on", cool=30, chamar=False)
         elif code == "DRSD" and corrida:
-            motivo = MOTIVO_DRS.get(data[33])
+            motivo = tx(MOTIVO_DRS.get(data[33]))
             if motivo:
-                self.say("DRS desabilitado, %s." % motivo, pri=2, ttl=8, chave="drs_off", cool=30, chamar=False)
+                self.say(tx("DRS desabilitado, %s.") % motivo, pri=2, ttl=8, chave="drs_off", cool=30, chamar=False)
         elif code == "SCAR":
             tipo, ev = data[33], data[34]
             if ev == 1 and tipo == 1:
-                self.say("Safety car entra nesta volta. Aqueça os pneus e prepare a relargada.", pri=1, ttl=20)
+                self.say(tx("Safety car entra nesta volta. Aqueça os pneus e prepare a relargada."), pri=1, ttl=20)
             elif ev == 1 and tipo == 2:
-                self.say("VSC terminando. Prepare-se pra acelerar.", pri=1, ttl=15)
+                self.say(tx("VSC terminando. Prepare-se pra acelerar."), pri=1, ttl=15)
         elif code == "RDFL":
-            self.say("Bandeira vermelha! Diminua e volte para o pit.", pri=1, ttl=20)
+            self.say(tx("Bandeira vermelha! Diminua e volte para o pit."), pri=1, ttl=20)
         elif code == "COLL":
             a, b = data[33], data[34]
             if p in (a, b):
                 outro = b if a == p else a
-                self.say("Contato com %s. Tudo bem? Vou checar os danos." % self.quem(outro), pri=2, ttl=10,
+                self.say(tx("Contato com %s. Tudo bem? Vou checar os danos.") % self.quem(outro), pri=2, ttl=10,
                          chave="contato", cool=15)
 
     def _cr_fim_sessao(self):
@@ -416,11 +417,11 @@ class CorridaMixin:
         if not self.cr_corte:
             return
         pos, corte, fase = self.cr_corte
-        proxima = {"Q1": "Q2", "Q2": "Q3", "SQ1": "SQ2", "SQ2": "SQ3"}.get(fase, "próxima fase")
+        proxima = {"Q1": "Q2", "Q2": "Q3", "SQ1": "SQ2", "SQ2": "SQ3"}.get(fase, tx("próxima fase"))
         if pos <= corte:
-            self.say("Passamos! P%d, estamos no %s." % (pos, proxima), pri=2, tom="animado")
+            self.say(tx("Passamos! P%d, estamos no %s.") % (pos, proxima), pri=2, tom="animado")
         else:
-            self.say("Fim do %s. P%d, ficamos fora dessa vez." % (fase, pos), pri=2, tom="calmo")
+            self.say(tx("Fim do %s. P%d, ficamos fora dessa vez.") % (fase, pos), pri=2, tom="calmo")
         self.cr_corte = None
 
 

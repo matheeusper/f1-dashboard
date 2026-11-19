@@ -10,7 +10,9 @@ import sys
 import tkinter as tk
 import webbrowser
 
+import idioma
 from caminhos import APP_DIR, CONGELADO, RECURSOS
+from idioma import N_, tx
 
 REPO = "https://github.com/matheeusper/f1-dashboard"
 BG, CARD, CARD_HOVER, LINHA = "#05070b", "#111823", "#1a2433", "#26324a"
@@ -19,10 +21,10 @@ FONTE = "Bahnschrift"
 
 # (chave, titulo, descricao, argumentos do servidor)
 MODOS = [
-    ("painel", "Iniciar painel", "Recebe a telemetria do F1 25 e abre o painel", []),
-    ("demo", "Demo: corrida simulada", "Veja tudo funcionando sem abrir o jogo", ["--demo"]),
-    ("tt", "Demo: Time Trial", "Testa o modo treino e as metas do dia", ["--demo", "--time-trial"]),
-    ("lan", "Painel no celular ou tablet", "Libera o painel na rede local e mostra o endereço", ["--lan"]),
+    ("painel", N_("Iniciar painel"), N_("Recebe a telemetria do F1 25 e abre o painel"), []),
+    ("demo", N_("Demo: corrida simulada"), N_("Veja tudo funcionando sem abrir o jogo"), ["--demo"]),
+    ("tt", N_("Demo: Time Trial"), N_("Testa o modo treino e as metas do dia"), ["--demo", "--time-trial"]),
+    ("lan", N_("Painel no celular ou tablet"), N_("Libera o painel na rede local e mostra o endereço"), ["--lan"]),
 ]
 
 
@@ -52,33 +54,56 @@ class Menu:
     def __init__(self, base):
         self.base = base
         self.url = None
+        self.tela = None   # (chave, args) depois de escolher um modo
         _dpi_nitido()
         self.root = root = tk.Tk()
-        root.title("Painel F1 25")
         root.configure(bg=BG, padx=26, pady=22)
         root.resizable(False, False)
         self._icone()
         root.protocol("WM_DELETE_WINDOW", self.sair)
+        self.img_topo = self._png(64)
+        self._montar()
 
+    def _montar(self):
+        """Monta a janela inteira no idioma atual (de novo quando o idioma muda)."""
+        root = self.root
+        for w in root.winfo_children():
+            w.destroy()
+        root.title(tx("Painel F1 25"))
         topo = tk.Frame(root, bg=BG)
         topo.pack(fill="x")
-        self.img_topo = self._png(64)
         if self.img_topo:
             tk.Label(topo, image=self.img_topo, bg=BG).pack(side="left", padx=(0, 14))
         txt = tk.Frame(topo, bg=BG)
         txt.pack(side="left", fill="x")
-        tk.Label(txt, text="PAINEL F1 25", font=(FONTE, 22, "bold"), fg=TEXTO, bg=BG).pack(anchor="w")
-        tk.Label(txt, text="Telemetria e engenheiro de corrida", font=(FONTE, 11), fg=DIM, bg=BG).pack(anchor="w")
+        tk.Label(txt, text=tx("PAINEL F1 25"), font=(FONTE, 22, "bold"), fg=TEXTO, bg=BG).pack(anchor="w")
+        tk.Label(txt, text=tx("Telemetria e engenheiro de corrida"), font=(FONTE, 11), fg=DIM, bg=BG).pack(anchor="w")
 
         self.corpo = tk.Frame(root, bg=BG)
         self.corpo.pack(fill="both", expand=True, pady=(18, 0))
-        self._menu()
+        if self.tela:
+            self._rodando(*self.tela, primeira=False)
+        else:
+            self._menu()
 
-        rodape = tk.Label(root, text="Manual e novidades no GitHub", font=(FONTE, 10, "underline"),
+        rodape = tk.Frame(root, bg=BG)
+        rodape.pack(fill="x", pady=(16, 0))
+        gh = tk.Label(rodape, text=tx("Manual e novidades no GitHub"), font=(FONTE, 10, "underline"),
+                      fg=DIM, bg=BG, cursor="hand2")
+        gh.pack(side="left")
+        gh.bind("<Button-1>", lambda e: webbrowser.open(REPO))
+        outro = "en" if idioma.atual() == "pt" else "pt"
+        lingua = tk.Label(rodape, text="🌐 " + idioma.IDIOMAS[outro], font=(FONTE, 10, "underline"),
                           fg=DIM, bg=BG, cursor="hand2")
-        rodape.pack(anchor="w", pady=(16, 0))
-        rodape.bind("<Button-1>", lambda e: webbrowser.open(REPO))
+        lingua.pack(side="right")
+        lingua.bind("<Button-1>", lambda e: self.trocar_idioma(outro))
         self._centralizar()
+
+    def trocar_idioma(self, lang):
+        """Muda o idioma do painel todo (engenheiro, voz e paginas) e remonta o menu."""
+        from server import ajustes
+        ajustes.atualiza({"idioma": lang})
+        self._montar()
 
     # ------------------------------------------------------------ visual
     def _icone(self):
@@ -137,7 +162,7 @@ class Menu:
     def _menu(self):
         self._limpar()
         for i, (chave, titulo, desc, extra) in enumerate(MODOS):
-            self._cartao(self.corpo, titulo, desc, lambda c=chave, x=extra: self.escolher(c, x), destaque=i == 0)
+            self._cartao(self.corpo, tx(titulo), tx(desc), lambda c=chave, x=extra: self.escolher(c, x), destaque=i == 0)
         self.erro = tk.Label(self.corpo, text="", font=(FONTE, 10), fg=VERMELHO, bg=BG, wraplength=380,
                              justify="left", anchor="w")
         self.erro.pack(fill="x", pady=(6, 0))
@@ -154,46 +179,48 @@ class Menu:
             return
         self._rodando(chave, args)
 
-    def _rodando(self, chave, args):
+    def _rodando(self, chave, args, primeira=True):
+        self.tela = (chave, args)
         self._limpar()
-        titulo = {k: t for k, t, _d, _x in MODOS}[chave]
+        titulo = tx({k: t for k, t, _d, _x in MODOS}[chave])
         linha = tk.Frame(self.corpo, bg=BG)
         linha.pack(fill="x")
         tk.Label(linha, text="●", font=(FONTE, 14), fg=VERDE, bg=BG).pack(side="left")
-        tk.Label(linha, text=" %s: rodando" % titulo, font=(FONTE, 14, "bold"), fg=TEXTO, bg=BG).pack(side="left")
+        tk.Label(linha, text=tx(" %s: rodando") % titulo, font=(FONTE, 14, "bold"), fg=TEXTO, bg=BG).pack(side="left")
 
         def info(texto, cor=DIM, tam=11):
             tk.Label(self.corpo, text=texto, font=(FONTE, tam), fg=cor, bg=BG, wraplength=390,
                      justify="left", anchor="w").pack(fill="x", pady=(8, 0))
 
         if chave in ("painel", "lan"):
-            info("Esperando o F1 25 na porta UDP %d. Entre na pista e o painel acende sozinho." % args.porta_udp)
-            info("No jogo: Configurações → Telemetria → UDP ligado, IP 127.0.0.1, porta %d, 60 Hz."
+            info(tx("Esperando o F1 25 na porta UDP %d. Entre na pista e o painel acende sozinho.") % args.porta_udp)
+            info(tx("No jogo: Configurações → Telemetria → UDP ligado, IP 127.0.0.1, porta %d, 60 Hz.")
                  % args.porta_udp, tam=10)
         else:
-            info("Dados simulados, sem o jogo. O demo usa um histórico separado do seu.")
+            info(tx("Dados simulados, sem o jogo. O demo usa um histórico separado do seu."))
         if chave == "lan":
             ip = ip_local()
-            endereco = "http://%s:%d" % (ip, args.porta_web) if ip else "(não achei o IP deste PC: veja com ipconfig)"
-            info("No celular ou tablet, na mesma rede, abra:", cor=TEXTO)
+            endereco = "http://%s:%d" % (ip, args.porta_web) if ip else tx("(não achei o IP deste PC: veja com ipconfig)")
+            info(tx("No celular ou tablet, na mesma rede, abra:"), cor=TEXTO)
             campo = tk.Entry(self.corpo, font=(FONTE, 18, "bold"), fg=CIANO, bg=CARD, relief="flat",
                              readonlybackground=CARD, justify="center", highlightthickness=1,
                              highlightbackground=LINHA)
             campo.insert(0, endereco)
             campo.configure(state="readonly")
             campo.pack(fill="x", pady=(6, 0), ipady=6)
-            info("Se não abrir, libere o Painel F1 25 no firewall do Windows (redes privadas e públicas). "
-                 "Deixe a VOZ desligada no celular para o engenheiro não falar em dobro.", tam=10)
+            info(tx("Se não abrir, libere o Painel F1 25 no firewall do Windows (redes privadas e públicas). "
+                 "Deixe a VOZ desligada no celular para o engenheiro não falar em dobro."), tam=10)
 
         botoes = tk.Frame(self.corpo, bg=BG)
         botoes.pack(fill="x", pady=(16, 0))
         from server import abrir_ou_focar
-        self._botao(botoes, "Abrir painel", lambda: abrir_ou_focar(self.url), principal=True).pack(side="left")
-        self._botao(botoes, "Evolução", lambda: webbrowser.open(self.url + "/evolucao")).pack(side="left", padx=8)
-        self._botao(botoes, "Trocar de modo", self.reiniciar).pack(side="left")
-        info("Fechar esta janela desliga o painel.", tam=10)
-        self._centralizar()
-        if chave != "lan":   # o painel ja abriu: o menu sai da frente e fica na barra de tarefas
+        self._botao(botoes, tx("Abrir painel"), lambda: abrir_ou_focar(self.url), principal=True).pack(side="left")
+        self._botao(botoes, tx("Evolução"), lambda: webbrowser.open(self.url + "/evolucao")).pack(side="left", padx=8)
+        self._botao(botoes, tx("Trocar de modo"), self.reiniciar).pack(side="left")
+        info(tx("Fechar esta janela desliga o painel."), tam=10)
+        if primeira:
+            self._centralizar()
+        if primeira and chave != "lan":   # o painel ja abriu: o menu sai da frente e fica na barra de tarefas
             self.root.after(1500, self.root.iconify)
 
     # ------------------------------------------------------------ sair / reiniciar

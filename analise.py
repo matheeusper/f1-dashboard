@@ -9,7 +9,9 @@
 import bisect
 from array import array
 
-RODAS = ["traseira esquerda", "traseira direita", "dianteira esquerda", "dianteira direita"]
+from idioma import N_, ingles, tx
+
+RODAS = [N_("traseira esquerda"), N_("traseira direita"), N_("dianteira esquerda"), N_("dianteira direita")]
 TRAVA = 0.3     # escorregamento da roda na frenagem que conta como travada
 PATINA = 0.25   # escorregamento traseiro com acelerador que conta como patinada
 
@@ -243,49 +245,49 @@ def deltas(m, r):
 # --------------------------------------------------------------- textos
 def texto_meu(motivo, valor):
     return {
-        "trava": "travou a roda %s" % (RODAS[valor] if 0 <= valor < 4 else ""),
-        "cedo": "freou %d metros cedo demais" % valor,
-        "tarde": "freou %d metros tarde e passou do ponto" % valor,
-        "lento": "contornou %d km/h mais lento" % valor,
-        "acel": "acelerou %d metros mais tarde na saída" % valor,
-        "patinou": "patinou na saída",
-        "rapido": "entrou %d km/h rápido demais e saiu mal" % valor,
-        "geral": "perdeu tempo no trecho",
+        "trava": tx("travou a roda %s") % (tx(RODAS[valor]) if 0 <= valor < 4 else ""),
+        "cedo": tx("freou %d metros cedo demais") % valor,
+        "tarde": tx("freou %d metros tarde e passou do ponto") % valor,
+        "lento": tx("contornou %d km/h mais lento") % valor,
+        "acel": tx("acelerou %d metros mais tarde na saída") % valor,
+        "patinou": tx("patinou na saída"),
+        "rapido": tx("entrou %d km/h rápido demais e saiu mal") % valor,
+        "geral": tx("perdeu tempo no trecho"),
     }[motivo]
 
 
 def texto_outro(motivo, valor):
     return {
-        "trava": "você travou a roda %s" % (RODAS[valor] if 0 <= valor < 4 else ""),
-        "cedo": "ele freia %d metros depois de você" % valor,
-        "tarde": "ele freia %d metros antes e sai melhor" % valor,
-        "lento": "ele contorna %d km/h mais rápido" % valor,
-        "acel": "ele acelera %d metros antes na saída" % valor,
-        "patinou": "você patinou na saída",
-        "rapido": "ele entra mais devagar e sai melhor",
-        "geral": "ele é mais rápido no trecho",
+        "trava": tx("você travou a roda %s") % (tx(RODAS[valor]) if 0 <= valor < 4 else ""),
+        "cedo": tx("ele freia %d metros depois de você") % valor,
+        "tarde": tx("ele freia %d metros antes e sai melhor") % valor,
+        "lento": tx("ele contorna %d km/h mais rápido") % valor,
+        "acel": tx("ele acelera %d metros antes na saída") % valor,
+        "patinou": tx("você patinou na saída"),
+        "rapido": tx("ele entra mais devagar e sai melhor"),
+        "geral": tx("ele é mais rápido no trecho"),
     }[motivo]
 
 
 DICA = {
-    "trava": "cuidado com a trava na frenagem",
-    "cedo": "freie mais tarde",
-    "tarde": "freie um pouco antes",
-    "lento": "leve mais velocidade no meio",
-    "acel": "acelere mais cedo",
-    "patinou": "dose o acelerador na saída",
-    "rapido": "entre mais devagar e saia forte",
+    "trava": N_("cuidado com a trava na frenagem"),
+    "cedo": N_("freie mais tarde"),
+    "tarde": N_("freie um pouco antes"),
+    "lento": N_("leve mais velocidade no meio"),
+    "acel": N_("acelere mais cedo"),
+    "patinou": N_("dose o acelerador na saída"),
+    "rapido": N_("entre mais devagar e saia forte"),
     "geral": None,
 }
 
 HABITO = {
-    "trava": "travar as rodas",
-    "cedo": "frear cedo demais",
-    "tarde": "frear tarde e passar do ponto",
-    "lento": "contornar devagar demais",
-    "acel": "acelerar tarde na saída",
-    "patinou": "patinar na saída",
-    "rapido": "entrar rápido demais",
+    "trava": N_("travar as rodas"),
+    "cedo": N_("frear cedo demais"),
+    "tarde": N_("frear tarde e passar do ponto"),
+    "lento": N_("contornar devagar demais"),
+    "acel": N_("acelerar tarde na saída"),
+    "patinou": N_("patinar na saída"),
+    "rapido": N_("entrar rápido demais"),
 }
 
 
@@ -299,18 +301,25 @@ def fala_volta(ms):
 def fala_dif(seg):
     decimos = int(round(abs(seg) * 10))
     if decimos == 0:
-        return "menos de um décimo"
+        return tx("menos de um décimo")
     if decimos == 1:
-        return "um décimo"
+        return tx("um décimo")
     if decimos < 10:
-        return "%d décimos" % decimos
-    return ("%.1f" % abs(seg)).replace(".", ",") + (" segundo" if abs(seg) < 2 else " segundos")
+        return tx("%d décimos") % decimos
+    return _segundos(abs(seg))
+
+
+def _segundos(s):
+    if ingles():
+        return "%.1f %s" % (s, "second" if round(s, 1) == 1 else "seconds")
+    return num(s) + (" segundo" if s < 2 else " segundos")
 
 
 def fala_gap(ms):
-    s = ms / 1000.0
-    return ("%.1f" % s).replace(".", ",") + (" segundo" if s < 2 else " segundos")
+    return _segundos(ms / 1000.0)
 
 
 def num(x, casas=1):
-    return ("%.*f" % (casas, x)).replace(".", ",")
+    """Numero com a virgula (ou ponto, em ingles) decimal."""
+    t = "%.*f" % (casas, x)
+    return t if ingles() else t.replace(".", ",")

@@ -11,10 +11,11 @@ import statistics
 import time
 
 from analise import fala_gap
+from idioma import N_, tx
 
 PERDA_PADRAO = 22.0          # segundos, ate aprender a pista
 FATOR_SC = {1: 0.55, 2: 0.7}  # o pit custa menos com safety car / VSC
-COMPOSTO = {16: "macios", 17: "médios", 18: "duros", 7: "intermediários", 8: "de chuva"}
+COMPOSTO = {16: N_("macios"), 17: N_("médios"), 18: N_("duros"), 7: N_("intermediários"), 8: N_("de chuva")}
 
 
 def cap(s):
@@ -89,17 +90,18 @@ class EstrategiaMixin:
                 (t[1], t[0] - alvo) if t else None,
                 perda)
 
-    def texto_previsao(self, prefixo="Se parar agora, volta em"):
+    def texto_previsao(self, prefixo=None):
+        prefixo = prefixo or tx("Se parar agora, volta em")
         p = self.previsao_pit()
         if not p:
             return ""
         pos, f, t, _perda = p
         partes = ["%s P%d" % (prefixo, pos)]
         if f:   # "1,2 segundo atrás do Pérez"
-            partes.append("%s atrás %s" % (fala_gap(f[1]), self.de(f[0])) if f[1] < 3000
-                          else "atrás %s" % self.de(f[0]))
+            partes.append(tx("%s atrás %s") % (fala_gap(f[1]), self.de(f[0])) if f[1] < 3000
+                          else tx("atrás %s") % self.de(f[0]))
         if t and t[1] < 3000:   # "com o Sainz 0,8 segundo atrás"
-            partes.append("com %s %s atrás" % (self.quem(t[0]), fala_gap(t[1])))
+            partes.append(tx("com %s %s atrás") % (self.quem(t[0]), fala_gap(t[1])))
         return ", ".join(partes) + "."
 
     # ================================================================ 2x por segundo (corrida)
@@ -119,9 +121,9 @@ class EstrategiaMixin:
             precisa = len(self.cr_compostos) < 2 and all(c in (16, 17, 18) for c in self.cr_compostos)
             if not recente and restantes > 2 and (st["tyreAge"] >= 6 or janela or precisa):
                 perda = self.perda_pit() * FATOR_SC[sc]
-                self.say("%s na pista! Box, box: o pit custa só uns %d segundos agora. %s"
-                         % ("Safety car" if sc == 1 else "VSC", round(perda),
-                            self.texto_previsao("Você volta em")),
+                self.say(tx("%s na pista! Box, box: o pit custa só uns %d segundos agora. %s")
+                         % (tx("Safety car") if sc == 1 else "VSC", round(perda),
+                            self.texto_previsao(tx("Você volta em"))),
                          pri=1, ttl=20, tom="urgente", chave="sc_box", cool=60)
         self.es_sc_prev = sc
 
@@ -141,10 +143,10 @@ class EstrategiaMixin:
             gap = v[7] * 60000 + v[6]
             idade = sts[fi][1]
             if 0 < gap < 3000 and idade - minha_idade >= 8:
-                self.say("%s está com pneus %d voltas mais velhos. Ele vai cair, pressiona."
+                self.say(tx("%s está com pneus %d voltas mais velhos. Ele vai cair, pressiona.")
                          % (cap(self.quem(fi)), idade - minha_idade), pri=3, chave="pneu_frente", cool=self.voltas(4))
             elif 0 < gap < 2000 and janela and sem_parar and not al[fi][15]:
-                self.say("Chance de undercut %s, a %s. Se pararmos nesta volta, o pneu novo pode te colocar na frente."
+                self.say(tx("Chance de undercut %s, a %s. Se pararmos nesta volta, o pneu novo pode te colocar na frente.")
                          % (self.de(fi), fala_gap(gap)), pri=2, chave="undercut_eu", cool=self.voltas(3))
         # carro de tras
         ti = self.idx_pos(pos + 1)
@@ -153,10 +155,10 @@ class EstrategiaMixin:
             gap_t = lt[7] * 60000 + lt[6]
             idade = sts[ti][1]
             if 0 < gap_t < 3000 and minha_idade - idade >= 8:
-                self.say("%s tem pneus %d voltas mais novos, vai vir forte." % (cap(self.quem(ti)), minha_idade - idade),
+                self.say(tx("%s tem pneus %d voltas mais novos, vai vir forte.") % (cap(self.quem(ti)), minha_idade - idade),
                          pri=3, chave="pneu_tras", cool=self.voltas(4))
             elif 0 < gap_t < 2500 and janela and sem_parar:
-                self.say("Atenção ao undercut %s, a %s. Se ele parar, a gente responde na volta seguinte."
+                self.say(tx("Atenção ao undercut %s, a %s. Se ele parar, a gente responde na volta seguinte.")
                          % (self.de(ti), fala_gap(gap_t)), pri=2, chave="undercut_ele", cool=self.voltas(3))
 
     def _es_minha_volta(self, ms, parou):
@@ -172,23 +174,23 @@ class EstrategiaMixin:
         if not s or v is None or not st:
             return False
         if not s["isRace"]:
-            self.responde("Estratégia de pit só na corrida.")
+            self.responde(tx("Estratégia de pit só na corrida."))
             return
-        partes = ["O pit aqui custa uns %d segundos." % round(self.perda_pit())]
+        partes = [tx("O pit aqui custa uns %d segundos.") % round(self.perda_pit())]
         prev = self.texto_previsao()
         if prev:
             partes.append(prev)
-        comp = COMPOSTO.get(st["visual"])
-        partes.append("Seus %s têm %d voltas." % (comp, st["tyreAge"]) if comp else
-                      "Seus pneus têm %d voltas." % st["tyreAge"])
-        for p, onde in ((v[13] - 1, "frente"), (v[13] + 1, "trás")):
+        comp = tx(COMPOSTO.get(st["visual"]))
+        partes.append(tx("Seus %s têm %d voltas.") % (comp, st["tyreAge"]) if comp else
+                      tx("Seus pneus têm %d voltas.") % st["tyreAge"])
+        for p, onde in ((v[13] - 1, tx("frente")), (v[13] + 1, tx("trás"))):
             i = self.idx_pos(p) if p >= 1 else None
             if i is not None and sts and i < len(sts):
-                c = COMPOSTO.get(sts[i][0])
+                c = tx(COMPOSTO.get(sts[i][0]))
                 if c:
-                    partes.append("%s, %s, está de %s com %d voltas." % (cap(self.quem(i)), onde, c, sts[i][1]))
+                    partes.append(tx("%s, %s, está de %s com %d voltas.") % (cap(self.quem(i)), onde, c, sts[i][1]))
         if s["pitIdeal"] and v[14] <= max(s["pitLatest"], s["pitIdeal"]):
-            partes.append("Janela de pit: volta %d%s." % (s["pitIdeal"], " a %d" % s["pitLatest"]
+            partes.append(tx("Janela de pit: volta %d%s.") % (s["pitIdeal"], tx(" a %d") % s["pitLatest"]
                                                         if s["pitLatest"] and s["pitLatest"] != s["pitIdeal"] else ""))
         self.responde(" ".join(partes))
 

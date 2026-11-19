@@ -12,19 +12,20 @@ import statistics
 from collections import deque
 
 from analise import ponto_entrada
+from idioma import N_, tx
 
 LIMIAR = 0.012        # rad (~0,7 grau) de diferenca de deriva para contar como sub/sobresterco
 PATINA_SAIDA = 0.15   # escorregamento medio dos traseiros com acelerador na saida
 DIF_TEMP = 8.0        # graus entre dianteiros e traseiros
-FASES = {"e": "na entrada", "m": "no meio", "s": "na saída"}
+FASES = {"e": N_("na entrada"), "m": N_("no meio"), "s": N_("na saída")}
 
 
 def _lista(ns):
     """'da curva 2' / 'das curvas 3 e 7'."""
     ns = sorted(ns)
     if len(ns) == 1:
-        return "da curva %d" % ns[0]
-    return "das curvas " + ", ".join(str(n) for n in ns[:-1]) + " e %d" % ns[-1]
+        return tx("da curva %d") % ns[0]
+    return tx("das curvas ") + ", ".join(str(n) for n in ns[:-1]) + tx(" e ") + str(ns[-1])
 
 
 class AcertoMixin:
@@ -106,28 +107,28 @@ class AcertoMixin:
         def de_para(nome, atual, novo, unid=""):
             if atual is None:
                 return nome
-            return "%s de %d para %d%s" % (nome, atual, novo, unid)
+            return tx("%s de %d para %d%s") % (nome, atual, novo, unid)
 
         sug = []
         tipos = {(f, t) for f, t, _ in achados}
         if ("e", "sub") in tipos:
-            sug.append(de_para("balanço de freio mais para trás", bias, (bias or 0) - 1, "%"))
-            sug.append(de_para("diferencial sem acelerador mais aberto", doff, max(10, (doff or 0) - 5), "%"))
+            sug.append(de_para(tx("balanço de freio mais para trás"), bias, (bias or 0) - 1, "%"))
+            sug.append(de_para(tx("diferencial sem acelerador mais aberto"), doff, max(10, (doff or 0) - 5), "%"))
         if ("e", "sobre") in tipos:
-            sug.append(de_para("balanço de freio mais para frente", bias, (bias or 0) + 1, "%"))
-            sug.append(de_para("diferencial sem acelerador mais fechado", doff, min(100, (doff or 0) + 5), "%"))
+            sug.append(de_para(tx("balanço de freio mais para frente"), bias, (bias or 0) + 1, "%"))
+            sug.append(de_para(tx("diferencial sem acelerador mais fechado"), doff, min(100, (doff or 0) + 5), "%"))
         if ("m", "sub") in tipos:
-            sug.append(de_para("mais asa dianteira", fw, (fw or 0) + 1))
+            sug.append(de_para(tx("mais asa dianteira"), fw, (fw or 0) + 1))
         if ("m", "sobre") in tipos:
-            sug.append(de_para("mais asa traseira", rw, (rw or 0) + 1))
+            sug.append(de_para(tx("mais asa traseira"), rw, (rw or 0) + 1))
         if ("s", "sub") in tipos or ("s", "sobre") in tipos or ("s", "patina") in tipos:
-            sug.append(de_para("diferencial no acelerador mais aberto", don, max(10, (don or 0) - 5), "%"))
+            sug.append(de_para(tx("diferencial no acelerador mais aberto"), don, max(10, (don or 0) - 5), "%"))
         if ("s", "sobre") in tipos or ("s", "patina") in tipos:
-            sug.append("acelerador mais progressivo na saída")
+            sug.append(tx("acelerador mais progressivo na saída"))
         if ("temp", "frente") in tipos:
-            sug.append("pressão dos dianteiros um pouco menor")
+            sug.append(tx("pressão dos dianteiros um pouco menor"))
         if ("temp", "tras") in tipos:
-            sug.append("pressão dos traseiros um pouco menor")
+            sug.append(tx("pressão dos traseiros um pouco menor"))
         return sug
 
     def ac_texto(self):
@@ -135,21 +136,21 @@ class AcertoMixin:
         if self.ac_voltas < 3:
             return None, achados
         if not achados:
-            return "Carro equilibrado nas últimas voltas: nada de subesterço ou sobresterço que se repita.", achados
+            return tx("Carro equilibrado nas últimas voltas: nada de subesterço ou sobresterço que se repita."), achados
         partes = []
         for fase, tipo, ns in achados:
             if fase == "temp":
-                partes.append("dianteiros %d graus mais quentes que os traseiros" % round(statistics.median(self.ac_temp))
+                partes.append(tx("dianteiros %d graus mais quentes que os traseiros") % round(statistics.median(self.ac_temp))
                               if tipo == "frente" else
-                              "traseiros %d graus mais quentes que os dianteiros" % round(-statistics.median(self.ac_temp)))
+                              tx("traseiros %d graus mais quentes que os dianteiros") % round(-statistics.median(self.ac_temp)))
             elif tipo == "patina":
-                partes.append("patinando na saída %s" % _lista(ns))
+                partes.append(tx("patinando na saída %s") % _lista(ns))
             else:
-                partes.append("%s %s %s" % ("subesterço" if tipo == "sub" else "sobresterço", FASES[fase], _lista(ns)))
-        texto = "Acerto: " + "; ".join(partes) + "."
+                partes.append("%s %s %s" % (tx("subesterço") if tipo == "sub" else tx("sobresterço"), tx(FASES[fase]), _lista(ns)))
+        texto = tx("Acerto: ") + "; ".join(partes) + "."
         sug = self.ac_sugestoes(achados)
         if sug:
-            texto += " Sugestão: " + "; ".join(sug) + "."
+            texto += tx(" Sugestão: ") + "; ".join(sug) + "."
         return texto, achados
 
     def _ac_fala_periodica(self, num):
@@ -167,7 +168,7 @@ class AcertoMixin:
     def _r_acerto(self):
         texto, _ = self.ac_texto()
         if texto is None:
-            self.responde("Ainda preciso de %d voltas lançadas para analisar o equilíbrio do carro."
+            self.responde(tx("Ainda preciso de %d voltas lançadas para analisar o equilíbrio do carro.")
                           % max(1, 3 - self.ac_voltas))
         else:
             self.responde(texto)
@@ -177,10 +178,10 @@ class AcertoMixin:
         itens = []
         for fase, tipo, ns in achados:
             if fase == "temp":
-                itens.append("Pneus dianteiros mais quentes" if tipo == "frente" else "Pneus traseiros mais quentes")
+                itens.append(tx("Pneus dianteiros mais quentes") if tipo == "frente" else tx("Pneus traseiros mais quentes"))
             elif tipo == "patina":
-                itens.append("Patinando na saída %s" % _lista(ns))
+                itens.append(tx("Patinando na saída %s") % _lista(ns))
             else:
-                itens.append("%s %s %s" % ("Subesterço" if tipo == "sub" else "Sobresterço", FASES[fase], _lista(ns)))
+                itens.append("%s %s %s" % (tx("Subesterço") if tipo == "sub" else tx("Sobresterço"), tx(FASES[fase]), _lista(ns)))
         return {"voltas": self.ac_voltas, "achados": itens, "sugestoes": self.ac_sugestoes(achados) if achados else [],
                 "ok": texto is not None}

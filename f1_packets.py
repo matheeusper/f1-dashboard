@@ -12,6 +12,9 @@ import struct
 import threading
 import time
 
+from idioma import N_, tx
+from idioma import atual as idioma_atual
+
 HEADER = struct.Struct("<HBBBBBQfIIBB")  # 29 bytes
 HEADER_SIZE = HEADER.size
 
@@ -79,27 +82,27 @@ PACKET_NAMES = {MOTION: "Motion", SESSION: "Session", LAP_DATA: "Lap Data", EVEN
                 MOTION_EX: "Motion Ex"}
 
 TRACKS = {
-    0: "Melbourne", 1: "Paul Ricard", 2: "Xangai", 3: "Sakhir", 4: "Barcelona", 5: "Mônaco",
+    0: "Melbourne", 1: N_("Paul Ricard"), 2: N_("Xangai"), 3: "Sakhir", 4: "Barcelona", 5: N_("Mônaco"),
     6: "Montreal", 7: "Silverstone", 8: "Hockenheim", 9: "Hungaroring", 10: "Spa-Francorchamps",
-    11: "Monza", 12: "Singapura", 13: "Suzuka", 14: "Abu Dhabi", 15: "Austin", 16: "Interlagos",
-    17: "Red Bull Ring", 18: "Sochi", 19: "Cidade do México", 20: "Baku", 21: "Sakhir (curto)",
-    22: "Silverstone (curto)", 23: "Austin (curto)", 24: "Suzuka (curto)", 25: "Hanói",
-    26: "Zandvoort", 27: "Ímola", 28: "Portimão", 29: "Jeddah", 30: "Miami", 31: "Las Vegas",
-    32: "Losail", 39: "Silverstone (invertido)", 40: "Red Bull Ring (invertido)",
-    41: "Zandvoort (invertido)", 42: "Madri",
+    11: "Monza", 12: N_("Singapura"), 13: "Suzuka", 14: N_("Abu Dhabi"), 15: "Austin", 16: "Interlagos",
+    17: N_("Red Bull Ring"), 18: "Sochi", 19: N_("Cidade do México"), 20: "Baku", 21: N_("Sakhir (curto)"),
+    22: N_("Silverstone (curto)"), 23: N_("Austin (curto)"), 24: N_("Suzuka (curto)"), 25: N_("Hanói"),
+    26: "Zandvoort", 27: N_("Ímola"), 28: N_("Portimão"), 29: "Jeddah", 30: "Miami", 31: N_("Las Vegas"),
+    32: "Losail", 39: N_("Silverstone (invertido)"), 40: N_("Red Bull Ring (invertido)"),
+    41: N_("Zandvoort (invertido)"), 42: N_("Madri"),
 }
 SESSION_TYPES = {
-    0: "—", 1: "Treino livre 1", 2: "Treino livre 2", 3: "Treino livre 3", 4: "Treino curto",
-    5: "Classificação 1", 6: "Classificação 2", 7: "Classificação 3", 8: "Classificação curta",
-    9: "Classificação volta única", 10: "Sprint Shootout 1", 11: "Sprint Shootout 2",
-    12: "Sprint Shootout 3", 13: "Sprint Shootout curto", 14: "Sprint Shootout volta única",
-    15: "Corrida", 16: "Corrida 2", 17: "Corrida 3", 18: "Time Trial",
+    0: "—", 1: N_("Treino livre 1"), 2: N_("Treino livre 2"), 3: N_("Treino livre 3"), 4: N_("Treino curto"),
+    5: N_("Classificação 1"), 6: N_("Classificação 2"), 7: N_("Classificação 3"), 8: N_("Classificação curta"),
+    9: N_("Classificação volta única"), 10: N_("Sprint Shootout 1"), 11: N_("Sprint Shootout 2"),
+    12: N_("Sprint Shootout 3"), 13: N_("Sprint Shootout curto"), 14: N_("Sprint Shootout volta única"),
+    15: N_("Corrida"), 16: N_("Corrida 2"), 17: N_("Corrida 3"), 18: N_("Time Trial"),
 }
 RACE_SESSIONS = (15, 16, 17)
-WEATHER = {0: "Limpo", 1: "Poucas nuvens", 2: "Nublado", 3: "Chuva fraca", 4: "Chuva forte",
-           5: "Tempestade"}
-SC_EVENT = {0: "acionado", 1: "voltando aos boxes", 2: "retornou aos boxes", 3: "corrida retomada"}
-SC_TYPE = {1: "Safety Car", 2: "Virtual Safety Car", 3: "Volta de formação"}
+WEATHER = {0: N_("Limpo"), 1: N_("Poucas nuvens"), 2: N_("Nublado"), 3: N_("Chuva fraca"), 4: N_("Chuva forte"),
+           5: N_("Tempestade")}
+SC_EVENT = {0: N_("acionado"), 1: N_("voltando aos boxes"), 2: N_("retornou aos boxes"), 3: N_("corrida retomada")}
+SC_TYPE = {1: N_("Safety Car"), 2: N_("Virtual Safety Car"), 3: N_("Volta de formação")}
 
 
 def fmt_time(ms):
@@ -178,7 +181,7 @@ class Decoder:
             lay = LAYOUTS.get(fmt)
             if lay is None:
                 self.last_rx = time.monotonic()
-                self._warn("Formato UDP %d não suportado. No jogo, escolha o formato 2025 ou 2026." % fmt)
+                self._warn(tx("Formato UDP %d não suportado. No jogo, escolha o formato 2025 ou 2026.") % fmt)
                 return
             self.last_rx = time.monotonic()
             self.fmt = fmt
@@ -186,7 +189,7 @@ class Decoder:
             if expected is None:
                 return
             if len(data) != expected:
-                self._warn("Pacote %s com tamanho inesperado (%d bytes, esperado %d)."
+                self._warn(tx("Pacote %s com tamanho inesperado (%d bytes, esperado %d).")
                            % (PACKET_NAMES.get(pid, pid), len(data), expected))
                 return
             if uid != self.uid:
@@ -285,7 +288,7 @@ class Decoder:
                 break
         self.session = {
             "weather": WEATHER.get(v[0], "—"), "weatherId": v[0], "trackTemp": v[1], "airTemp": v[2],
-            "totalLaps": v[3], "trackLength": v[4], "type": SESSION_TYPES.get(stype, "Sessão"),
+            "totalLaps": v[3], "trackLength": v[4], "type": SESSION_TYPES.get(stype, N_("Sessão")),
             "isRace": stype in RACE_SESSIONS, "track": TRACKS.get(v[6], "Pista %d" % v[6]),
             "timeLeft": v[8], "pitLimit": v[10], "safetyCar": data[OFF_SAFETY_CAR], "rain": rain,
             "trackId": v[6], "formula": v[7], "typeId": stype,
@@ -349,29 +352,29 @@ class Decoder:
         text, n = None, 0
         if code == "FTLP":
             idx, t = struct.unpack_from("<Bf", data, 33)
-            text = "Volta mais rápida: " + fmt_time(int(t * 1000))
+            text = tx("Volta mais rápida: ") + fmt_time(int(t * 1000))
             if idx == p:
-                text += " — sua!"
+                text += tx(" — sua!")
         elif code == "STLG":
             n = data[33]
         elif code == "LGOT":
-            text = "Luzes apagadas!"
+            text = tx("Luzes apagadas!")
         elif code == "CHQF":
-            text = "Bandeira quadriculada"
+            text = tx("Bandeira quadriculada")
         elif code == "RDFL":
-            text = "Bandeira vermelha"
+            text = tx("Bandeira vermelha")
         elif code == "DRSE":
-            text = "DRS liberado"
+            text = tx("DRS liberado")
         elif code == "DRSD":
-            text = "DRS desabilitado"
+            text = tx("DRS desabilitado")
         elif code == "SCAR":
             kind, ev = data[33], data[34]
             if kind in SC_TYPE:
-                text = "%s: %s" % (SC_TYPE[kind], SC_EVENT.get(ev, ""))
+                text = "%s: %s" % (tx(SC_TYPE[kind]), tx(SC_EVENT.get(ev, "")))
         elif code == "PENA":
             if data[35] == p:
                 secs = data[37]
-                text = "Punição recebida" + (" (%d s)" % secs if 0 < secs < 255 else "")
+                text = tx("Punição recebida") + (" (%d s)" % secs if 0 < secs < 255 else "")
         else:
             return
         if text is None and code != "STLG":
@@ -439,14 +442,21 @@ class Decoder:
         now = time.monotonic()
         with self.lock:
             return {
-                "connected": self.last_rx > 0 and now - self.last_rx < 2.0,
+                "connected": self.last_rx > 0 and now - self.last_rx < 2.0, "lang": idioma_atual(),
                 "format": self.fmt, "demo": self.demo,
                 "warn": self.warn if self.warn and now - self.warn_t < 6 else None,
                 "tel": self.tel, "status": self.status, "damage": self.damage,
-                "lap": self._lap_view(), "session": self.session, "motion": self.motion,
+                "lap": self._lap_view(), "session": self._session_view(), "motion": self.motion,
                 "setup": self.setup, "t2": self.t2, "event": self.event,
                 "coach": self.eng.view() if self.eng else None,
             }
+
+    def _session_view(self):
+        """A sessao com os nomes no idioma do painel (por dentro ficam em portugues)."""
+        s = self.session
+        if s is None:
+            return None
+        return dict(s, track=tx(s["track"]), type=tx(s["type"]), weather=tx(s["weather"]))
 
     def mapa(self):
         with self.lock:
