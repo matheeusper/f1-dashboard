@@ -1,8 +1,10 @@
 """Gera o icone do programa (conta-giros nas cores do painel) sem bibliotecas externas.
 
 Saidas:
-  icone.ico        icone do PainelF1.exe e da janela do menu (16 a 256 px)
-  web/icone.png    favicon do painel e da pagina Evolucao (256 px)
+  app/icons/icon.ico   icone do PainelF1.exe, da janela e da bandeja (16 a 256 px)
+  app/icons/icon.png   o mesmo em PNG (256 px), para o Tauri
+  app/ui/icone.png     logo da tela "Iniciando..." do app
+  web/icone.png        favicon do painel e da pagina Evolucao
 
 Uso:  uv run tools/gerar_icone.py
 """
@@ -113,11 +115,12 @@ def main():
         img = imagens[t]
         entradas += struct.pack("<BBBBHHII", t % 256, t % 256, 0, 0, 1, 32, len(img), pos + len(dados))
         dados += img
-    with open(os.path.join(RAIZ, "icone.ico"), "wb") as f:
+    with open(os.path.join(RAIZ, "app", "icons", "icon.ico"), "wb") as f:
         f.write(cab + entradas + dados)
-    with open(os.path.join(RAIZ, "web", "icone.png"), "wb") as f:
-        f.write(imagens[256])
-    print("icone.ico e web/icone.png gerados")
+    for caminho in (("app", "icons", "icon.png"), ("app", "ui", "icone.png"), ("web", "icone.png")):
+        with open(os.path.join(RAIZ, *caminho), "wb") as f:
+            f.write(imagens[256])
+    print("icones gerados em app/icons, app/ui e web")
 
 
 if __name__ == "__main__":

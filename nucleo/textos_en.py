@@ -513,36 +513,7 @@ EN = {
     "DRS desabilitado": "DRS disabled",
     "Punição recebida": "Penalty received",
 
-    # ------------------------------------------------------------ menu e servidor
-    "Iniciar painel": "Start dashboard",
-    "Recebe a telemetria do F1 25 e abre o painel": "Receives F1 25 telemetry and opens the dashboard",
-    "Demo: corrida simulada": "Demo: simulated race",
-    "Veja tudo funcionando sem abrir o jogo": "See everything working without the game",
-    "Demo: Time Trial": "Demo: Time Trial",
-    "Testa o modo treino e as metas do dia": "Try practice mode and the daily goals",
-    "Painel no celular ou tablet": "Dashboard on phone or tablet",
-    "Libera o painel na rede local e mostra o endereço": "Shares the dashboard on your network and shows the address",
-    "Painel F1 25": "Painel F1 25",
-    "PAINEL F1 25": "PAINEL F1 25",
-    "Telemetria e engenheiro de corrida": "Telemetry and race engineer",
-    "Fechar esta janela desliga o painel.": "Closing this window shuts the dashboard down.",
-    "Manual e novidades no GitHub": "Manual and updates on GitHub",
-    "Dados simulados, sem o jogo. O demo usa um histórico separado do seu.":
-        "Simulated data, no game needed. The demo uses a history separate from yours.",
-    "(não achei o IP deste PC: veja com ipconfig)": "(couldn't find this PC's IP: check with ipconfig)",
-    "No celular ou tablet, na mesma rede, abra:": "On your phone or tablet, on the same network, open:",
-    "Se não abrir, libere o Painel F1 25 no firewall do Windows (redes privadas e públicas). "
-    "Deixe a VOZ desligada no celular para o engenheiro não falar em dobro.":
-        "If it doesn't load, allow Painel F1 25 through the Windows firewall (private and public networks). "
-        "Keep VOICE off on the phone so the engineer doesn't talk twice.",
-    "Esperando o F1 25 na porta UDP %d. Entre na pista e o painel acende sozinho.":
-        "Waiting for F1 25 on UDP port %d. Go out on track and the dashboard lights up by itself.",
-    "No jogo: Configurações → Telemetria → UDP ligado, IP 127.0.0.1, porta %d, 60 Hz.":
-        "In the game: Settings → Telemetry → UDP on, IP 127.0.0.1, port %d, 60 Hz.",
-    "Abrir painel": "Open dashboard",
-    "Evolução": "Progress",
-    "Trocar de modo": "Change mode",
-    " %s: rodando": " %s: running",
+    # ------------------------------------------------------------ servidor
     "A porta UDP %d já está em uso: outro app de telemetria (SimHub, Crew Chief...) ou o próprio painel já está aberto.":
         "UDP port %d is already in use: another telemetry app (SimHub, Crew Chief...) or the dashboard itself is already open.",
     "A porta %d já está em uso: o painel já está aberto?": "Port %d is already in use: is the dashboard already open?",

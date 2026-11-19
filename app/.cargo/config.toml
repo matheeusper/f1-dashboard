@@ -1,3 +1,10 @@
 # Whisper (whisper-rs) gera as bindings com o libclang do LLVM (instalado em C:\Program Files\LLVM).
+# O whisper.cpp sai compilado para qualquer processador com AVX2 (desde ~2013), e nao so para o deste
+# PC: sem isso o .exe podia fechar sozinho em processadores mais antigos.
 [env]
 LIBCLANG_PATH = "C:\\Program Files\\LLVM\\bin"
+GGML_NATIVE = "OFF"
+GGML_AVX = "ON"
+GGML_AVX2 = "ON"
+GGML_FMA = "ON"
+GGML_F16C = "ON"

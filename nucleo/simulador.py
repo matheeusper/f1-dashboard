@@ -5,8 +5,8 @@ rapido em algumas curvas) e um carro em P5 se aproximando. A cada volta voce
 comete erros diferentes (frear cedo, travar, acelerar tarde...) para o
 engenheiro analisar. Ao fim da corrida comeca outra sessao, um pouco melhor.
 
-    python simulador.py                  # formato 2025
-    python simulador.py --formato 2026   # formato do Season Pack 2026
+    uv run nucleo/simulador.py                  # formato 2025
+    uv run nucleo/simulador.py --formato 2026   # formato do Season Pack 2026
 """
 import argparse
 import math

@@ -3,9 +3,9 @@
 Escuta a telemetria UDP do jogo e entrega o estado do carro para a pagina web
 (http://127.0.0.1:8025) via Server-Sent Events. Usa so a biblioteca padrao.
 
-    python server.py            # espera o jogo
-    python server.py --abrir    # e abre o painel no monitor vertical
-    python server.py --demo     # dados simulados, sem o jogo
+    uv run nucleo/server.py            # espera o jogo
+    uv run nucleo/server.py --abrir    # e abre o painel no monitor vertical
+    uv run nucleo/server.py --demo     # dados simulados, sem o jogo
 """
 import argparse
 import json
@@ -22,7 +22,7 @@ from urllib.parse import parse_qs
 import historico
 import idioma
 import voz as vozmod
-from caminhos import CONGELADO, RECURSOS
+from caminhos import RECURSOS
 from f1_packets import Decoder
 from idioma import tx
 
@@ -245,7 +245,7 @@ def focar_painel():
             classe = ctypes.create_unicode_buffer(256)
             user32.GetWindowTextW(hwnd, titulo, 256)
             user32.GetClassNameW(hwnd, classe, 256)
-            # janela do Chrome/Edge com a pagina do painel (o menu tambem se chama assim, mas e Tk)
+            # janela do Chrome/Edge com a pagina do painel
             if titulo.value.startswith("Painel F1 25") and classe.value.startswith("Chrome_WidgetWin"):
                 achadas.append(hwnd)
         return True
@@ -307,8 +307,6 @@ def criar_parser():
     ap.add_argument("--abrir", action="store_true", help="abre o painel no navegador")
     ap.add_argument("--historico", help="arquivo do historico (padrao: dados/historico.sqlite3; "
                                         "o modo demo usa dados/demo.sqlite3)")
-    ap.add_argument("--menu", action="store_true",
-                    help="abre a janela de menu (iniciar, demo, celular); e o padrao do executavel")
     return ap
 
 
@@ -345,7 +343,7 @@ def iniciar(args):
                          daemon=True).start()
     url = "http://127.0.0.1:%d" % args.porta_web
     if args.abrir:
-        abrir_ou_focar(url)   # depois de "Trocar de modo" a janela antiga continua aberta
+        abrir_ou_focar(url)   # se a janela do painel ja esta aberta, so traz para a frente
     return url
 
 
@@ -356,13 +354,7 @@ def main():
     except Exception:
         pass
     ap = criar_parser()
-    if CONGELADO and len(sys.argv) == 1:
-        sys.argv.append("--menu")   # dois cliques no PainelF1.exe: abre o menu
     args = ap.parse_args()
-    if args.menu:
-        from menu import abrir_menu
-        abrir_menu(args)
-        return 0
     try:
         url = iniciar(args)
     except ErroInicio as exc:

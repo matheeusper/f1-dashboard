@@ -14,7 +14,8 @@ import re
 import sys
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, RAIZ)
+NUCLEO = os.path.join(RAIZ, "nucleo")
+sys.path.insert(0, NUCLEO)
 # trechos da pagina que sao iguais nos dois idiomas (siglas e unidades): nao precisam de traducao
 SO_SIMBOLO = {"RPM", "km/h", "DRS", "OVERTAKE", "PIT", "ERS", "POS", "G LAT", "G LONG", "MJ", "kg", "kW", "psi",
               "0.00 MJ", "0 kW", "Ex.: Max"}
@@ -22,10 +23,10 @@ SO_SIMBOLO = {"RPM", "km/h", "DRS", "OVERTAKE", "PIT", "ERS", "POS", "G LAT", "G
 
 def textos_py():
     achados = {}
-    for nome in sorted(os.listdir(RAIZ)):
+    for nome in sorted(os.listdir(NUCLEO)):
         if not nome.endswith(".py") or nome == "textos_en.py":
             continue
-        arvore = ast.parse(open(os.path.join(RAIZ, nome), encoding="utf-8").read())
+        arvore = ast.parse(open(os.path.join(NUCLEO, nome), encoding="utf-8").read())
         for no in ast.walk(arvore):
             if (isinstance(no, ast.Call) and isinstance(no.func, ast.Name) and no.func.id in ("tx", "N_")
                     and no.args and isinstance(no.args[0], ast.Constant) and isinstance(no.args[0].value, str)):

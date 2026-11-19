@@ -157,7 +157,7 @@ fn comando_base() -> Result<Command, String> {
     {
         let repo = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf();
         let mut c = Command::new("uv");
-        c.args(["run", "-q", "--project"]).arg(&repo).arg("python").arg(repo.join("server.py"));
+        c.args(["run", "-q", "--project"]).arg(&repo).arg("python").arg(repo.join("nucleo").join("server.py"));
         c.current_dir(&repo);
         Ok(c)
     }

@@ -1,6 +1,7 @@
-# Gera o PainelF1.exe (Windows) e anexa na release a cada release publicada.
-# Tambem pode ser rodado na mao em Actions > "Executavel Windows" > Run workflow
+# Gera o PainelF1.exe (app nativo, com o nucleo Python embutido) e anexa na release a cada release
+# publicada. Tambem pode ser rodado na mao em Actions > "Executavel Windows" > Run workflow
 # (nesse caso o .exe fica disponivel como artefato da execucao).
+# O Windows do GitHub ja traz o Rust, o Visual Studio com C++, o CMake e o LLVM (para o Whisper).
 name: Executavel Windows
 
 on:
@@ -19,18 +20,18 @@ jobs:
 
       - uses: astral-sh/setup-uv@v6
 
-      - name: Compilar o executavel
+      - name: Compilar o app
         shell: pwsh
-        run: ./build.ps1
+        run: ./build-app.ps1
 
       - name: Anexar o executavel na release
         if: github.event_name == 'release'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/PainelF1.exe --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" app/target/release/PainelF1.exe --clobber
 
       - uses: actions/upload-artifact@v4
         with:
           name: PainelF1
-          path: dist/PainelF1.exe
+          path: app/target/release/PainelF1.exe

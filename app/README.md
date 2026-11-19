@@ -1,58 +1,30 @@
-# Painel F1 25: app nativo (em desenvolvimento)
+# Painel F1 25: o programa (Rust + Tauri 2)
 
-Versão nativa do Painel F1 25, feita com **Rust + Tauri 2**. É um `.exe` só, portátil (sem instalador). **O próprio painel é o programa**:
+O `PainelF1.exe` é este app: um `.exe` só, portátil, com o núcleo Python (pasta `nucleo/`) embutido. Como usar está no [README principal](../README.md); aqui ficam as notas para quem mexe no código.
 
-- abre direto o **painel**: em tela cheia no monitor vertical, ou numa janela 540×960 se não houver um. Enquanto o núcleo sobe, aparece "Iniciando…"; se der erro (porta ocupada etc.), a mesma tela mostra o motivo e "Tentar de novo";
-- tudo fica no **menu ☰** do painel (botão no topo, **Esc** ou Ctrl+Alt+Espaço):
-  - fonte da telemetria (Jogo, Demo corrida, Demo Time Trial);
-  - chaves de **celular e tablet** e **overlay**;
-  - telas (torre, análise, evolução, rádio e voz, **controles e teclas** com "gravar");
-  - idioma, tela cheia ou janela, e sair;
-- o **overlay** é uma faixa transparente por cima do jogo;
-- **ícone na bandeja**: mostrar o painel, overlay e sair. Fechar a janela do painel encerra o programa;
-- recebe comandos **sem o painel em foco**, com o F1 25 em primeiro plano:
-  - **teclas globais** (Ctrl+Alt+…);
-  - **controle de Xbox / XInput**, lido direto;
-- roda o núcleo Python (telemetria e engenheiro) embutido e conversa com ele por HTTP local, então o celular e o tablet continuam funcionando pela rede, igual antes.
+## Como funciona
 
-Os dados ficam na pasta `dados` ao lado do `.exe`: histórico, ajustes, `app.json` (fonte, celular e overlay) e `controles.json` (teclas e botões). Pelo celular, o mesmo painel abre pela rede, e o ☰ mostra só torre, análise, evolução, rádio e idioma.
+- **Janela do painel:** abre a tela local `ui/index.html` ("Iniciando…") e, quando o núcleo responde, navega para a página que ele serve em `http://127.0.0.1:<porta>`. Se o núcleo não sobe (porta ocupada etc.), a mesma tela mostra o motivo, a escolha de fonte e "Tentar de novo".
+- **IPC:** a página do painel vem do núcleo (origem remota). O Tauri só libera comandos para ela porque eles estão declarados no `build.rs` (`AppManifest`) e permitidos na `capabilities/default.json` (`remote.urls`). Comando novo precisa entrar nos dois lugares.
+- **Comandos que criam janela** (overlay, tela cheia…) são `#[tauri::command(async)]`: no Windows, um comando síncrono que cria janela trava.
+- **Núcleo:** em desenvolvimento roda pelo código com o uv (`uv run nucleo/server.py`). No `.exe` final vem embutido (`include_bytes!`, quando o `PAINELF1_NUCLEO` aponta para o `dist\PainelF1.exe` do PyInstaller) e é extraído para `%LOCALAPPDATA%\PainelF1\nucleo-<hash>.exe`. Um Job Object do Windows fecha o núcleo junto com o app.
+- **Teclas globais:** `tauri-plugin-global-shortcut`. **Controle:** XInput lido direto (crate `windows`), funciona sem foco.
+- **Ouvido:** `src/ouvido.rs` grava o microfone (cpal) e transcreve com o Whisper (whisper-rs, modelo `ggml-base`, baixado para `dados\modelos` na primeira vez). A página mostra o progresso por `estado_ouvido`.
+- **Dados:** pasta `dados` ao lado do `.exe` (o núcleo recebe em `PAINELF1_DADOS`): histórico, ajustes, `app.json` (fonte, celular, overlay, portas) e `controles.json` (teclas e botões).
 
-## Comandos
-
-**Teclado** (funcionam com o jogo em foco; dá para trocar em ☰ → Controles e teclas → gravar):
-
-| Tecla | O que faz |
+| Arquivo | O que faz |
 |---|---|
-| Ctrl+Alt+Espaço | Abre o menu ☰ |
-| Ctrl+Alt+M | Falar com o engenheiro |
-| Ctrl+Alt+1 … 0 | As perguntas dos botões UDP Action 1 a 10 |
-| Ctrl+Alt+P | Torre de tempos |
-| Ctrl+Alt+A | Análise da volta |
-| Ctrl+Alt+O | Liga e desliga o overlay |
-| Ctrl+Alt+X | Fecha torre, análise e ajustes |
-
-**Controle** (XInput: Xbox, ou PlayStation via Steam Input/DS4Windows). **Segure View/Back** e aperte:
-
-| Botão | O que faz |
-|---|---|
-| A | Falar com o engenheiro |
-| X | Pneus |
-| B | Gaps |
-| Y | Estratégia de pit |
-| ↑ / ↓ / ← / → | Combustível / Onde estou perdendo / Clima / Repetir |
-| LB / RB | Torre / Análise |
-| Start | Menu ☰ |
-| RS (clique no analógico direito) | Fecha as telas |
-
-O botão segurado junto (View/Back) existe para não disparar nada sem querer enquanto você pilota. Para trocar um botão: ☰ → Controles e teclas → gravar, e aperte o botão novo no controle.
-
-**Falar com o engenheiro:** o próprio app grava o microfone e entende a pergunta com o **Whisper**, rodando no seu PC (offline, sem conta). Na primeira vez ele baixa o modelo de voz (~150 MB) para `dados\modelos`; o rádio mostra o progresso. Depois disso não precisa de internet para ouvir. A gravação para sozinha cerca de 1 s depois que você termina de falar.
-
-**Overlay:** funciona com o F1 25 em **tela cheia sem bordas** (borderless). Em tela cheia exclusiva o Windows não deixa nenhuma janela ficar por cima, e contornar isso exigiria mexer no jogo, o que o anti-cheat pune.
+| `src/main.rs` | Comandos chamados pela página, bandeja, início e fim do programa |
+| `src/janelas.rs` | Janela do painel, overlay, tela cheia e bandeja |
+| `src/nucleo.rs` | Sobe, confere e para o núcleo Python |
+| `src/entrada.rs` | Teclas globais, controle XInput e o "gravar" da tela de controles |
+| `src/ouvido.rs` | Microfone e Whisper |
+| `src/config.rs` | `app.json` e o idioma |
+| `ui/` | Tela "Iniciando…" e de erro |
 
 ## Compilar
 
-Precisa do [Rust](https://rustup.rs), do Visual Studio Build Tools com C++ (inclui o CMake) e do [LLVM](https://github.com/llvm/llvm-project/releases) (o `libclang`, para compilar o Whisper). O `app\.cargo\config.toml` aponta o `LIBCLANG_PATH` para `C:\Program Files\LLVM\bin`; o CMake precisa estar no PATH (o `build-app.ps1` já coloca).
+Precisa do [Rust](https://rustup.rs), do Visual Studio Build Tools com C++ (inclui o CMake) e do [LLVM](https://github.com/llvm/llvm-project/releases) (o `libclang`, para compilar o Whisper). O `.cargo/config.toml` aponta o `LIBCLANG_PATH` para `C:\Program Files\LLVM\bin` e compila o whisper.cpp para qualquer processador com AVX2 (não só para o da sua máquina). O CMake precisa estar no PATH; o `build-app.ps1` já coloca.
 
 ```powershell
 # desenvolvimento: roda o núcleo pelo código, com o uv (dados em app\target\debug\dados)
@@ -63,8 +35,16 @@ cargo run
 powershell -ExecutionPolicy Bypass -File build-app.ps1   # -> app\target\release\PainelF1.exe
 ```
 
+A versão de desenvolvimento liga a depuração remota do WebView2 na porta 9223 e usa uma pasta de WebView2 separada, para não misturar com o programa instalado.
+
+Teste da transcrição com um `.wav` (16 bits, mono, 16 kHz), usando o modelo já baixado em `target\debug\dados\modelos`:
+
+```powershell
+$env:PAINELF1_WAV = "pergunta.wav"; cargo test ouvido -- --ignored --nocapture
+```
+
 ## Próximas etapas
 
 1. Portar o núcleo de Python para Rust, módulo por módulo: pacotes UDP, estado, engenheiro, análise, estratégia, histórico. No fim fica sem Python e com um `.exe` menor.
-2. Voz nativa: as vozes neurais do engenheiro chamadas direto do Rust (o ouvido com Whisper já é nativo).
+2. As vozes neurais do engenheiro chamadas direto do Rust.
 3. Atualização pelo próprio app (baixa a release nova e se substitui) e assinatura digital.
