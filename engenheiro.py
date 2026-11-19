@@ -111,7 +111,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self._ms_reset()
         self._tr_reset()
         self._ac_reset()
-        self.ac_cache = {"voltas": 0, "achados": [], "sugestoes": [], "ok": False}
+        self.ac_cache = {"voltas": 0, "achados": [], "sugestao": None, "comparacao": None, "ok": False}
         self.rep_tr = self.rep_ref = None
         self.rep_ref_ms = self.rep_ms = 0
 
@@ -647,7 +647,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self.rep_tr, self.rep_ref, self.rep_ref_ms, self.rep_ms = tr, ref, ref_ms, ms
         # modo treino/metas (Time Trial) e analise do acerto
         self._seguro(self._tr_fim_volta, num, ms, valida, resultado)
-        self._seguro(self._ac_volta, num, tr)
+        self._seguro(self._ac_volta, num, tr, ms, valida)
         self.ac_cache = self._seguro(self.ac_view) or self.ac_cache
 
         self.voltas_desde_resumo += 1

@@ -431,8 +431,9 @@ def simular(host="127.0.0.1", port=20777, fmt=2025, hz=60, stop=None, seed=None,
                 if rival.laps:
                     history(RIVAL, rival.laps)
             if frame % 120 == 0:
+                # no Time Trial a asa dianteira sobe um ponto depois da volta 3 (exercita o "antes e depois")
                 send(per_car(SETUPS, SETUP_CAR,
-                             (28, 22, 60, 55, -3.5, -2.0, 0.05, 0.2, 41, 3, 15, 8, 22, 55, 100, 56, 80,
+                             (29 if not corrida and eu.lap > 3 else 28, 22, 60, 55, -3.5, -2.0, 0.05, 0.2, 41, 3, 15, 8, 22, 55, 100, 56, 80,
                               22.5, 22.5, 24.0, 24.0, 0, 20.5), struct.pack("<f", 28.0)))
 
             frame += 1

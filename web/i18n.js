@@ -40,6 +40,8 @@
     "Analisando: %d de 3 voltas.": "Analysing: %d of 3 laps.",
     "Carro equilibrado: nada de subesterço ou sobresterço que se repita.":
       "Car is balanced: no understeer or oversteer that keeps repeating.",
+    "Depois, se precisar: ": "Next, if needed: ",
+    "Última mudança:": "Last change:",
     "CURVA ": "TURN ", "igual": "same",
     " curvas mapeadas. A análise aparece ao fim da próxima volta.": " corners mapped. The analysis shows up at the end of the next lap.",
     "Faça uma volta limpa para o engenheiro mapear as curvas.": "Do a clean lap so the engineer can map the corners.",

@@ -272,7 +272,13 @@ class Decoder:
         # alturas, pressao de freio, pneus, lastro). Fica de fora o que muda pelo MFD andando:
         # diferencial no acelerador (v[2]), balanco de freio (v[15]), freio-motor (v[16]), e o combustivel.
         chave = (v[0], v[1], v[3]) + tuple(round(x, 2) for x in v[4:8]) + tuple(v[8:15]) +             tuple(round(x, 1) for x in v[17:21]) + (v[21],)
-        self.setup = {"frontWing": v[0], "rearWing": v[1], "diffOn": v[2], "diffOff": v[3], "chave": chave}
+        self.setup = {"frontWing": v[0], "rearWing": v[1], "diffOn": v[2], "diffOff": v[3],
+                      "frontCamber": v[4], "rearCamber": v[5], "frontToe": v[6], "rearToe": v[7],
+                      "frontSusp": v[8], "rearSusp": v[9], "frontARB": v[10], "rearARB": v[11],
+                      "frontRide": v[12], "rearRide": v[13], "brakePressure": v[14], "brakeBias": v[15],
+                      "engineBraking": v[16],
+                      "frontPressure": round((v[19] + v[20]) / 2, 1), "rearPressure": round((v[17] + v[18]) / 2, 1),
+                      "chave": chave}
 
     def _telemetry2(self, data, lay, p):
         v = TELEMETRY2_CAR.unpack_from(data, HEADER_SIZE + p * TELEMETRY2_CAR.size)

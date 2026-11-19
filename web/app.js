@@ -899,7 +899,14 @@
     else if (!ac.achados.length) at = '<p>' + T('Carro equilibrado: nada de subesterço ou sobresterço que se repita.') + '</p>';
     else {
       at = '<ul>' + ac.achados.map((a) => '<li>' + esc(a) + '</li>').join('') + '</ul>';
-      if (ac.sugestoes.length) at += '<ul class="sug">' + ac.sugestoes.map((s) => '<li>' + esc(s) + '</li>').join('') + '</ul>';
+      if (ac.sugestao) {   // uma mudanca por vez, com o motivo e a proxima da fila
+        at += '<ul class="sug"><li>' + esc(ac.sugestao) + ' <span class="dim">(' + esc(ac.motivo) + ')</span></li></ul>';
+        if (ac.proxima) at += '<p class="dim">' + T('Depois, se precisar: ') + esc(ac.proxima) + '</p>';
+      } else if (ac.aviso) at += '<p class="dim">' + esc(ac.aviso) + '</p>';
+    }
+    if (ac.comparacao) {   // o que a ultima mudanca de acerto fez
+      const v = { melhor: '✅ ', pior: '⚠️ ', passou: '⚠️ ', igual: '➖ ' }[ac.comparacao.veredito] || '';
+      at += '<p class="a-comp"><b>' + T('Última mudança:') + '</b> ' + v + esc(ac.comparacao.texto) + '</p>';
     }
     html($('aAcerto'), at);
   }
