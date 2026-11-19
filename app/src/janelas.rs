@@ -20,6 +20,15 @@ const ARGS_WEBVIEW: &str = "--autoplay-policy=no-user-gesture-required \
     --disable-features=CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows \
     --disable-renderer-backgrounding --disable-background-timer-throttling --remote-debugging-port=9223";
 
+/// Opcoes de WebView2 iguais para todas as janelas. Em desenvolvimento, uma pasta de WebView2 so dela:
+/// assim uma copia de teste nao se mistura com o app que o usuario esta usando.
+fn webview<'a>(b: WebviewWindowBuilder<'a, tauri::Wry, AppHandle>) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
+    let b = b.additional_browser_args(ARGS_WEBVIEW);
+    #[cfg(debug_assertions)]
+    let b = b.data_directory(std::env::temp_dir().join("PainelF1-dev-webview"));
+    b
+}
+
 fn mostrar(w: &WebviewWindow) {
     let _ = w.unminimize();
     let _ = w.show();
@@ -32,9 +41,7 @@ pub fn criar_painel(app: &AppHandle) {
     if app.get_webview_window("painel").is_some() {
         return;
     }
-    let mut b = WebviewWindowBuilder::new(app, "painel", WebviewUrl::App("index.html".into()))
-        .title("Painel F1 25")
-        .additional_browser_args(ARGS_WEBVIEW);
+    let mut b = webview(WebviewWindowBuilder::new(app, "painel", WebviewUrl::App("index.html".into())).title("Painel F1 25"));
     let vertical = app
         .available_monitors()
         .unwrap_or_default()
@@ -116,7 +123,7 @@ pub fn overlay(app: &AppHandle, url: &str, ligar: bool) {
         }
         None => (0.0, 0.0, 1280.0),
     };
-    let w = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::External(format!("{url}/overlay").parse().unwrap()))
+    let w = webview(WebviewWindowBuilder::new(app, "overlay", WebviewUrl::External(format!("{url}/overlay").parse().unwrap())))
         .title("Painel F1 25 · overlay")
         .transparent(true)
         .decorations(false)
@@ -127,7 +134,6 @@ pub fn overlay(app: &AppHandle, url: &str, ligar: bool) {
         .resizable(false)
         .position(x, y)
         .inner_size(larg, 200.0)
-        .additional_browser_args(ARGS_WEBVIEW)
         .build();
     if let Ok(w) = w {
         let _ = w.set_ignore_cursor_events(true);

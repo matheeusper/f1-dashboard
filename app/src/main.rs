@@ -8,6 +8,7 @@ mod config;
 mod entrada;
 mod janelas;
 mod nucleo;
+mod ouvido;
 
 use std::sync::Mutex;
 
@@ -152,6 +153,22 @@ fn restaurar_controles(app: AppHandle) {
     entrada::restaurar(&app);
 }
 
+/// Ouve uma pergunta no microfone (reconhecimento de fala do Windows) e devolve o texto.
+#[tauri::command(async)]
+fn ouvir() -> Result<String, String> {
+    ouvido::ouvir(&config::idioma())
+}
+
+#[tauri::command(async)]
+fn parar_ouvir() {
+    ouvido::parar();
+}
+
+#[tauri::command]
+fn abrir_privacidade_fala() {
+    ouvido::abrir_privacidade();
+}
+
 #[tauri::command]
 fn sair(app: AppHandle) {
     encerrar(&app);
@@ -179,6 +196,9 @@ fn main() {
             gravar_tecla,
             gravar_botao,
             restaurar_controles,
+            ouvir,
+            parar_ouvir,
+            abrir_privacidade_fala,
             sair
         ])
         .setup(|app| {

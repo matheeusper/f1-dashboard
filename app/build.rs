@@ -16,6 +16,9 @@ const COMANDOS: &[&str] = &[
     "gravar_tecla",
     "gravar_botao",
     "restaurar_controles",
+    "ouvir",
+    "parar_ouvir",
+    "abrir_privacidade_fala",
     "sair",
 ];
 

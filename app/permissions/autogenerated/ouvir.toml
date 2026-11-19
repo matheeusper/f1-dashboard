@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ouvir"
+description = "Enables the ouvir command without any pre-configured scope."
+commands.allow = ["ouvir"]
+
+[[permission]]
+identifier = "deny-ouvir"
+description = "Denies the ouvir command without any pre-configured scope."
+commands.deny = ["ouvir"]

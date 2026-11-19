@@ -139,6 +139,11 @@
     "Nenhum microfone encontrado.": "No microphone found.", "O servidor do painel não respondeu.": "The dashboard server didn't respond.",
     "Falar com o engenheiro (tecla M ou UDP Action 11)": "Talk to the engineer (key M or UDP Action 11)",
     "Overlay F1 25": "F1 25 Overlay",
+    "Não consegui usar o microfone. Confira se ele está conectado e liberado para apps em Privacidade > Microfone.":
+      "Couldn't use the microphone. Check that it's connected and allowed for apps in Privacy > Microphone.",
+    "O Windows não tem reconhecimento de fala neste idioma.": "Windows doesn't have speech recognition for this language.",
+    "Ligue o \"Reconhecimento de fala online\" do Windows: abri a tela para você.": "Turn on Windows \"Online speech recognition\": I opened the screen for you.",
+    "Não consegui ouvir: ": "Couldn't listen: ",
     "Painel aberto pela rede": "Dashboard opened over the network", "Fonte: ": "Source: ", "iniciando…": "starting…",
     "No celular ou tablet, na mesma rede, abra:": "On your phone or tablet, on the same network, open:", "Ligando…": "Turning on…",
     "Trocando a fonte… o painel reconecta sozinho.": "Switching the source… the dashboard reconnects by itself.",

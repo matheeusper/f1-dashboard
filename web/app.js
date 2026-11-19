@@ -635,7 +635,8 @@
 
   // ---- perguntar pela voz (UDP Action 11, tecla M ou 🎤): o navegador transcreve e o servidor entende
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const micOk = !!SR && window.isSecureContext;   // no celular pela rede (http) o navegador nao deixa
+  const NATIVO = !!window.__TAURI__;              // dentro do app nativo quem ouve e o app (Windows)
+  const micOk = NATIVO || (!!SR && window.isSecureContext);   // no celular pela rede (http) o navegador nao deixa
   const micBtn = $('micBtn');
   let ouvindo = false, rec = null, recTimer = null;
   cls(micBtn, 'sem', !micOk);
@@ -648,7 +649,40 @@
     const c = actx;
     if (c && c.state === 'running') { const { out } = cadeia(c, false); fechaRadio(c, out, c.currentTime + 0.01); }
   }
+  // no app nativo: o reconhecimento de fala do Windows (o WebView2 nao tem o do Chrome)
+  const ERROS_OUVIR = {
+    nada: () => T('Não ouvi nada. Aperte e fale de novo.'),
+    microfone: () => T('Não consegui usar o microfone. Confira se ele está conectado e liberado para apps em Privacidade > Microfone.'),
+    idioma: () => T('O Windows não tem reconhecimento de fala neste idioma.'),
+    rede: () => T('Sem internet para reconhecer a voz.'),
+    privacidade: () => T('Ligue o "Reconhecimento de fala online" do Windows: abri a tela para você.'),
+  };
+  async function ouvirNativo() {
+    const inv = window.__TAURI__.core.invoke;
+    if (ouvindo) { inv('parar_ouvir').catch(() => {}); return; }   // apertou de novo: para de ouvir
+    pararFala();
+    const c = audioCtx();
+    if (c && c.state === 'running') { const { out } = cadeia(c, false); abreRadio(c, out, c.currentTime + 0.01); }
+    ouvindo = true;
+    cls(R.box, 'ouvindo', true);
+    cls(micBtn, 'on', true);
+    avisoRadio('🎤 ' + T('Ouvindo…'));
+    let texto = null, erro = null;
+    try { texto = await inv('ouvir'); } catch (e) { erro = String(e); }
+    fimOuvir();
+    if (texto) {
+      avisoRadio('🎤 “' + texto + '”');
+      fetch('/api/voz', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto }) }).catch(() => avisoRadio(T('O servidor do painel não respondeu.')));
+      return;
+    }
+    const cod = (erro || '').split(':')[0];
+    avisoRadio(ERROS_OUVIR[cod] ? ERROS_OUVIR[cod]() : T('Não consegui ouvir: ') + erro);
+    if (cod === 'privacidade') inv('abrir_privacidade_fala').catch(() => {});
+  }
+
   function ouvir() {
+    if (NATIVO) return ouvirNativo();
     if (ouvindo) { if (rec) rec.stop(); return; }      // apertou de novo: para de ouvir
     if (!micOk) { avisoRadio(T('Reconhecimento de voz indisponível aqui. Use o Chrome ou o Edge no PC.')); return; }
     pararFala();                                         // ele para de falar para ouvir voce

@@ -20,6 +20,9 @@
     "allow-gravar-tecla",
     "allow-gravar-botao",
     "allow-restaurar-controles",
+    "allow-ouvir",
+    "allow-parar-ouvir",
+    "allow-abrir-privacidade-fala",
     "allow-sair"
   ]
 }

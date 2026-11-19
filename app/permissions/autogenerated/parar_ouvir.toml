@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-parar-ouvir"
+description = "Enables the parar_ouvir command without any pre-configured scope."
+commands.allow = ["parar_ouvir"]
+
+[[permission]]
+identifier = "deny-parar-ouvir"
+description = "Denies the parar_ouvir command without any pre-configured scope."
+commands.deny = ["parar_ouvir"]
