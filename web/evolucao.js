@@ -3,6 +3,10 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const sel = $('pista'), box = $('conteudo');
+  // aberta dentro do painel (menu > Evolucao): o painel ja tem o botao de fechar e o titulo
+  if (window.top !== window) {
+    for (const el of document.querySelectorAll('.back, h1')) el.style.display = 'none';
+  }
   const HABITO = {
     trava: T('travar as rodas'), cedo: T('frear cedo demais'), tarde: T('frear tarde e passar do ponto'),
     lento: T('contornar devagar demais'), acel: T('acelerar tarde na saída'), patinou: T('patinar na saída'),

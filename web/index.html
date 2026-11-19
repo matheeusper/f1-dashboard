@@ -13,8 +13,11 @@
   <!-- 1. Barra de status -->
   <header class="top panel" id="top">
     <div class="top-left">
-      <div id="track" class="track">—</div>
-      <div class="sub"><span id="sessionType">Sem sessão</span><span id="flag" class="pill"></span></div>
+      <button id="menuBtn" class="menu-btn" type="button" title="Menu (Esc)">☰</button>
+      <div class="tl-txt">
+        <div id="track" class="track">—</div>
+        <div class="sub"><span id="sessionType">Sem sessão</span><span id="flag" class="pill"></span></div>
+      </div>
     </div>
     <div class="top-mid">
       <div class="kv"><span class="lbl">POS</span><span class="kv-v"><small>P</small><b id="pos">–</b></span></div>
@@ -194,7 +197,7 @@
         <div class="a-sub" id="aSub">Sem voltas analisadas ainda.</div>
       </div>
       <div class="a-actions">
-        <a class="a-btn" href="/evolucao">EVOLUÇÃO →</a>
+        <button class="a-btn" type="button" data-tela="evolucao">EVOLUÇÃO →</button>
         <button class="a-btn" id="aClose" type="button">FECHAR ✕</button>
       </div>
     </div>
@@ -215,6 +218,78 @@
     </table>
     <div class="a-log-title lbl">ÚLTIMAS MENSAGENS</div>
     <ol class="a-log" id="aLog"></ol>
+  </div>
+
+  <!-- Menu do programa (☰, Esc ou Ctrl+Alt+Espaco). Os itens "so-app" so aparecem dentro do app nativo -->
+  <div id="menu" class="analysis menu">
+    <div class="a-head">
+      <div>
+        <div class="a-title">MENU</div>
+        <div class="a-sub" id="mnSub"></div>
+      </div>
+      <div class="a-actions"><button class="a-btn" id="mnClose" type="button">FECHAR ✕</button></div>
+    </div>
+    <div class="mn-grid">
+      <section class="mn-sec so-app">
+        <div class="lbl">FONTE DA TELEMETRIA</div>
+        <div class="mn-seg">
+          <button type="button" data-fonte="jogo">JOGO</button>
+          <button type="button" data-fonte="demo">DEMO CORRIDA</button>
+          <button type="button" data-fonte="tt">DEMO TIME TRIAL</button>
+        </div>
+        <div class="mn-nota" id="mnFonteNota"></div>
+      </section>
+      <section class="mn-sec so-app">
+        <div class="lbl">LIGAR E DESLIGAR</div>
+        <button class="mn-item" type="button" id="mnCelular"><span>📱 Celular e tablet na rede</span><i class="mn-chave"></i></button>
+        <div class="mn-lan" id="mnLan"></div>
+        <button class="mn-item" type="button" id="mnOverlay"><span>🖥 Overlay por cima do jogo</span><i class="mn-chave"></i></button>
+      </section>
+      <section class="mn-sec">
+        <div class="lbl">TELAS</div>
+        <button class="mn-item" type="button" data-tela="torre"><span>Torre de tempos</span><kbd>P</kbd></button>
+        <button class="mn-item" type="button" data-tela="analise"><span>Análise da volta</span><kbd>A</kbd></button>
+        <button class="mn-item" type="button" data-tela="evolucao"><span>Evolução</span><kbd>E</kbd></button>
+        <button class="mn-item" type="button" data-tela="ajustes"><span>Rádio e voz</span><kbd>C</kbd></button>
+        <button class="mn-item so-app" type="button" data-tela="controles"><span>Controles e teclas</span></button>
+      </section>
+      <section class="mn-sec">
+        <div class="lbl">PROGRAMA</div>
+        <button class="mn-item" type="button" id="mnIdioma"><span id="mnIdiomaTxt">🌐 English</span></button>
+        <button class="mn-item so-app" type="button" id="mnTela"><span>Tela cheia ou janela</span></button>
+        <button class="mn-item so-app mn-sair" type="button" id="mnSair"><span>Sair do Painel F1 25</span></button>
+      </section>
+    </div>
+  </div>
+
+  <!-- Controles e teclas (app nativo): o que cada tecla e botao faz, com "gravar" -->
+  <div id="controles" class="analysis">
+    <div class="a-head">
+      <div>
+        <div class="a-title">CONTROLES E TECLAS</div>
+        <div class="a-sub" id="ctSub"></div>
+      </div>
+      <div class="a-actions">
+        <button class="a-btn" id="ctPadrao" type="button">RESTAURAR PADRÃO</button>
+        <button class="a-btn" id="ctClose" type="button">FECHAR ✕</button>
+      </div>
+    </div>
+    <div class="a-legend ct-legend" id="ctLegenda"></div>
+    <div class="tw-scroll">
+      <table class="a-table ct-table">
+        <thead><tr><th>AÇÃO</th><th>TECLA</th><th>CONTROLE</th></tr></thead>
+        <tbody id="ctRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Evolucao dentro do painel -->
+  <div id="evol" class="analysis">
+    <div class="a-head">
+      <div class="a-title">EVOLUÇÃO</div>
+      <div class="a-actions"><button class="a-btn" id="evClose" type="button">FECHAR ✕</button></div>
+    </div>
+    <iframe id="evFrame" class="ev-frame" title="Evolução"></iframe>
   </div>
 
   <!-- Torre de tempos (tecla P ou toque na posicao) -->
@@ -285,7 +360,8 @@
       <p class="dim">O painel acende sozinho quando você entrar na pista. Para testar sem o jogo, escolha o Demo no menu do programa.</p>
       <div class="wait-actions">
         <button id="wCfg" class="a-btn" type="button">⚙ AJUSTES DO RÁDIO</button>
-        <a class="a-btn" href="/evolucao">📈 EVOLUÇÃO</a>
+        <button class="a-btn" type="button" data-tela="menu">☰ MENU</button>
+        <button class="a-btn" type="button" data-tela="evolucao">📈 EVOLUÇÃO</button>
         <button id="wHide" class="a-btn" type="button">VER O PAINEL ✕</button>
       </div>
     </div>

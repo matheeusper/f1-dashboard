@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-compartilhar"
+description = "Enables the compartilhar command without any pre-configured scope."
+commands.allow = ["compartilhar"]
+
+[[permission]]
+identifier = "deny-compartilhar"
+description = "Denies the compartilhar command without any pre-configured scope."
+commands.deny = ["compartilhar"]

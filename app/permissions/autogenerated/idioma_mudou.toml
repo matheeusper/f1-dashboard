@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-idioma-mudou"
+description = "Enables the idioma_mudou command without any pre-configured scope."
+commands.allow = ["idioma_mudou"]
+
+[[permission]]
+identifier = "deny-idioma-mudou"
+description = "Denies the idioma_mudou command without any pre-configured scope."
+commands.deny = ["idioma_mudou"]

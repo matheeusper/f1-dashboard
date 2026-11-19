@@ -1,22 +1,29 @@
 # Painel F1 25: app nativo (em desenvolvimento)
 
-Versão nativa do Painel F1 25, feita com **Rust + Tauri 2**. É um `.exe` só, portátil (sem instalador), que:
+Versão nativa do Painel F1 25, feita com **Rust + Tauri 2**. É um `.exe` só, portátil (sem instalador). **O próprio painel é o programa**:
 
-- abre a **janela de início** (os modos: painel, demo, Time Trial, celular), o **painel** em tela cheia no monitor vertical e um **overlay** transparente por cima do jogo;
-- fica com **ícone na bandeja**: fechar a janela de início não desliga o painel;
+- abre direto o **painel**: em tela cheia no monitor vertical, ou numa janela 540×960 se não houver um. Enquanto o núcleo sobe, aparece "Iniciando…"; se der erro (porta ocupada etc.), a mesma tela mostra o motivo e "Tentar de novo";
+- tudo fica no **menu ☰** do painel (botão no topo, **Esc** ou Ctrl+Alt+Espaço):
+  - fonte da telemetria (Jogo, Demo corrida, Demo Time Trial);
+  - chaves de **celular e tablet** e **overlay**;
+  - telas (torre, análise, evolução, rádio e voz, **controles e teclas** com "gravar");
+  - idioma, tela cheia ou janela, e sair;
+- o **overlay** é uma faixa transparente por cima do jogo;
+- **ícone na bandeja**: mostrar o painel, overlay e sair. Fechar a janela do painel encerra o programa;
 - recebe comandos **sem o painel em foco**, com o F1 25 em primeiro plano:
   - **teclas globais** (Ctrl+Alt+…);
   - **controle de Xbox / XInput**, lido direto;
 - roda o núcleo Python (telemetria e engenheiro) embutido e conversa com ele por HTTP local, então o celular e o tablet continuam funcionando pela rede, igual antes.
 
-Os dados ficam na pasta `dados` ao lado do `.exe`: histórico, ajustes, `app.json` (modo e overlay) e `controles.json` (teclas e botões).
+Os dados ficam na pasta `dados` ao lado do `.exe`: histórico, ajustes, `app.json` (fonte, celular e overlay) e `controles.json` (teclas e botões). Pelo celular, o mesmo painel abre pela rede, e o ☰ mostra só torre, análise, evolução, rádio e idioma.
 
 ## Comandos
 
-**Teclado** (funcionam com o jogo em foco; dá para trocar em `dados/controles.json`):
+**Teclado** (funcionam com o jogo em foco; dá para trocar em ☰ → Controles e teclas → gravar):
 
 | Tecla | O que faz |
 |---|---|
+| Ctrl+Alt+Espaço | Abre o menu ☰ |
 | Ctrl+Alt+M | Falar com o engenheiro |
 | Ctrl+Alt+1 … 0 | As perguntas dos botões UDP Action 1 a 10 |
 | Ctrl+Alt+P | Torre de tempos |
@@ -34,10 +41,10 @@ Os dados ficam na pasta `dados` ao lado do `.exe`: histórico, ajustes, `app.jso
 | Y | Estratégia de pit |
 | ↑ / ↓ / ← / → | Combustível / Onde estou perdendo / Clima / Repetir |
 | LB / RB | Torre / Análise |
-| Start | Overlay |
+| Start | Menu ☰ |
 | RS (clique no analógico direito) | Fecha as telas |
 
-O botão segurado junto (View/Back) existe para não disparar nada sem querer enquanto você pilota. Isso também se troca em `controles.json`.
+O botão segurado junto (View/Back) existe para não disparar nada sem querer enquanto você pilota. Para trocar um botão: ☰ → Controles e teclas → gravar, e aperte o botão novo no controle.
 
 **Overlay:** funciona com o F1 25 em **tela cheia sem bordas** (borderless). Em tela cheia exclusiva o Windows não deixa nenhuma janela ficar por cima, e contornar isso exigiria mexer no jogo, o que o anti-cheat pune.
 

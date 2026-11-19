@@ -186,6 +186,20 @@ EN = {
     "Curva %d: perdeu %s": "Turn %d: you lost %s",
     "A referência freia a %d metros.": "The reference brakes at %d metres.",
     "Seu vício ali: %s.": "Your habit there: %s.",
+    "Ele é %s mais rápido na curva %d%s.": "They're %s quicker in turn %d%s.",
+    "Você tira %s por volta dele. Alcança em %d voltas.": "You're taking %s a lap out of them. You'll catch them in %d laps.",
+    "Ele está abrindo %s por volta.": "They're pulling away %s a lap.",
+    "Ele continua vindo, %s por volta.": "They're still closing, %s a lap.",
+    "Ele já está no DRS, a %s. Defenda nas retas.": "They're in DRS now, %s behind. Defend on the straights.",
+    "Está a %s dele. %s": "You're %s behind them. %s",
+    "A %s %s. %s": "%s to %s. %s",
+    "Ele está com pneus %d voltas mais velhos. Vai cair, pressiona.":
+        "They're on tyres %d laps older. They'll drop off, keep the pressure on.",
+    "Chance de undercut nele. Se pararmos nesta volta, o pneu novo pode te colocar na frente.":
+        "Undercut chance on them. If we box this lap, fresh tyres could get you ahead.",
+    "Ele tem pneus %d voltas mais novos, vai vir forte.": "They have tyres %d laps fresher, they'll come at you.",
+    "Atenção ao undercut dele. Se ele parar, a gente responde na volta seguinte.":
+        "Watch the undercut from them. If they stop, we respond the lap after.",
     "na asa dianteira esquerda": "to the front left wing",
     "na asa dianteira direita": "to the front right wing",
     "na asa traseira": "to the rear wing",

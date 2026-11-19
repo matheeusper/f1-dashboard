@@ -1,7 +1,25 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Janela de inicio (pagina local do app): chama os comandos do app.",
-  "windows": ["inicio"],
-  "permissions": ["core:default"]
+  "identifier": "painel",
+  "description": "A janela do painel chama os comandos do app: na tela local 'Iniciando…' e na pagina do painel que o nucleo serve em 127.0.0.1.",
+  "windows": ["painel"],
+  "local": true,
+  "remote": {
+    "urls": ["http://127.0.0.1:*/*", "http://localhost:*/*"]
+  },
+  "permissions": [
+    "core:default",
+    "allow-estado",
+    "allow-trocar-fonte",
+    "allow-compartilhar",
+    "allow-tentar-de-novo",
+    "allow-alternar-overlay",
+    "allow-tela-cheia",
+    "allow-idioma-mudou",
+    "allow-controles",
+    "allow-gravar-tecla",
+    "allow-gravar-botao",
+    "allow-restaurar-controles",
+    "allow-sair"
+  ]
 }

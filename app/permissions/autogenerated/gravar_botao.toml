@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-gravar-botao"
+description = "Enables the gravar_botao command without any pre-configured scope."
+commands.allow = ["gravar_botao"]
+
+[[permission]]
+identifier = "deny-gravar-botao"
+description = "Denies the gravar_botao command without any pre-configured scope."
+commands.deny = ["gravar_botao"]

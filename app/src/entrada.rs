@@ -1,10 +1,14 @@
 // Comandos sem o painel em foco: teclas globais (funcionam com o jogo em primeiro plano) e o
-// controle de Xbox / XInput (lido direto, tambem sem foco). O mapa fica em dados/controles.json.
+// controle de Xbox / XInput (lido direto, tambem sem foco). O mapa fica em dados/controles.json
+// e pode ser trocado pelo menu do painel (Controles > gravar).
 use std::{
     collections::HashMap,
     fs,
     str::FromStr,
-    sync::{Mutex, OnceLock},
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        mpsc, Mutex, OnceLock,
+    },
     thread,
     time::{Duration, Instant},
 };
@@ -16,7 +20,7 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use crate::{config, janelas, nucleo, Estado};
 
 /// O que um botao ou tecla faz. "pergunta:N" = a mesma pergunta do botao UDP Action N.
-fn executar(app: &AppHandle, acao: &str) {
+pub fn executar(app: &AppHandle, acao: &str) {
     let app = app.clone();
     let acao = acao.to_string();
     thread::spawn(move || {
@@ -29,12 +33,9 @@ fn executar(app: &AppHandle, acao: &str) {
         } else if acao == "overlay" {
             alternar_overlay(&app);
             Ok(())
-        } else if acao == "painel" {
-            let url = app.state::<Estado>().nucleo.lock().unwrap().url();
-            janelas::painel(&app, &url);
-            Ok(())
         } else {
-            // falar, torre, analise, ajustes, fechar: a pagina do painel reage
+            // falar, menu, torre, analise, ajustes, fechar: a pagina do painel reage
+            janelas::mostrar_painel(&app);
             nucleo::post(porta, "/api/comando", serde_json::json!({ "acao": acao }))
         };
         if let Err(e) = r {
@@ -73,6 +74,7 @@ impl Default for Controles {
         let p = |a: &str, b: &str| (a.to_string(), b.to_string());
         Controles {
             teclas: vec![
+                p("Ctrl+Alt+Space", "menu"),
                 p("Ctrl+Alt+M", "falar"),
                 p("Ctrl+Alt+P", "torre"),
                 p("Ctrl+Alt+A", "analise"),
@@ -101,7 +103,7 @@ impl Default for Controles {
                 p("y", "pergunta:8"),
                 p("lb", "torre"),
                 p("rb", "analise"),
-                p("start", "overlay"),
+                p("start", "menu"),
                 p("rs", "fechar"),
             ],
         }
@@ -118,25 +120,65 @@ impl Controles {
             Some(c) => c,
             None => {
                 let c = Controles::default();
-                if let Ok(s) = serde_json::to_string_pretty(&c) {
-                    let _ = fs::write(Self::caminho(), s); // deixa o arquivo pronto para editar
-                }
+                c.salvar(); // deixa o arquivo pronto para editar
                 c
             }
         }
     }
+
+    fn salvar(&self) {
+        if let Ok(s) = serde_json::to_string_pretty(self) {
+            let _ = fs::write(Self::caminho(), s);
+        }
+    }
 }
 
-static CONTROLES: OnceLock<Controles> = OnceLock::new();
-fn controles() -> &'static Controles {
-    CONTROLES.get_or_init(Controles::carregar)
+static CONTROLES: Mutex<Option<Controles>> = Mutex::new(None);
+static VERSAO: AtomicU32 = AtomicU32::new(0); // muda quando o mapa do controle muda
+
+pub fn controles() -> Controles {
+    let mut c = CONTROLES.lock().unwrap();
+    c.get_or_insert_with(Controles::carregar).clone()
 }
 
-pub fn teclas_view() -> Vec<(String, String)> {
-    controles().teclas.clone()
+fn trocar_controles(app: &AppHandle, novo: Controles) {
+    novo.salvar();
+    *CONTROLES.lock().unwrap() = Some(novo);
+    VERSAO.fetch_add(1, Ordering::SeqCst);
+    registrar_teclas(app);
 }
 
-/// Texto curto para a tela de inicio: "conectado" ou None.
+/// Grava a tecla da acao (tira ela de qualquer outra acao que a usava).
+pub fn definir_tecla(app: &AppHandle, acao: &str, tecla: &str) -> Result<(), String> {
+    Shortcut::from_str(tecla).map_err(|e| format!("tecla invalida: {e}"))?;
+    let mut c = controles();
+    c.teclas.retain(|(t, a)| a != acao && !t.eq_ignore_ascii_case(tecla));
+    c.teclas.push((tecla.to_string(), acao.to_string()));
+    trocar_controles(app, c);
+    Ok(())
+}
+
+pub fn definir_botao(app: &AppHandle, acao: &str, botao: &str) {
+    let mut c = controles();
+    c.controle.retain(|(b, a)| a != acao && b != botao);
+    c.controle.push((botao.to_string(), acao.to_string()));
+    trocar_controles(app, c);
+}
+
+pub fn restaurar(app: &AppHandle) {
+    trocar_controles(app, Controles::default());
+}
+
+/// Espera o proximo botao do controle (para gravar). Volta o nome dele, ou erro se nada em 8 s.
+pub fn esperar_botao() -> Result<String, String> {
+    let (tx, rx) = mpsc::channel();
+    *GRAVANDO.lock().unwrap() = Some(tx);
+    let r = rx.recv_timeout(Duration::from_secs(8)).map_err(|_| "nenhum botão apertado".to_string());
+    *GRAVANDO.lock().unwrap() = None;
+    r
+}
+
+/// Texto curto para o menu: "Controle XInput" ou None.
 pub fn controle_view() -> Option<String> {
     CONTROLE_CONECTADO.lock().ok().and_then(|c| c.clone())
 }
@@ -160,6 +202,8 @@ pub fn plugin_teclas() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 
 pub fn registrar_teclas(app: &AppHandle) {
     let mapa = MAPA_TECLAS.get_or_init(|| Mutex::new(HashMap::new()));
+    let _ = app.global_shortcut().unregister_all();
+    mapa.lock().unwrap().clear();
     for (tecla, acao) in &controles().teclas {
         match Shortcut::from_str(tecla) {
             Ok(s) => {
@@ -176,40 +220,69 @@ pub fn registrar_teclas(app: &AppHandle) {
 
 // ------------------------------------------------------------------ controle (XInput)
 static CONTROLE_CONECTADO: Mutex<Option<String>> = Mutex::new(None);
+static GRAVANDO: Mutex<Option<mpsc::Sender<String>>> = Mutex::new(None);
+
+const BOTOES: [(&str, u16); 14] = [
+    ("cima", 0x0001),
+    ("baixo", 0x0002),
+    ("esquerda", 0x0004),
+    ("direita", 0x0008),
+    ("start", 0x0010),
+    ("back", 0x0020),
+    ("ls", 0x0040),
+    ("rs", 0x0080),
+    ("lb", 0x0100),
+    ("rb", 0x0200),
+    ("a", 0x1000),
+    ("b", 0x2000),
+    ("x", 0x4000),
+    ("y", 0x8000),
+];
 
 fn bit_do_botao(nome: &str) -> u16 {
-    match nome.to_ascii_lowercase().as_str() {
-        "cima" | "up" => 0x0001,
-        "baixo" | "down" => 0x0002,
-        "esquerda" | "left" => 0x0004,
-        "direita" | "right" => 0x0008,
-        "start" | "menu" => 0x0010,
-        "back" | "view" | "select" => 0x0020,
-        "ls" | "l3" => 0x0040,
-        "rs" | "r3" => 0x0080,
-        "lb" | "l1" => 0x0100,
-        "rb" | "r1" => 0x0200,
-        "a" | "cruz" => 0x1000,
-        "b" | "bola" => 0x2000,
-        "x" | "quadrado" => 0x4000,
-        "y" | "triangulo" => 0x8000,
-        _ => 0,
-    }
+    let n = nome.to_ascii_lowercase();
+    let n = match n.as_str() {
+        "up" => "cima",
+        "down" => "baixo",
+        "left" => "esquerda",
+        "right" => "direita",
+        "menu" => "start",
+        "view" | "select" => "back",
+        "l3" => "ls",
+        "r3" => "rs",
+        "l1" => "lb",
+        "r1" => "rb",
+        "cruz" => "a",
+        "bola" => "b",
+        "quadrado" => "x",
+        "triangulo" => "y",
+        outro => outro,
+    };
+    BOTOES.iter().find(|(b, _)| *b == n).map_or(0, |(_, bit)| *bit)
+}
+
+fn nome_do_bit(bits: u16) -> Option<&'static str> {
+    BOTOES.iter().find(|(_, b)| bits & b != 0).map(|(n, _)| *n)
 }
 
 #[cfg(windows)]
 pub fn iniciar_controle(app: AppHandle) {
     use windows::Win32::UI::Input::XboxController::{XInputGetState, XINPUT_STATE};
 
-    let c = controles();
-    let modificador = bit_do_botao(&c.controle_modificador);
-    let mapa: Vec<(u16, String)> =
-        c.controle.iter().map(|(b, a)| (bit_do_botao(b), a.clone())).filter(|(b, _)| *b != 0).collect();
     thread::spawn(move || {
+        let mut versao = u32::MAX;
+        let mut modificador = 0u16;
+        let mut mapa: Vec<(u16, String)> = vec![];
         let mut antes = [0u16; 4];
         let mut ligado = [false; 4];
         let mut proxima_busca = Instant::now();
         loop {
+            if VERSAO.load(Ordering::SeqCst) != versao {
+                versao = VERSAO.load(Ordering::SeqCst);
+                let c = controles();
+                modificador = bit_do_botao(&c.controle_modificador);
+                mapa = c.controle.iter().map(|(b, a)| (bit_do_botao(b), a.clone())).filter(|(b, _)| *b != 0).collect();
+            }
             // controles desconectados sao procurados so a cada 2 s (consultar slot vazio e lento)
             let buscar = Instant::now() >= proxima_busca;
             if buscar {
@@ -229,6 +302,15 @@ pub fn iniciar_controle(app: AppHandle) {
                 let botoes = s.Gamepad.wButtons.0 as u16;
                 let novos = botoes & !antes[i as usize];
                 antes[i as usize] = botoes;
+                // gravando um atalho: o proximo botao (fora o modificador) vai para quem pediu
+                if novos & !modificador != 0 {
+                    if let Some(tx) = GRAVANDO.lock().unwrap().take() {
+                        if let Some(n) = nome_do_bit(novos & !modificador) {
+                            let _ = tx.send(n.to_string());
+                        }
+                        continue;
+                    }
+                }
                 if modificador == 0 || botoes & modificador != 0 {
                     for (bit, acao) in &mapa {
                         if novos & bit != 0 {

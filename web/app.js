@@ -723,7 +723,8 @@
         if (a === 'torre') toggleTower();
         else if (a === 'analise') toggleAnalysis();
         else if (a === 'ajustes') toggleCfg();
-        else if (a === 'fechar') { toggleTower(false); toggleAnalysis(false); toggleCfg(false); }
+        else if (a === 'fechar') fecharTudo();
+        else if (a === 'menu') toggleMenu();
       }
       lastCmd = c.cmd.seq;
     }
@@ -1177,6 +1178,178 @@
   $('wHide').addEventListener('click', () => { waitHidden = true; cls(E.wait, 'show', false); });
   $('cfgClose').addEventListener('click', () => toggleCfg(false));
 
+
+  // ------------------------------------------------------------ menu ☰ (o programa)
+  // Dentro do app nativo, a pagina fala com ele (fonte, celular, overlay, controles, sair). No
+  // celular (navegador comum) o menu so mostra as telas e o idioma.
+  const APP = window.__TAURI__ && window.__TAURI__.core;
+  const app = (cmd, args) => APP.invoke(cmd, args);
+  cls(document.body, 'no-app', !APP);
+  const MN = { box: $('menu'), sub: $('mnSub'), nota: $('mnFonteNota'), celular: $('mnCelular'), lan: $('mnLan'),
+    overlay: $('mnOverlay'), idioma: $('mnIdiomaTxt') };
+  const CT = { box: $('controles'), sub: $('ctSub'), legenda: $('ctLegenda'), rows: $('ctRows') };
+  const EV = { box: $('evol'), frame: $('evFrame') };
+  const TELAS = () => [MN.box, CT.box, EV.box, TW.box, R.an, C.box];
+  let appEstado = null, trocandoFonte = false, menuTimer = null;
+  const FONTES = { jogo: T('Jogo'), demo: T('Demo corrida'), tt: T('Demo Time Trial') };
+
+  function fecharTudo() { for (const t of TELAS()) t.classList.remove('show'); clearInterval(menuTimer); }
+  function algumaAberta() { return TELAS().some((t) => t.classList.contains('show')); }
+
+  async function atualizaMenu() {
+    txt(MN.idioma, LANG_EN ? '🌐 Português' : '🌐 English');
+    if (!APP) { txt(MN.sub, T('Painel aberto pela rede')); return; }
+    try { appEstado = await app('estado'); } catch (e) { return; }
+    const a = appEstado;
+    for (const b of MN.box.querySelectorAll('[data-fonte]')) {
+      cls(b, 'on', b.dataset.fonte === a.fonte);
+      b.disabled = trocandoFonte;
+    }
+    txt(MN.sub, T('Fonte: ') + (FONTES[a.fonte] || a.fonte) + (a.rodando ? '' : ' · ' + T('iniciando…')));
+    if (!trocandoFonte) txt(MN.nota, a.erro || '');
+    cls(MN.celular, 'on', a.compartilhar);
+    cls(MN.overlay, 'on', a.overlay);
+    cls(MN.lan, 'show', a.compartilhar);
+    html(MN.lan, a.lan ? T('No celular ou tablet, na mesma rede, abra:') + '<br><b>' + esc(a.lan) + '</b>'
+      : a.compartilhar ? T('Ligando…') : '');
+  }
+  function toggleMenu(force) {
+    const open = force === undefined ? !MN.box.classList.contains('show') : force;
+    if (open) { fecharTudo(); MN.box.classList.add('show'); atualizaMenu(); menuTimer = setInterval(atualizaMenu, 1000); }
+    else { MN.box.classList.remove('show'); clearInterval(menuTimer); }
+  }
+  function abrirTela(nome) {
+    fecharTudo();
+    if (nome === 'menu') toggleMenu(true);
+    else if (nome === 'torre') toggleTower(true);
+    else if (nome === 'analise') toggleAnalysis(true);
+    else if (nome === 'ajustes') toggleCfg(true);
+    else if (nome === 'controles') abrirControles();
+    else if (nome === 'evolucao') {
+      if (!EV.frame.getAttribute('src')) EV.frame.src = '/evolucao';
+      else try { EV.frame.contentWindow.location.reload(); } catch (e) { /* ainda carregando */ }
+      EV.box.classList.add('show');
+    }
+  }
+  for (const b of document.querySelectorAll('[data-tela]')) {
+    b.addEventListener('click', (e) => { e.stopPropagation(); abrirTela(b.dataset.tela); });
+  }
+  $('menuBtn').addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+  $('mnClose').addEventListener('click', () => toggleMenu(false));
+  $('evClose').addEventListener('click', () => EV.box.classList.remove('show'));
+  $('ctClose').addEventListener('click', () => CT.box.classList.remove('show'));
+  for (const b of MN.box.querySelectorAll('[data-fonte]')) {
+    b.addEventListener('click', async () => {
+      if (!APP || trocandoFonte || (appEstado && appEstado.fonte === b.dataset.fonte && appEstado.rodando)) return;
+      trocandoFonte = true;
+      txt(MN.nota, T('Trocando a fonte… o painel reconecta sozinho.'));
+      atualizaMenu();
+      try { await app('trocar_fonte', { fonte: b.dataset.fonte }); txt(MN.nota, ''); }
+      catch (e) { txt(MN.nota, String(e)); }
+      trocandoFonte = false;
+      atualizaMenu();
+    });
+  }
+  MN.celular.addEventListener('click', async () => {
+    if (!APP || !appEstado) return;
+    cls(MN.celular, 'on', !appEstado.compartilhar);
+    txt(MN.nota, T('Reiniciando o painel… ele reconecta sozinho.'));
+    try { await app('compartilhar', { ligar: !appEstado.compartilhar }); txt(MN.nota, ''); }
+    catch (e) { txt(MN.nota, String(e)); }
+    atualizaMenu();
+  });
+  MN.overlay.addEventListener('click', async () => { if (APP) { await app('alternar_overlay'); atualizaMenu(); } });
+  $('mnTela').addEventListener('click', () => APP && app('tela_cheia'));
+  $('mnSair').addEventListener('click', () => APP && app('sair'));
+  $('mnIdioma').addEventListener('click', () => {
+    fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idioma: LANG_EN ? 'pt' : 'en' }) })
+      .then(() => (APP ? app('idioma_mudou') : null)).then(() => location.reload()).catch(() => {});
+  });
+
+  // ---- controles e teclas (gravar)
+  const ACOES = [['menu', T('Abrir o menu')], ['falar', T('Falar com o engenheiro')], ['torre', T('Torre de tempos')],
+    ['analise', T('Análise da volta')], ['overlay', T('Overlay liga/desliga')], ['fechar', T('Fechar as telas')]];
+  const BOTAO_NOME = { a: 'A', b: 'B', x: 'X', y: 'Y', lb: 'LB', rb: 'RB', ls: 'L3', rs: 'R3', start: 'Start',
+    back: 'View', cima: '↑', baixo: '↓', esquerda: '←', direita: '→' };
+  let ctMapa = null, gravandoTecla = null;
+  function acaoNome(a) {
+    if (a.startsWith('pergunta:')) {
+      const n = a.slice(9);
+      return T('Pergunta') + ' ' + n + (PERGUNTAS[n] ? ': ' + PERGUNTAS[n] : '');
+    }
+    const x = ACOES.find((q) => q[0] === a);
+    return x ? x[1] : a;
+  }
+  const PERGUNTAS = { 1: T('Pneus'), 2: T('Gaps'), 3: T('Combustível e bateria'), 4: T('Onde estou perdendo'),
+    5: T('Clima e pit'), 6: T('Repetir a última'), 7: T('Silêncio (só o essencial)'), 8: T('Estratégia de pit'),
+    9: T('Metas e treino'), 10: T('Acerto do carro') };
+  function renderControles() {
+    if (!ctMapa) return;
+    const todas = ACOES.map((a) => a[0]).concat(Object.keys(PERGUNTAS).map((n) => 'pergunta:' + n));
+    const tecla = (a) => (ctMapa.teclas.find((t) => t[1] === a) || [])[0];
+    const botao = (a) => (ctMapa.controle.find((t) => t[1] === a) || [])[0];
+    const mod = BOTAO_NOME[ctMapa.controle_modificador] || ctMapa.controle_modificador;
+    html(CT.legenda, T('Funcionam com o jogo em foco. No controle, segure %s e aperte o botão.').replace('%s', '<b>' + esc(mod) + '</b>'));
+    html(CT.rows, todas.map((a) => {
+      const t = tecla(a), b = botao(a);
+      return '<tr><td>' + esc(acaoNome(a)) + '</td>' +
+        '<td><span class="ct-cel"><kbd class="' + (t ? '' : 'vazio') + '">' + esc(t || '—') + '</kbd>' +
+        '<button type="button" data-gt="' + a + '">' + T('gravar') + '</button></span></td>' +
+        '<td><span class="ct-cel"><kbd class="' + (b ? '' : 'vazio') + '">' + esc(b ? mod + ' + ' + (BOTAO_NOME[b] || b) : '—') + '</kbd>' +
+        '<button type="button" data-gb="' + a + '">' + T('gravar') + '</button></span></td></tr>';
+    }).join(''));
+  }
+  async function abrirControles() {
+    if (!APP) return;
+    CT.box.classList.add('show');
+    try { ctMapa = await app('controles'); } catch (e) { return; }
+    try { appEstado = await app('estado'); } catch (e) { /* segue */ }
+    txt(CT.sub, appEstado && appEstado.controle ? T('Controle conectado: ') + appEstado.controle
+      : T('Nenhum controle XInput conectado (Xbox, ou PlayStation via Steam Input).'));
+    renderControles();
+  }
+  CT.rows.addEventListener('click', async (e) => {
+    const bt = e.target.closest('button');
+    if (!bt) return;
+    if (bt.dataset.gt) {          // tecla: a proxima combinacao apertada aqui
+      gravandoTecla = bt.dataset.gt;
+      cls(bt, 'gravando', true);
+      bt.textContent = T('aperte Ctrl/Alt + tecla…');
+    } else if (bt.dataset.gb) {   // botao: o proximo botao do controle (o app le direto)
+      cls(bt, 'gravando', true);
+      bt.textContent = T('aperte o botão…');
+      try { await app('gravar_botao', { acao: bt.dataset.gb }); } catch (err) { txt(CT.sub, String(err)); }
+      ctMapa = await app('controles');
+      renderControles();
+    }
+  });
+  $('ctPadrao').addEventListener('click', async () => {
+    if (!APP) return;
+    await app('restaurar_controles');
+    ctMapa = await app('controles');
+    renderControles();
+  });
+  addEventListener('keydown', async (e) => {   // capturando a tecla para gravar
+    if (!gravandoTecla) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return;
+    const acao = gravandoTecla;
+    gravandoTecla = null;
+    if (e.key === 'Escape') { renderControles(); return; }
+    if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
+      txt(CT.sub, T('Use Ctrl, Alt ou Shift junto, para não atrapalhar quando você digita.'));
+      renderControles();
+      return;
+    }
+    const cod = e.code.startsWith('Key') ? e.code.slice(3) : e.code.startsWith('Digit') ? e.code.slice(5) : e.code;
+    const tecla = (e.ctrlKey ? 'Ctrl+' : '') + (e.altKey ? 'Alt+' : '') + (e.shiftKey ? 'Shift+' : '') + cod;
+    try { await app('gravar_tecla', { acao, tecla }); } catch (err) { txt(CT.sub, String(err)); }
+    ctMapa = await app('controles');
+    renderControles();
+  }, true);
+
   R.mode.addEventListener('click', (e) => { e.stopPropagation(); cycleMode(); });
   R.corners.addEventListener('click', () => toggleAnalysis(true));
   $('aClose').addEventListener('click', () => toggleAnalysis(false));
@@ -1184,7 +1357,7 @@
   E.pos.closest('.kv').addEventListener('click', (e) => { e.stopPropagation(); toggleTower(true); });
   addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
-    if (k === 'escape') { toggleAnalysis(false); toggleTower(false); toggleCfg(false); return; }
+    if (k === 'escape') { if (algumaAberta()) fecharTudo(); else toggleMenu(true); return; }
     if (e.target.closest && e.target.closest('input, select, textarea')) return;   // digitando o nome
     if ((k === 'arrowleft' || k === 'arrowright') && R.an.classList.contains('show') && coach && coach.nCorners) {
       const n = coach.nCorners, atual = tcSel || 1;
@@ -1203,7 +1376,7 @@
     else if (k === 'm') ouvir();
     else if (k === 'v') cycleMode();
     else if (k === 'c') toggleCfg();
-    else if (k === 'e') location.href = '/evolucao';
+    else if (k === 'e') abrirTela('evolucao');
   });
   setMode(mode);
 

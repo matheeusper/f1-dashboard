@@ -14,7 +14,11 @@ pub fn pasta_dados() -> PathBuf {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(default)]
 pub struct Config {
-    pub modo: String,
+    /// de onde vem a telemetria: "jogo", "demo" (corrida simulada) ou "tt" (Time Trial simulado)
+    #[serde(alias = "modo")]
+    pub fonte: String,
+    /// libera o painel na rede local (celular e tablet)
+    pub compartilhar: bool,
     pub overlay: bool,
     pub porta_udp: u16,
     pub porta_web: u16,
@@ -22,7 +26,7 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Config { modo: "painel".into(), overlay: false, porta_udp: 20777, porta_web: 8025 }
+        Config { fonte: "jogo".into(), compartilhar: false, overlay: false, porta_udp: 20777, porta_web: 8025 }
     }
 }
 
@@ -32,7 +36,18 @@ impl Config {
     }
 
     pub fn carregar() -> Self {
-        fs::read_to_string(Self::caminho()).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default()
+        let mut c: Config =
+            fs::read_to_string(Self::caminho()).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
+        // app.json da primeira versao: "painel" virou "jogo", e "lan" virou jogo + compartilhar
+        match c.fonte.as_str() {
+            "jogo" | "demo" | "tt" => {}
+            "lan" => {
+                c.fonte = "jogo".into();
+                c.compartilhar = true;
+            }
+            _ => c.fonte = "jogo".into(),
+        }
+        c
     }
 
     pub fn salvar(&self) {

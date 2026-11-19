@@ -12,7 +12,8 @@ pub struct Nucleo {
     filho: Option<Child>,
     #[cfg(windows)]
     job: Option<job::Job>,
-    pub modo: String,
+    pub fonte: String,
+    pub compartilhar: bool,
     pub porta_web: u16,
     pub porta_udp: u16,
     pub erro: Option<String>,
@@ -27,7 +28,8 @@ impl Nucleo {
             filho: None,
             #[cfg(windows)]
             job: None,
-            modo: cfg.modo,
+            fonte: cfg.fonte,
+            compartilhar: cfg.compartilhar,
             porta_web: cfg.porta_web,
             porta_udp: cfg.porta_udp,
             erro: None,
@@ -58,11 +60,12 @@ impl Nucleo {
         }
     }
 
-    /// Para o nucleo atual (se houver) e lanca no modo pedido. Depois, `checar` diz quando ficou pronto
-    /// (assim quem chama nao segura a trava enquanto espera).
-    pub fn lancar(&mut self, modo: &str) -> Result<(), String> {
+    /// Para o nucleo atual (se houver) e lanca com a fonte (jogo, demo, tt) e o compartilhamento pedidos.
+    /// Depois, `checar` diz quando ficou pronto (assim quem chama nao segura a trava enquanto espera).
+    pub fn lancar(&mut self, fonte: &str, compartilhar: bool) -> Result<(), String> {
         self.parar();
-        self.modo = modo.to_string();
+        self.fonte = fonte.to_string();
+        self.compartilhar = compartilhar;
         self.erro = None;
         self.iniciando = true;
         let r = self.subir();
@@ -109,17 +112,17 @@ impl Nucleo {
     fn subir(&mut self) -> Result<(), String> {
         let mut cmd = comando_base()?;
         cmd.args(["--porta-udp", &self.porta_udp.to_string(), "--porta-web", &self.porta_web.to_string()]);
-        match self.modo.as_str() {
+        match self.fonte.as_str() {
             "demo" => {
                 cmd.arg("--demo");
             }
             "tt" => {
                 cmd.args(["--demo", "--time-trial"]);
             }
-            "lan" => {
-                cmd.arg("--lan");
-            }
             _ => {}
+        }
+        if self.compartilhar {
+            cmd.arg("--lan");
         }
         cmd.env("PAINELF1_DADOS", config::pasta_dados());
         #[cfg(windows)]

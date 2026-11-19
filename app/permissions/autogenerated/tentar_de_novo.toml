@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-tentar-de-novo"
+description = "Enables the tentar_de_novo command without any pre-configured scope."
+commands.allow = ["tentar_de_novo"]
+
+[[permission]]
+identifier = "deny-tentar-de-novo"
+description = "Denies the tentar_de_novo command without any pre-configured scope."
+commands.deny = ["tentar_de_novo"]

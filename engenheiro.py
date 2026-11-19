@@ -66,6 +66,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self.ptt = 0             # conta os apertos de botao (o painel toca o "clique" do radio)
         self.escuta = 0          # conta os apertos do botao de voz (o painel comeca a ouvir o microfone)
         self.cmd = {"seq": 0, "acao": None}   # comando do app nativo para a tela (torre, analise...)
+        self.citados = {}        # carro -> quando o engenheiro falou dele (para dizer "ele" em vez de repetir o nome)
         self.silencio = False    # botao 7: so o essencial
         try:
             from historico import Historico
@@ -165,7 +166,11 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self._ultima_frase[chave] = o
         return o
 
-    def say(self, texto, pri=3, ttl=20, chave=None, cool=0, show=None, tom=None, chamar=None, resp=False):
+    def citado(self, i, seg=25):
+        """Falou desse carro ha pouco? Entao a proxima frase diz "ele" em vez de repetir nome e gap."""
+        return i is not None and time.monotonic() - self.citados.get(i, -1e9) < seg
+
+    def say(self, texto, pri=3, ttl=20, chave=None, cool=0, show=None, tom=None, chamar=None, resp=False, sobre=None):
         agora = time.monotonic()
         if self.silencio and pri >= 3 and not resp:
             return False
@@ -183,6 +188,8 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self.msgs.append({"seq": self.seq, "text": texto, "show": tela, "pri": pri,
                           "ttl": ttl, "t": agora, "tom": tom, "resp": resp})
         self.preparar(texto, tom)
+        if sobre is not None:
+            self.citados[sobre] = agora
         return True
 
     def preparar(self, texto, tom="normal"):
@@ -679,9 +686,12 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             if res:
                 ganho, c, m, r = res
                 motivo, valor = diagnostico(m, r)[0]
-                self.say(tx("%s é %s mais rápido na curva %d%s.") % (self.rotulo(pos - 1), fala_dif(ganho), c["n"],
-                                                                 motivo_outro(motivo, valor)),
-                         pri=3, ttl=30, chave="rival", cool=self.voltas(2))
+                fi = self.idx_pos(pos - 1)
+                texto = (tx("Ele é %s mais rápido na curva %d%s.") % (fala_dif(ganho), c["n"], motivo_outro(motivo, valor))
+                         if self.citado(fi) else
+                         tx("%s é %s mais rápido na curva %d%s.") % (self.rotulo(pos - 1), fala_dif(ganho), c["n"],
+                                                                     motivo_outro(motivo, valor)))
+                self.say(texto, pri=3, ttl=30, chave="rival", cool=self.voltas(2), sobre=fi)
         elif self.best_other and time.monotonic() >= self.cool.get("melhor_outro", 0):
             i, otr, oms = self.best_other
             minha = self.sess_ms or ms
@@ -711,26 +721,32 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self.gaps.append((num, pos, gap_f, gap_t))
         self.gaps = self.gaps[-6:]
         ult = [g for g in self.gaps[-4:] if g[1] == pos]
+        fi, ti = self.idx_pos(pos - 1) if pos > 1 else None, self.idx_pos(pos + 1)
         if len(ult) >= 4:
             if all(g[2] for g in ult):
                 ritmo = (ult[-1][2] - ult[0][2]) / 3.0
                 if ritmo <= -150 and gap_f > 1000:
                     voltas = max(1, round((gap_f - 500) / -ritmo))
-                    self.say(tx("Você tira %s por volta %s. Alcança em %d voltas.")
-                             % (fala_dif(ritmo / 1000), self.de(self.idx_pos(pos - 1)), voltas), pri=2,
-                             chave="alcanca", cool=self.voltas(3))
+                    texto = (tx("Você tira %s por volta dele. Alcança em %d voltas.") % (fala_dif(ritmo / 1000), voltas)
+                             if self.citado(fi) else
+                             tx("Você tira %s por volta %s. Alcança em %d voltas.")
+                             % (fala_dif(ritmo / 1000), self.de(fi), voltas))
+                    self.say(texto, pri=2, chave="alcanca", cool=self.voltas(3), sobre=fi)
                 elif ritmo >= 250:
-                    self.say(tx("%s está abrindo %s por volta.") % (self.rotulo(pos - 1), fala_dif(ritmo / 1000)),
-                             pri=3, chave="abrindo", cool=self.voltas(5))
+                    texto = (tx("Ele está abrindo %s por volta.") % fala_dif(ritmo / 1000) if self.citado(fi) else
+                             tx("%s está abrindo %s por volta.") % (self.rotulo(pos - 1), fala_dif(ritmo / 1000)))
+                    self.say(texto, pri=3, chave="abrindo", cool=self.voltas(5), sobre=fi)
             if all(g[3] for g in ult):
                 ritmo_t = (ult[-1][3] - ult[0][3]) / 3.0
                 if ritmo_t <= -150 and gap_t < 4000:
-                    self.say(tx("%s se aproxima %s por volta, está a %s.")
-                             % (self.rotulo(pos + 1), fala_dif(ritmo_t / 1000), fala_gap(gap_t)), pri=2,
-                             chave="aproxima", cool=self.voltas(3))
+                    texto = (tx("Ele continua vindo, %s por volta.") % fala_dif(ritmo_t / 1000) if self.citado(ti) else
+                             tx("%s se aproxima %s por volta, está a %s.")
+                             % (self.rotulo(pos + 1), fala_dif(ritmo_t / 1000), fala_gap(gap_t)))
+                    self.say(texto, pri=2, chave="aproxima", cool=self.voltas(3), sobre=ti)
         if gap_t is not None and 0 < gap_t < 1000:
-            self.say(tx("%s a %s, dentro do DRS. Defenda nas retas.") % (self.rotulo(pos + 1), fala_gap(gap_t)),
-                     pri=2, chave="drs_atras", cool=self.voltas(2))
+            texto = (tx("Ele já está no DRS, a %s. Defenda nas retas.") % fala_gap(gap_t) if self.citado(ti) else
+                     tx("%s a %s, dentro do DRS. Defenda nas retas.") % (self.rotulo(pos + 1), fala_gap(gap_t)))
+            self.say(texto, pri=2, chave="drs_atras", cool=self.voltas(2), sobre=ti)
         if gap_f is not None and 0 < gap_f < 1000 and st:
             if d.t2 and d.t2.get("regs2026"):
                 dica = tx("Use o overtake na reta.") if d.t2.get("otAvail") else tx("Fique no vácuo.")
@@ -738,8 +754,9 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
                 dica = tx("Bateria em %d por cento, use o modo overtake na reta.") % (st["ersStore"] / 4e4)
             else:
                 dica = tx("Carregue a bateria e ataque na próxima.")
-            self.say("A %s %s. %s" % (fala_gap(gap_f), self.de(self.idx_pos(pos - 1)), dica), pri=2,
-                     chave="ataque", cool=self.voltas(2))
+            texto = (tx("Está a %s dele. %s") % (fala_gap(gap_f), dica) if self.citado(fi) else
+                     tx("A %s %s. %s") % (fala_gap(gap_f), self.de(fi), dica))
+            self.say(texto, pri=2, chave="ataque", cool=self.voltas(2), sobre=fi)
         if st and s and s["totalLaps"] and num >= 2:
             sobra = st["fuelLaps"]
             restantes = s["totalLaps"] - num
@@ -950,7 +967,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         elif self._seguro(fn) is False:
             self.responde(tx("Ainda sem dados pra isso. Entra na pista que eu te passo."))
 
-    COMANDOS = ("torre", "analise", "ajustes", "fechar")
+    COMANDOS = ("menu", "torre", "analise", "ajustes", "fechar")
 
     def comando(self, acao):
         """Comando vindo do app nativo (tecla global ou controle) para a tela do painel."""

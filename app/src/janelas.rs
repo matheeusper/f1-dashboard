@@ -1,5 +1,5 @@
-// Janelas do app: inicio (pagina local), painel (no monitor vertical, se houver), overlay
-// transparente por cima do jogo e a pagina Evolucao. E o icone na bandeja.
+// Janelas do app: o painel (que e o programa: comeca na tela "Iniciando…" e depois mostra o
+// painel do nucleo), o overlay transparente por cima do jogo e o icone na bandeja.
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -10,9 +10,15 @@ use crate::{config, entrada};
 
 // Todas as janelas usam o mesmo WebView2 com as mesmas opcoes: sem congelar quando o jogo cobre o
 // painel e com o som liberado sem precisar clicar antes (o engenheiro fala sozinho).
+#[cfg(not(debug_assertions))]
 const ARGS_WEBVIEW: &str = "--autoplay-policy=no-user-gesture-required \
     --disable-features=CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows \
     --disable-renderer-backgrounding --disable-background-timer-throttling";
+// em desenvolvimento, com depuracao remota (porta 9223) para os testes automaticos
+#[cfg(debug_assertions)]
+const ARGS_WEBVIEW: &str = "--autoplay-policy=no-user-gesture-required \
+    --disable-features=CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows \
+    --disable-renderer-backgrounding --disable-background-timer-throttling --remote-debugging-port=9223";
 
 fn mostrar(w: &WebviewWindow) {
     let _ = w.unminimize();
@@ -20,32 +26,13 @@ fn mostrar(w: &WebviewWindow) {
     let _ = w.set_focus();
 }
 
-pub fn inicio(app: &AppHandle) {
-    if let Some(w) = app.get_webview_window("inicio") {
-        mostrar(&w);
+/// Cria o painel na tela "Iniciando…" (pagina local do app). Em tela cheia no monitor em pe, se
+/// houver; senao uma janela 540x960.
+pub fn criar_painel(app: &AppHandle) {
+    if app.get_webview_window("painel").is_some() {
         return;
     }
-    let _ = WebviewWindowBuilder::new(app, "inicio", WebviewUrl::App("index.html".into()))
-        .title("Painel F1 25")
-        .inner_size(470.0, 660.0)
-        .resizable(false)
-        .maximizable(false)
-        .center()
-        .additional_browser_args(ARGS_WEBVIEW)
-        .build();
-}
-
-fn url_externa(url: &str) -> WebviewUrl {
-    WebviewUrl::External(url.parse().expect("url do nucleo"))
-}
-
-/// Painel: tela cheia no monitor em pe, se houver; senao uma janela 540x960.
-pub fn painel(app: &AppHandle, url: &str) {
-    if let Some(w) = app.get_webview_window("painel") {
-        mostrar(&w);
-        return;
-    }
-    let mut b = WebviewWindowBuilder::new(app, "painel", url_externa(url))
+    let mut b = WebviewWindowBuilder::new(app, "painel", WebviewUrl::App("index.html".into()))
         .title("Painel F1 25")
         .additional_browser_args(ARGS_WEBVIEW);
     let vertical = app
@@ -68,18 +55,43 @@ pub fn painel(app: &AppHandle, url: &str) {
     }
 }
 
-pub fn evolucao(app: &AppHandle, url: &str) {
-    if let Some(w) = app.get_webview_window("evolucao") {
-        let _ = w.navigate(format!("{url}/evolucao").parse().unwrap());
+pub fn mostrar_painel(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window("painel") {
         mostrar(&w);
-        return;
+    } else {
+        criar_painel(app);
     }
-    let _ = WebviewWindowBuilder::new(app, "evolucao", url_externa(&format!("{url}/evolucao")))
-        .title("Painel F1 25")
-        .inner_size(1100.0, 900.0)
-        .center()
-        .additional_browser_args(ARGS_WEBVIEW)
-        .build();
+}
+
+/// Leva o painel para a pagina do nucleo (se ainda estiver na tela "Iniciando…").
+pub fn painel_no_nucleo(app: &AppHandle, url: &str) {
+    if let Some(w) = app.get_webview_window("painel") {
+        let atual = w.url().map(|u| u.to_string()).unwrap_or_default();
+        if !atual.starts_with(url) {
+            let _ = w.navigate(url.parse().expect("url do nucleo"));
+        }
+    }
+}
+
+/// Volta o painel para a tela "Iniciando…"/erro (o nucleo parou).
+pub fn painel_iniciando(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window("painel") {
+        let atual = w.url().map(|u| u.to_string()).unwrap_or_default();
+        if atual.starts_with("http://127.0.0.1") || atual.starts_with("http://localhost") {
+            let _ = w.navigate("http://tauri.localhost/index.html".parse().unwrap()); // pagina local no Windows
+        }
+    }
+}
+
+pub fn alternar_tela_cheia(app: &AppHandle) -> bool {
+    match app.get_webview_window("painel") {
+        Some(w) => {
+            let cheia = !w.is_fullscreen().unwrap_or(false);
+            let _ = w.set_fullscreen(cheia);
+            cheia
+        }
+        None => false,
+    }
 }
 
 /// Overlay: faixa transparente no alto do monitor principal, sempre por cima e sem pegar clique
@@ -104,7 +116,7 @@ pub fn overlay(app: &AppHandle, url: &str, ligar: bool) {
         }
         None => (0.0, 0.0, 1280.0),
     };
-    let w = WebviewWindowBuilder::new(app, "overlay", url_externa(&format!("{url}/overlay")))
+    let w = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::External(format!("{url}/overlay").parse().unwrap()))
         .title("Painel F1 25 · overlay")
         .transparent(true)
         .decorations(false)
@@ -124,11 +136,11 @@ pub fn overlay(app: &AppHandle, url: &str, ligar: bool) {
     }
 }
 
-fn textos() -> [&'static str; 5] {
+fn textos() -> [&'static str; 3] {
     if config::idioma() == "en" {
-        ["Open home", "Open dashboard", "Overlay on/off", "Progress", "Quit"]
+        ["Show dashboard", "Overlay on/off", "Quit"]
     } else {
-        ["Abrir início", "Abrir painel", "Overlay liga/desliga", "Evolução", "Sair"]
+        ["Mostrar painel", "Overlay liga/desliga", "Sair"]
     }
 }
 
@@ -137,12 +149,10 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     Menu::with_items(
         app,
         &[
-            &MenuItem::with_id(app, "inicio", t[0], true, None::<&str>)?,
-            &MenuItem::with_id(app, "painel", t[1], true, None::<&str>)?,
-            &MenuItem::with_id(app, "overlay", t[2], true, None::<&str>)?,
-            &MenuItem::with_id(app, "evolucao", t[3], true, None::<&str>)?,
+            &MenuItem::with_id(app, "painel", t[0], true, None::<&str>)?,
+            &MenuItem::with_id(app, "overlay", t[1], true, None::<&str>)?,
             &PredefinedMenuItem::separator(app)?,
-            &MenuItem::with_id(app, "sair", t[4], true, None::<&str>)?,
+            &MenuItem::with_id(app, "sair", t[2], true, None::<&str>)?,
         ],
     )
 }
@@ -154,25 +164,17 @@ pub fn bandeja(app: &AppHandle) -> tauri::Result<()> {
         .tooltip("Painel F1 25")
         .menu(&menu(app)?)
         .show_menu_on_left_click(false)
-        .on_menu_event(|app, ev| {
-            let url = app.state::<crate::Estado>().nucleo.lock().unwrap().url();
-            match ev.id().as_ref() {
-                "inicio" => inicio(app),
-                "painel" => painel(app, &url),
-                "overlay" => {
-                    entrada::alternar_overlay(app);
-                }
-                "evolucao" => evolucao(app, &url),
-                "sair" => {
-                    app.state::<crate::Estado>().nucleo.lock().unwrap().parar();
-                    app.exit(0);
-                }
-                _ => {}
+        .on_menu_event(|app, ev| match ev.id().as_ref() {
+            "painel" => mostrar_painel(app),
+            "overlay" => {
+                entrada::alternar_overlay(app);
             }
+            "sair" => crate::encerrar(app),
+            _ => {}
         })
         .on_tray_icon_event(|tray, ev| {
             if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = ev {
-                inicio(tray.app_handle());
+                mostrar_painel(tray.app_handle());
             }
         })
         .build(app)?;

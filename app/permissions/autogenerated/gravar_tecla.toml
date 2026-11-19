@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-gravar-tecla"
+description = "Enables the gravar_tecla command without any pre-configured scope."
+commands.allow = ["gravar_tecla"]
+
+[[permission]]
+identifier = "deny-gravar-tecla"
+description = "Denies the gravar_tecla command without any pre-configured scope."
+commands.deny = ["gravar_tecla"]

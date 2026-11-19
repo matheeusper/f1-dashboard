@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-trocar-fonte"
+description = "Enables the trocar_fonte command without any pre-configured scope."
+commands.allow = ["trocar_fonte"]
+
+[[permission]]
+identifier = "deny-trocar-fonte"
+description = "Denies the trocar_fonte command without any pre-configured scope."
+commands.deny = ["trocar_fonte"]

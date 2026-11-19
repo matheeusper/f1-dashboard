@@ -143,11 +143,17 @@ class EstrategiaMixin:
             gap = v[7] * 60000 + v[6]
             idade = sts[fi][1]
             if 0 < gap < 3000 and idade - minha_idade >= 8:
-                self.say(tx("%s está com pneus %d voltas mais velhos. Ele vai cair, pressiona.")
-                         % (cap(self.quem(fi)), idade - minha_idade), pri=3, chave="pneu_frente", cool=self.voltas(4))
+                texto = (tx("Ele está com pneus %d voltas mais velhos. Vai cair, pressiona.") % (idade - minha_idade)
+                         if self.citado(fi) else
+                         tx("%s está com pneus %d voltas mais velhos. Ele vai cair, pressiona.")
+                         % (cap(self.quem(fi)), idade - minha_idade))
+                self.say(texto, pri=3, chave="pneu_frente", cool=self.voltas(4), sobre=fi)
             elif 0 < gap < 2000 and janela and sem_parar and not al[fi][15]:
-                self.say(tx("Chance de undercut %s, a %s. Se pararmos nesta volta, o pneu novo pode te colocar na frente.")
-                         % (self.de(fi), fala_gap(gap)), pri=2, chave="undercut_eu", cool=self.voltas(3))
+                texto = (tx("Chance de undercut nele. Se pararmos nesta volta, o pneu novo pode te colocar na frente.")
+                         if self.citado(fi) else
+                         tx("Chance de undercut %s, a %s. Se pararmos nesta volta, o pneu novo pode te colocar na frente.")
+                         % (self.de(fi), fala_gap(gap)))
+                self.say(texto, pri=2, chave="undercut_eu", cool=self.voltas(3), sobre=fi)
         # carro de tras
         ti = self.idx_pos(pos + 1)
         if ti is not None and ti < len(sts):
@@ -155,11 +161,16 @@ class EstrategiaMixin:
             gap_t = lt[7] * 60000 + lt[6]
             idade = sts[ti][1]
             if 0 < gap_t < 3000 and minha_idade - idade >= 8:
-                self.say(tx("%s tem pneus %d voltas mais novos, vai vir forte.") % (cap(self.quem(ti)), minha_idade - idade),
-                         pri=3, chave="pneu_tras", cool=self.voltas(4))
+                texto = (tx("Ele tem pneus %d voltas mais novos, vai vir forte.") % (minha_idade - idade)
+                         if self.citado(ti) else
+                         tx("%s tem pneus %d voltas mais novos, vai vir forte.") % (cap(self.quem(ti)), minha_idade - idade))
+                self.say(texto, pri=3, chave="pneu_tras", cool=self.voltas(4), sobre=ti)
             elif 0 < gap_t < 2500 and janela and sem_parar:
-                self.say(tx("Atenção ao undercut %s, a %s. Se ele parar, a gente responde na volta seguinte.")
-                         % (self.de(ti), fala_gap(gap_t)), pri=2, chave="undercut_ele", cool=self.voltas(3))
+                texto = (tx("Atenção ao undercut dele. Se ele parar, a gente responde na volta seguinte.")
+                         if self.citado(ti) else
+                         tx("Atenção ao undercut %s, a %s. Se ele parar, a gente responde na volta seguinte.")
+                         % (self.de(ti), fala_gap(gap_t)))
+                self.say(texto, pri=2, chave="undercut_ele", cool=self.voltas(3), sobre=ti)
 
     def _es_minha_volta(self, ms, parou):
         sc = time.monotonic() - self.es_sc_visto < self.lap_sec * 1.2
