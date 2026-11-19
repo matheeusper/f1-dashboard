@@ -25,6 +25,8 @@
     padding: 10px 16px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line);
   }
   select { min-width: 240px; }
+  select#grupo { min-width: 0; }
+  @media (max-width: 640px) { select { min-width: 0; flex: 1 1 100%; } }
   .panel { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; }
   .lbl { font-size: 13px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; }
   h2 { margin: 0 0 14px; font-size: 15px; letter-spacing: 2.2px; color: var(--dim); font-weight: 500; }
@@ -62,6 +64,7 @@
   <header>
     <a class="back" href="/">← Painel</a>
     <h1>Evolução</h1>
+    <select id="grupo" aria-label="Tipo de sessão" style="display:none"></select>
     <select id="pista" aria-label="Pista"></select>
   </header>
   <div id="conteudo"><div class="panel empty">Carregando…</div></div>

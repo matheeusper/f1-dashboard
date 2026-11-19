@@ -80,6 +80,8 @@
     "soma dos seus melhores trechos": "sum of your best sections",
     "Última sessão": "Last session", "média ": "average ", "Voltas registradas": "Laps recorded",
     "em %d sessões": "over %d sessions", "em 1 sessão": "in 1 session",
+    "Volta rápida (TT e classificação)": "Quali pace (TT and qualifying)", "Corrida e treinos": "Race and practice",
+    "Tudo junto": "Everything", "%d sessões": "%d sessions", "1 sessão": "1 session", "Tipo de sessão": "Session type",
     "EVOLUÇÃO POR SESSÃO": "PROGRESS PER SESSION", "CONQUISTAS DO MODO TREINO": "PRACTICE MODE ACHIEVEMENTS",
     "CURVA A CURVA": "CORNER BY CORNER", "CURVA": "TURN", "MELHOR TRECHO": "BEST SECTION",
     "MÉDIA RECENTE": "RECENT AVERAGE", "TEMPO PARA BUSCAR": "TIME TO FIND", "TENDÊNCIA": "TREND", "VÍCIO": "HABIT",

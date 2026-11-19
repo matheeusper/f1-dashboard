@@ -256,6 +256,10 @@ EN = {
     "Bateria baixa. Mude para o modo médio e recarregue.": "Battery low. Switch to medium mode and recharge.",
     "Primeira vez aqui. Faz uma volta limpa pra eu montar sua referência.":
         "First time here. Give me a clean lap so I can build your reference.",
+    "Primeira volta rápida aqui, vou montar uma referência separada da corrida.":
+        "First quali pace session here, I'll build a reference separate from the race one.",
+    "Primeira corrida aqui, vou montar uma referência separada da volta rápida.":
+        "First race here, I'll build a reference separate from your quali pace one.",
     "Resumo da sessão: %d voltas válidas, melhor %s, média %s, variação de %s.":
         "Session summary: %d valid laps, best %s, average %s, spread of %s.",
     "Sessão: %d voltas · melhor %s · média %s · ±%s": "Session: %d laps · best %s · average %s · ±%s",

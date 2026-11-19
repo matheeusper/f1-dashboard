@@ -16,6 +16,7 @@ from analise import num as numero
 from acerto import AcertoMixin
 from corrida import CorridaMixin, primeiro_nome
 from estrategia import EstrategiaMixin
+from f1_packets import grupo_da_sessao
 from idioma import N_, tx
 from ouvido import intencao
 from treino import TreinoMixin
@@ -81,6 +82,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         self.cur = Trace()
         self.lap_no = None
         self.chave = None
+        self.grupo = None        # "rapida" (TT/classificacao) ou "corrida": recorde e metas separados
         self.corners = []
         self.entradas = []
         self.lap_len = 0.0
@@ -216,15 +218,16 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         if chave == self.chave:
             return
         self.chave = chave
+        self.grupo = grupo_da_sessao(s["typeId"])
         self.lap_len = float(s["trackLength"] or 0)
         if self.hist:
-            ref = self._seguro(self.hist.referencia, chave)
+            ref = self._seguro(self.hist.referencia, chave, self.grupo)
             if ref:
                 self.corners = ref["curvas"]
                 self.recorde_ms, self.recorde_tr = ref["tempo"], ref["traco"]
                 self.lap_len = ref["comprimento"] or self.lap_len
             self.sess_id = self._seguro(self.hist.sessao, self.d.uid, chave, s["track"], s["type"],
-                                        s["isRace"])
+                                        s["isRace"], self.grupo)
             self._atualiza_resumo()
             self._es_pista()
         self._entradas()
@@ -235,7 +238,7 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
 
     def _atualiza_resumo(self):
         if self.hist and self.chave:
-            self.resumo = self._seguro(self.hist.resumo, self.chave, self.sess_id, len(self.corners))
+            self.resumo = self._seguro(self.hist.resumo, self.chave, self.sess_id, len(self.corners), self.grupo)
 
     def _referencia(self):
         s = self.d.session
@@ -537,10 +540,13 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
             self.sess_ms, self.sess_tr = ms, tr
         recorde_ant = self.recorde_ms
         novo_rec = valida and bool(self.corners) and (self.recorde_ms == 0 or ms < self.recorde_ms)
-        if novo_rec:
+        # grupo com recorde antigo sem telemetria (historico de antes da separacao TT x corrida):
+        # igualar o tempo ja basta para guardar a volta como referencia, sem anunciar recorde
+        sem_traco = valida and bool(self.corners) and self.recorde_tr is None and ms <= self.recorde_ms
+        if novo_rec or sem_traco:
             self.recorde_ms, self.recorde_tr = ms, tr
             if self.hist and self.chave:
-                self._seguro(self.hist.salvar_referencia, self.chave, ms, self.corners, tr, self.lap_len)
+                self._seguro(self.hist.salvar_referencia, self.chave, self.grupo, ms, self.corners, tr, self.lap_len)
             self.map_ver += 1
 
         # ------------- relatorio da volta (tela)
@@ -908,6 +914,11 @@ class Engenheiro(CorridaMixin, EstrategiaMixin, TreinoMixin, AcertoMixin):
         if not r or not r["voltas"]:
             partes.append(tx("Primeira vez aqui. Faz uma volta limpa pra eu montar sua referência."))
         else:
+            if not r.get("voltas_grupo") and not self.recorde_ms:
+                # pista conhecida, mas o recorde de Time Trial nao serve de meta na corrida (e vice-versa)
+                partes.append(tx("Primeira volta rápida aqui, vou montar uma referência separada da corrida.")
+                              if self.grupo == "rapida" else
+                              tx("Primeira corrida aqui, vou montar uma referência separada da volta rápida."))
             # curto como no radio: recorde, o que da pra buscar e o ponto de atencao do dia
             if self.recorde_ms:
                 partes.append(tx("Recorde: %s.") % fala_volta(self.recorde_ms))

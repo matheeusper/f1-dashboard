@@ -99,6 +99,13 @@ SESSION_TYPES = {
     15: N_("Corrida"), 16: N_("Corrida 2"), 17: N_("Corrida 3"), 18: N_("Time Trial"),
 }
 RACE_SESSIONS = (15, 16, 17)
+# grupos do historico: classificacao, sprint shootout e Time Trial tem pouco combustivel e pneu novo,
+# entao o recorde/volta ideal delas fica separado do de corrida e treino livre
+TIPOS_RAPIDA = frozenset(range(5, 15)) | {18}
+
+
+def grupo_da_sessao(type_id):
+    return "rapida" if type_id in TIPOS_RAPIDA else "corrida"
 WEATHER = {0: N_("Limpo"), 1: N_("Poucas nuvens"), 2: N_("Nublado"), 3: N_("Chuva fraca"), 4: N_("Chuva forte"),
            5: N_("Tempestade")}
 SC_EVENT = {0: N_("acionado"), 1: N_("voltando aos boxes"), 2: N_("retornou aos boxes"), 3: N_("corrida retomada")}

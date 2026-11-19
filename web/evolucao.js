@@ -2,7 +2,15 @@
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const sel = $('pista'), box = $('conteudo');
+  const sel = $('pista'), selGrupo = $('grupo'), box = $('conteudo');
+  // recorde, volta ideal e evolucao separados: TT/classificacao (pouco combustivel) x corrida/treino
+  const GRUPOS = [
+    ['rapida', T('Volta rápida (TT e classificação)')],
+    ['corrida', T('Corrida e treinos')],
+    ['', T('Tudo junto')],
+  ];
+  let grupo = null;   // null = ainda nao escolhido: abre no grupo da ultima sessao da pista
+  try { grupo = localStorage.getItem('painel.grupo'); } catch (e) { /* sem storage */ }
   // aberta dentro do painel (menu > Evolucao): o painel ja tem o botao de fechar e o titulo
   if (window.top !== window) {
     for (const el of document.querySelectorAll('.back, h1')) el.style.display = 'none';
@@ -114,11 +122,39 @@
     box.innerHTML = h;
   }
 
+  function opcoesGrupo(d) {
+    const n = d.grupos || {};
+    const total = (n.rapida || 0) + (n.corrida || 0);
+    selGrupo.innerHTML = GRUPOS.map(([k, nome]) => {
+      const q = k ? n[k] || 0 : total;
+      return '<option value="' + k + '"' + (q ? '' : ' disabled') + '>' + esc(nome) + ' · ' +
+        (q === 1 ? T('1 sessão') : T('%d sessões').replace('%d', q)) + '</option>';
+    }).join('');
+    selGrupo.value = d.grupo;
+    selGrupo.style.display = '';
+  }
+
   function carregar(chave) {
     try { localStorage.setItem('painel.pista', chave); } catch (e) { /* sem storage */ }
-    fetch('/api/evolucao?pista=' + encodeURIComponent(chave)).then((r) => r.json()).then(render)
+    const pede = grupo == null ? '' : grupo;
+    fetch('/api/evolucao?pista=' + encodeURIComponent(chave) + '&grupo=' + encodeURIComponent(pede))
+      .then((r) => r.json()).then((d) => {
+        // primeira vez, ou o grupo escolhido nao tem sessoes nesta pista: vai para o da ultima sessao
+        const vazio = d.grupo && !(d.grupos || {})[d.grupo];
+        if ((grupo == null || vazio) && d.ultimo && d.ultimo !== d.grupo) {
+          if (grupo == null) grupo = d.ultimo;
+          return fetch('/api/evolucao?pista=' + encodeURIComponent(chave) + '&grupo=' + d.ultimo).then((r) => r.json());
+        }
+        return d;
+      }).then((d) => { opcoesGrupo(d); render(d); })
       .catch(() => { box.innerHTML = '<div class="panel empty">' + T('Não consegui ler o histórico. O servidor do painel está aberto?') + '</div>'; });
   }
+
+  selGrupo.addEventListener('change', () => {
+    grupo = selGrupo.value;
+    try { localStorage.setItem('painel.grupo', grupo); } catch (e) { /* sem storage */ }
+    carregar(sel.value);
+  });
 
   fetch('/api/pistas').then((r) => r.json()).then((pistas) => {
     if (!pistas.length) {

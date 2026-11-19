@@ -101,8 +101,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/pistas":
             return self._json(historico.api_pistas(historico.ARQUIVO))
         if path == "/api/evolucao":
-            chave = parse_qs(query).get("pista", [""])[0]
-            return self._json(historico.api_evolucao(chave, historico.ARQUIVO))
+            q = parse_qs(query)
+            chave, grupo = q.get("pista", [""])[0], q.get("grupo", [""])[0]
+            return self._json(historico.api_evolucao(chave, historico.ARQUIVO, grupo or None))
         entry = STATIC.get(path)
         if not entry:
             return self._send(b"Nao encontrado", "text/plain", 404)

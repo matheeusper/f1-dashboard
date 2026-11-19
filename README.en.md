@@ -150,9 +150,10 @@ On the next lap, he warns you **before** the corner: *"Turn 3, brake at 90 metre
 Everything is saved in `dados/historico.sqlite3`:
 - **Record per track:** the telemetry of your best lap becomes the reference for the next sessions.
 - **Ideal lap:** the sum of your best sections.
-- **Habits:** mistakes that keep repeating in the same corner. He brings them up at the start of the session and before the corner.
-- **Session summary:** compares with the previous session and tells you where you improved and what to work on.
-- **Progress page** (☰ → Progress, key **E**, or `http://127.0.0.1:8025/evolucao`): chart per session, corner-by-corner table with trends and habits, and achievements.
+- **Quali pace vs race:** record, ideal lap, weak spot and the comparison with the previous session are split into two groups: **quali pace** (Time Trial and qualifying, low fuel and new tyres) and **race** (race and free practice). That way your Time Trial record never becomes an impossible target on a full tank.
+- **Habits:** mistakes that keep repeating in the same corner, counted across every session type. He brings them up at the start of the session and before the corner.
+- **Session summary:** compares with the previous session of the same group and tells you where you improved and what to work on.
+- **Progress page** (☰ → Progress, key **E**, or `http://127.0.0.1:8025/evolucao`): chart per session, corner-by-corner table with trends and habits, and achievements. At the top you pick quali pace, race or everything.
 
 ### Race and qualifying (instead of the in-game engineer)
 

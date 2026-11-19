@@ -150,9 +150,10 @@ Na volta seguinte, ele avisa **antes** da curva: *"Curva 3, freie a 90 metros."*
 Tudo fica salvo em `dados/historico.sqlite3`:
 - **Recorde por pista:** a telemetria da sua melhor volta vira a referência das próximas sessões.
 - **Volta ideal:** a soma dos seus melhores trechos.
-- **Vícios:** erros que se repetem na mesma curva. Ele lembra disso no começo da sessão e antes da curva.
-- **Resumo da sessão:** compara com a sessão anterior e diz onde você evoluiu e o que treinar.
-- **Página Evolução** (☰ → Evolução, tecla **E**, ou `http://127.0.0.1:8025/evolucao`): gráfico por sessão, tabela curva a curva com tendência e vícios, e conquistas.
+- **Volta rápida x corrida:** recorde, volta ideal, ponto fraco e comparação com a sessão anterior são separados em dois grupos: **volta rápida** (Time Trial e classificação, com pouco combustível e pneu novo) e **corrida** (corrida e treinos livres). Assim, o recorde do Time Trial não vira uma meta impossível com o tanque cheio.
+- **Vícios:** erros que se repetem na mesma curva, somando todos os tipos de sessão. Ele lembra disso no começo da sessão e antes da curva.
+- **Resumo da sessão:** compara com a sessão anterior do mesmo grupo e diz onde você evoluiu e o que treinar.
+- **Página Evolução** (☰ → Evolução, tecla **E**, ou `http://127.0.0.1:8025/evolucao`): gráfico por sessão, tabela curva a curva com tendência e vícios, e conquistas. No topo você escolhe entre volta rápida, corrida ou tudo junto.
 
 ### Corrida e classificação (no lugar do engenheiro do jogo)
 
